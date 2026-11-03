@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">AERIS</string>
+
+    <!-- Registro (T002 / H001) -->
+    <string name="volver">‹  volver</string>
+    <string name="registro_titulo">Crear cuenta</string>
+    <string name="registro_subtitulo">Regístrate para empezar a medir el aire que respiras.</string>
+    <string name="registro_nombre">Nombre</string>
+    <string name="registro_apellidos">Apellidos</string>
+    <string name="registro_correo">Correo electrónico</string>
+    <string name="registro_contrasena">Contraseña</string>
+    <string name="registro_contrasena_pista">Mínimo 8 caracteres</string>
+    <string name="registro_confirmacion">Confirmar contraseña</string>
+    <string name="registro_confirmacion_pista">Repite la contraseña</string>
+    <string name="registro_continuar">Continuar</string>
+    <string name="registro_ya_tienes_cuenta">¿Ya tienes cuenta?</string>
+    <string name="registro_inicia_sesion">Inicia sesión</string>
+    <string name="registro_enviando">Creando la cuenta…</string>
+    <string name="registro_login_pendiente">El inicio de sesión llega en la tarea T003.</string>
+
+    <!-- Vincular sensor (pantalla provisional hasta T005) -->
+    <string name="vincular_titulo">Vincular sensor</string>
+    <string name="vincular_texto">Cuenta creada. Aquí podrás buscar tu sensor por Bluetooth y vincularlo a tu cuenta (tarea T005).</string>
+    <string name="vincular_omitir">Omitir por ahora</string>
+</resources>
