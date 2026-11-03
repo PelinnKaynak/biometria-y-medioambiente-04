@@ -40,15 +40,8 @@ function cargarReglasREST(servidor, logica) {
         respuesta.status(200).json(await logica.iniciarSesion(correo, contrasena));
     }));
 
-    // POST /cerrarSesion  (Authorization: Bearer <token>)
-    //   204 · 401
-    servidor.post('/cerrarSesion', requiereSesion(logica), envolver(async (peticion, respuesta) => {
-        await logica.cerrarSesion(peticion.token);
-        respuesta.status(204).end();
-    }));
-
     // GET /usuarioActual  (Authorization: Bearer <token>)
-    //   200 { idUsuario, nombre, apellidos, correo, rol, fechaRegistro } · 401
+    //   200 { idUsuario, nombre, apellidos, correo, rol, fechaAlta, premiumHasta } · 401
     servidor.get('/usuarioActual', requiereSesion(logica), envolver(async (peticion, respuesta) => {
         respuesta.status(200).json(await logica.obtenerUsuario(peticion.usuario.idUsuario));
     }));

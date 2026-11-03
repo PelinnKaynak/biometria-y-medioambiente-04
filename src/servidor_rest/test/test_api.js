@@ -40,7 +40,7 @@ describe('API REST de usuarios y autenticación', function () {
         await crearBDPruebas();
         logica = await Logica.crear(CONFIG_BD_PRUEBAS,
             async (destinatario, asunto, texto) => { correos.push({ destinatario, texto }); },
-            'http://localhost:8080/restablecer.html');
+            'http://localhost:8080/restablecer.html', 'clave-de-pruebas');
 
         // Rutas solo para probar los roles (no existen en el servidor real)
         const servidor = crearServidor(logica, (s) => {
@@ -67,12 +67,12 @@ describe('API REST de usuarios y autenticación', function () {
         const r = await peticion('POST', '/registrarUsuario', PELIN);
         assert.strictEqual(r.codigo, 201);
         assert.strictEqual(r.cuerpo.rol, 'portador');
-        assert.match(r.cuerpo.token, /^[0-9a-f]{64}$/);
+        assert.match(r.cuerpo.token, /^[\w-]+\.[\w-]+$/);
 
-        const [filas] = await logica.conexion.query('SELECT Email, HashContrasenya FROM Usuarios');
+        const [filas] = await logica.conexion.query('SELECT email, passwordHash FROM Usuarios');
         assert.strictEqual(filas.length, 1);
-        assert.strictEqual(filas[0].Email, 'pelin@aeris.es');
-        assert.ok(!filas[0].HashContrasenya.includes('aire2026'));
+        assert.strictEqual(filas[0].email, 'pelin@aeris.es');
+        assert.ok(!filas[0].passwordHash.includes('aire2026'));
     });
 
     it('POST /registrarUsuario con el JSON que envía la app (LogicaFakeRegistro.crearJSON)', async function () {
@@ -106,7 +106,7 @@ describe('API REST de usuarios y autenticación', function () {
         assert.strictEqual(r.codigo, 200);
         assert.strictEqual(r.cuerpo.rol, 'portador');
         assert.strictEqual(r.cuerpo.nombre, 'Pelin');
-        assert.match(r.cuerpo.token, /^[0-9a-f]{64}$/);
+        assert.match(r.cuerpo.token, /^[\w-]+\.[\w-]+$/);
     });
 
     it('POST /iniciarSesion incorrecto: 401 (mismo mensaje si el correo no existe)', async function () {
@@ -139,16 +139,10 @@ describe('API REST de usuarios y autenticación', function () {
         const { cuerpo } = await peticion('POST', '/registrarUsuario', PELIN);
         assert.strictEqual((await peticion('GET', '/pruebaSoloAdmin', undefined, cuerpo.token)).codigo, 403);
 
-        await logica.conexion.query('UPDATE Usuarios SET IdRol = 1 WHERE IdUsuario = ?', [cuerpo.idUsuario]);
+        await logica.conexion.query("UPDATE Usuarios SET role = 'administrador' WHERE idUsuario = ?", [cuerpo.idUsuario]);
         const r = await peticion('GET', '/pruebaSoloAdmin', undefined, cuerpo.token);
         assert.strictEqual(r.codigo, 200);
         assert.strictEqual(r.cuerpo.usuario.rol, 'administrador');
-    });
-
-    it('POST /cerrarSesion: 204 y el token deja de valer', async function () {
-        const { cuerpo } = await peticion('POST', '/registrarUsuario', PELIN);
-        assert.strictEqual((await peticion('POST', '/cerrarSesion', undefined, cuerpo.token)).codigo, 204);
-        assert.strictEqual((await peticion('GET', '/usuarioActual', undefined, cuerpo.token)).codigo, 401);
     });
 
     // --- recuperación de contraseña -----------------------------------------
@@ -158,7 +152,7 @@ describe('API REST de usuarios y autenticación', function () {
         const r = await peticion('POST', '/solicitarRecuperacion', { correo: 'pelin@aeris.es' });
         assert.strictEqual(r.codigo, 200);
         assert.strictEqual(correos.length, 1);
-        assert.match(correos[0].texto, /restablecer\.html\?token=[0-9a-f]{64}/);
+        assert.match(correos[0].texto, /restablecer\.html\?token=[\w-]+\.[\w-]+/);
     });
 
     it('POST /solicitarRecuperacion con un correo no registrado: 200 igual, pero no envía nada', async function () {
@@ -170,7 +164,7 @@ describe('API REST de usuarios y autenticación', function () {
     it('POST /restablecerContrasenya: 204, la nueva contraseña funciona y el enlace no se puede repetir', async function () {
         await peticion('POST', '/registrarUsuario', PELIN);
         await peticion('POST', '/solicitarRecuperacion', { correo: 'pelin@aeris.es' });
-        const token = correos[0].texto.match(/token=([0-9a-f]{64})/)[1];
+        const token = correos[0].texto.match(/token=(\S+)/)[1];
 
         assert.strictEqual((await peticion('POST', '/restablecerContrasenya', { token, contrasena: 'nueva2026' })).codigo, 204);
         assert.strictEqual((await peticion('POST', '/iniciarSesion', { correo: 'pelin@aeris.es', contrasena: 'nueva2026' })).codigo, 200);

@@ -2,7 +2,8 @@
 // Fichero:     Seguridad.js
 // Descripción: Funciones de seguridad de la lógica: hash de contraseñas con
 //              scrypt (módulo crypto de Node, sin dependencias) y tokens
-//              aleatorios para sesiones y recuperación de contraseña.
+//              firmados (HMAC) para las sesiones y la recuperación de
+//              contraseña, sin guardar nada en la base de datos.
 //              Diseño en doc/logica_design.md. Tarea T016.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
@@ -14,7 +15,6 @@ const crypto = require('crypto');
 
 const LONGITUD_SAL = 16;       // bytes
 const LONGITUD_CLAVE = 64;     // bytes
-const LONGITUD_TOKEN = 32;     // bytes -> 64 caracteres hexadecimales
 
 // ---------------------------------------------------------------------------
 // contrasena: Texto --> calcularHash() --> Texto
@@ -44,19 +44,59 @@ async function comprobarContrasenya(contrasena, hashGuardado) {
 }
 
 // ---------------------------------------------------------------------------
-// --> generarToken() --> Texto
-// What it does: returns a random token of 64 hexadecimal characters.
+// datos: Objeto, clave: Texto --> firmarToken() --> Texto
+// What it does: returns "<datos en base64url>.<firma>", where the signature is
+//               HMAC-SHA256 with the server's secret key. Nobody without the
+//               key can make or change a token. Nothing is saved in the BD.
 // ---------------------------------------------------------------------------
-function generarToken() {
-    return crypto.randomBytes(LONGITUD_TOKEN).toString('hex');
+function firmarToken(datos, clave) {
+    const parteDatos = Buffer.from(JSON.stringify(datos)).toString('base64url');
+    return `${parteDatos}.${firmar(parteDatos, clave)}`;
 }
 
 // ---------------------------------------------------------------------------
-// token: Texto --> hashToken() --> Texto
-// What it does: SHA-256 of the token (hex). The BD stores this, not the token.
+// token: Texto, clave: Texto --> leerToken() --> Objeto | null
+// What it does: returns the data of the token if the signature is right and
+//               it has not expired (field exp, in seconds); null if not.
 // ---------------------------------------------------------------------------
-function hashToken(token) {
-    return crypto.createHash('sha256').update(String(token)).digest('hex');
+function leerToken(token, clave) {
+    const partes = String(token || '').split('.');
+    if (partes.length !== 2) {
+        return null;
+    }
+    const [parteDatos, firma] = partes;
+    const firmaEsperada = Buffer.from(firmar(parteDatos, clave));
+    const firmaRecibida = Buffer.from(firma);
+    if (firmaRecibida.length !== firmaEsperada.length || !crypto.timingSafeEqual(firmaRecibida, firmaEsperada)) {
+        return null;
+    }
+    let datos;
+    try {
+        datos = JSON.parse(Buffer.from(parteDatos, 'base64url').toString('utf8'));
+    } catch (error) {
+        return null;
+    }
+    if (typeof datos.exp !== 'number' || datos.exp <= Math.floor(Date.now() / 1000)) {
+        return null;
+    }
+    return datos;
+}
+
+// ---------------------------------------------------------------------------
+// passwordHash: Texto --> huellaContrasenya() --> Texto
+// What it does: 16 hex characters that change when the password changes.
+//               Tokens carry it, so changing the password cancels them.
+// ---------------------------------------------------------------------------
+function huellaContrasenya(passwordHash) {
+    return crypto.createHash('sha256').update(String(passwordHash)).digest('hex').slice(0, 16);
+}
+
+// ---------------------------------------------------------------------------
+// texto: Texto, clave: Texto --> firmar() --> Texto
+// What it does: HMAC-SHA256 of the text in base64url.
+// ---------------------------------------------------------------------------
+function firmar(texto, clave) {
+    return crypto.createHmac('sha256', String(clave)).update(texto).digest('base64url');
 }
 
 // ---------------------------------------------------------------------------
@@ -70,4 +110,4 @@ function scrypt(contrasena, sal) {
     });
 }
 
-module.exports = { calcularHash, comprobarContrasenya, generarToken, hashToken };
+module.exports = { calcularHash, comprobarContrasenya, firmarToken, leerToken, huellaContrasenya };

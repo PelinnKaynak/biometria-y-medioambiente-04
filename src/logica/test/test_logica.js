@@ -10,9 +10,11 @@
 
 const assert = require('assert');
 const { Logica } = require('../Logica');
+const Seguridad = require('../Seguridad');
 const { CONFIG_BD_PRUEBAS, crearBDPruebas, vaciarTablas } = require('./bdPruebas');
 
 const URL_RESTABLECER = 'http://localhost:8080/restablecer.html';
+const CLAVE = 'clave-de-pruebas';
 
 describe('Logica (usuarios y autenticación)', function () {
 
@@ -23,7 +25,7 @@ describe('Logica (usuarios y autenticación)', function () {
         await crearBDPruebas();     // también prueba que el script SQL funciona en una BD vacía
         logica = await Logica.crear(CONFIG_BD_PRUEBAS,
             async (destinatario, asunto, texto) => { correos.push({ destinatario, asunto, texto }); },
-            URL_RESTABLECER);
+            URL_RESTABLECER, CLAVE);
     });
 
     beforeEach(async function () {
@@ -37,7 +39,7 @@ describe('Logica (usuarios y autenticación)', function () {
 
     // token del enlace del último correo enviado
     function tokenDelUltimoCorreo() {
-        return correos[correos.length - 1].texto.match(/token=([0-9a-f]{64})/)[1];
+        return correos[correos.length - 1].texto.match(/token=(\S+)/)[1];
     }
 
     // --- registro -----------------------------------------------------------
@@ -47,7 +49,7 @@ describe('Logica (usuarios y autenticación)', function () {
         assert.ok(sesion.idUsuario > 0);
         assert.strictEqual(sesion.rol, 'portador');
         assert.strictEqual(sesion.nombre, 'Pelin');
-        assert.match(sesion.token, /^[0-9a-f]{64}$/);
+        assert.ok(Seguridad.leerToken(sesion.token, CLAVE));
 
         const usuario = await logica.obtenerUsuario(sesion.idUsuario);
         assert.strictEqual(usuario.correo, 'pelin@aeris.es');
@@ -57,9 +59,9 @@ describe('Logica (usuarios y autenticación)', function () {
 
     it('registrarUsuario() guarda la contraseña cifrada, nunca en claro', async function () {
         await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
-        const [filas] = await logica.conexion.query('SELECT HashContrasenya FROM Usuarios');
-        assert.ok(filas[0].HashContrasenya.startsWith('scrypt$'));
-        assert.ok(!filas[0].HashContrasenya.includes('aire2026'));
+        const [filas] = await logica.conexion.query('SELECT passwordHash FROM Usuarios');
+        assert.ok(filas[0].passwordHash.startsWith('scrypt$'));
+        assert.ok(!filas[0].passwordHash.includes('aire2026'));
     });
 
     it('registrarUsuario() con un correo ya registrado lanza CORREO_YA_REGISTRADO', async function () {
@@ -96,7 +98,7 @@ describe('Logica (usuarios y autenticación)', function () {
 
     it('comprobarSesion() devuelve el rol actual del usuario', async function () {
         const sesion = await logica.registrarUsuario('Ana', 'Admin', 'ana@aeris.es', 'admin2026');
-        await logica.conexion.query('UPDATE Usuarios SET IdRol = 1 WHERE IdUsuario = ?', [sesion.idUsuario]);
+        await logica.conexion.query("UPDATE Usuarios SET role = 'administrador' WHERE idUsuario = ?", [sesion.idUsuario]);
         assert.strictEqual((await logica.comprobarSesion(sesion.token)).rol, 'administrador');
     });
 
@@ -105,20 +107,21 @@ describe('Logica (usuarios y autenticación)', function () {
         assert.strictEqual(await logica.comprobarSesion('a'.repeat(64)), null);
         assert.strictEqual(await logica.comprobarSesion(''), null);
         assert.strictEqual(await logica.comprobarSesion(undefined), null);
-        await logica.conexion.query('UPDATE Sesiones SET FechaCaducidad = UTC_TIMESTAMP() - INTERVAL 1 MINUTE');
-        assert.strictEqual(await logica.comprobarSesion(sesion.token), null);
+        const caducado = Seguridad.firmarToken(
+            { ...Seguridad.leerToken(sesion.token, CLAVE), exp: Math.floor(Date.now() / 1000) - 1 }, CLAVE);
+        assert.strictEqual(await logica.comprobarSesion(caducado), null);
+        assert.strictEqual(await logica.comprobarSesion(sesion.token.replace(/.$/, c => c === 'A' ? 'B' : 'A')), null);
     });
 
-    it('cerrarSesion() hace que el token deje de valer', async function () {
-        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
-        await logica.cerrarSesion(sesion.token);
-        assert.strictEqual(await logica.comprobarSesion(sesion.token), null);
+    it('un enlace de recuperación no sirve como sesión', async function () {
+        await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.solicitarRecuperacion('pelin@aeris.es');
+        assert.strictEqual(await logica.comprobarSesion(tokenDelUltimoCorreo()), null);
     });
 
-    it('la BD guarda el hash del token, no el token', async function () {
-        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
-        const [filas] = await logica.conexion.query('SELECT HashToken FROM Sesiones');
-        assert.notStrictEqual(filas[0].HashToken, sesion.token);
+    it('no hay tablas de sesiones: la BD solo tiene Usuarios', async function () {
+        const [tablas] = await logica.conexion.query('SHOW TABLES');
+        assert.deepStrictEqual(tablas.map(t => Object.values(t)[0].toLowerCase()), ['usuarios']);
     });
 
     // --- recuperación de contraseña -----------------------------------------
@@ -129,6 +132,7 @@ describe('Logica (usuarios y autenticación)', function () {
         assert.strictEqual(correos.length, 1);
         assert.strictEqual(correos[0].destinatario, 'pelin@aeris.es');
         assert.ok(correos[0].texto.includes(URL_RESTABLECER + '?token='));
+        assert.ok(Seguridad.leerToken(tokenDelUltimoCorreo(), CLAVE));
     });
 
     it('solicitarRecuperacion() con un correo no registrado no envía nada', async function () {
@@ -162,8 +166,8 @@ describe('Logica (usuarios y autenticación)', function () {
 
         await assert.rejects(logica.restablecerContrasenya(token, 'corta'), { codigo: 'DATOS_NO_VALIDOS' });
         await assert.rejects(logica.restablecerContrasenya('b'.repeat(64), 'nueva2026'), { codigo: 'TOKEN_NO_VALIDO' });
-        await logica.conexion.query(
-            'UPDATE RecuperacionesContrasenya SET FechaCaducidad = UTC_TIMESTAMP() - INTERVAL 1 MINUTE');
-        await assert.rejects(logica.restablecerContrasenya(token, 'nueva2026'), { codigo: 'TOKEN_NO_VALIDO' });
+        const caducado = Seguridad.firmarToken(
+            { ...Seguridad.leerToken(token, CLAVE), exp: Math.floor(Date.now() / 1000) - 1 }, CLAVE);
+        await assert.rejects(logica.restablecerContrasenya(caducado, 'nueva2026'), { codigo: 'TOKEN_NO_VALIDO' });
     });
 });

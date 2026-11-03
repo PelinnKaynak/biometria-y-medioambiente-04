@@ -28,13 +28,27 @@ describe('Seguridad', function () {
         assert.strictEqual(await Seguridad.comprobarContrasenya('aire2026', 'aire2026'), false);
     });
 
-    it('los tokens son aleatorios, de 64 caracteres, y su hash es SHA-256', function () {
-        const a = Seguridad.generarToken();
-        const b = Seguridad.generarToken();
-        assert.match(a, /^[0-9a-f]{64}$/);
-        assert.notStrictEqual(a, b);
-        assert.match(Seguridad.hashToken(a), /^[0-9a-f]{64}$/);
-        assert.notStrictEqual(Seguridad.hashToken(a), a);
+    it('firmarToken() y leerToken(): solo vale con la misma clave y sin modificar', function () {
+        const exp = Math.floor(Date.now() / 1000) + 60;
+        const token = Seguridad.firmarToken({ u: 7, t: 'sesion', exp }, 'clave');
+        assert.deepStrictEqual(Seguridad.leerToken(token, 'clave'), { u: 7, t: 'sesion', exp });
+        assert.strictEqual(Seguridad.leerToken(token, 'otra clave'), null);
+
+        const [datos, firma] = token.split('.');
+        const datosCambiados = Buffer.from(JSON.stringify({ u: 1, t: 'sesion', exp })).toString('base64url');
+        assert.strictEqual(Seguridad.leerToken(`${datosCambiados}.${firma}`, 'clave'), null);
+        assert.strictEqual(Seguridad.leerToken('no-es-un-token', 'clave'), null);
+        assert.strictEqual(Seguridad.leerToken(undefined, 'clave'), null);
+    });
+
+    it('leerToken() rechaza un token caducado', function () {
+        const token = Seguridad.firmarToken({ u: 7, exp: Math.floor(Date.now() / 1000) - 1 }, 'clave');
+        assert.strictEqual(Seguridad.leerToken(token, 'clave'), null);
+    });
+
+    it('huellaContrasenya() cambia si cambia el hash', function () {
+        assert.match(Seguridad.huellaContrasenya('scrypt$a$b'), /^[0-9a-f]{16}$/);
+        assert.notStrictEqual(Seguridad.huellaContrasenya('scrypt$a$b'), Seguridad.huellaContrasenya('scrypt$a$c'));
     });
 });
 

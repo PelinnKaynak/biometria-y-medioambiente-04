@@ -33,6 +33,14 @@ async function main() {
         remitente: entorno.SMTP_REMITENTE || 'AERIS <no-responder@aeris.es>'
     });
 
+    // Clave secreta que firma los tokens de sesión y de recuperación.
+    // En producción hay que poner una propia y larga en .env (CLAVE_TOKENS).
+    let claveTokens = entorno.CLAVE_TOKENS;
+    if (!claveTokens) {
+        claveTokens = 'clave-de-desarrollo-aeris-cambiar-en-produccion';
+        console.warn('Aviso: falta CLAVE_TOKENS en .env; se usa una clave de desarrollo.');
+    }
+
     let logica;
     try {
         logica = await Logica.crear({
@@ -41,7 +49,7 @@ async function main() {
             user: entorno.BD_USUARIO || 'root',
             password: entorno.BD_CONTRASENYA || '',
             database: entorno.BD_NOMBRE || 'aeris'
-        }, enviarCorreo, entorno.URL_RESTABLECER || `http://localhost:${puerto}/restablecer.html`);
+        }, enviarCorreo, entorno.URL_RESTABLECER || `http://localhost:${puerto}/restablecer.html`, claveTokens);
     } catch (error) {
         console.error('No se puede conectar con MySQL. ¿Está MySQL en marcha en XAMPP y existe la BD aeris?');
         console.error(error.message);
