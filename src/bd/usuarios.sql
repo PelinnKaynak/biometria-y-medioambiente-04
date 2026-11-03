@@ -1,9 +1,9 @@
 -- ---------------------------------------------------------------
 -- usuarios.sql
 -- Proyecto AERIS - SenseTech (Equipo 04)
--- Crea la base de datos del proyecto y las tablas Roles y Usuarios,
--- según el diseño de la BD del Sprint 1.
--- Motor: MySQL / MariaDB (XAMPP)
+-- Crea la base de datos del proyecto y las tablas de usuarios:
+-- Roles, Usuarios, Sesiones y RecuperacionesContrasenya.
+-- Diseño en doc/bd_design.md. Motor: MySQL / MariaDB (XAMPP)
 -- ---------------------------------------------------------------
 
 CREATE DATABASE IF NOT EXISTS aeris
@@ -36,12 +36,12 @@ INSERT IGNORE INTO Roles (IdRol, Nombre) VALUES
 -- ---------------------------------------------------------------
 -- Tabla: Usuarios
 -- Personas registradas en la plataforma (app y web).
--- La contraseña NUNCA se guarda en claro: el servidor guarda
--- solo su hash (T016).
+-- La contraseña NUNCA se guarda en claro: solo su hash.
+-- Quien se registra desde la app es 'portador' (IdRol = 2).
 -- ---------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS Usuarios (
   IdUsuario        INT           NOT NULL AUTO_INCREMENT,
-  IdRol            INT           NOT NULL DEFAULT 3,
+  IdRol            INT           NOT NULL DEFAULT 2,
   Nombre           VARCHAR(50)   NOT NULL,
   Apellidos        VARCHAR(100)  NOT NULL,
   Email            VARCHAR(255)  NOT NULL,
@@ -51,4 +51,37 @@ CREATE TABLE IF NOT EXISTS Usuarios (
   PRIMARY KEY (IdUsuario),
   UNIQUE KEY uk_usuarios_email (Email),
   CONSTRAINT fk_usuarios_rol FOREIGN KEY (IdRol) REFERENCES Roles (IdRol)
+) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------
+-- Tabla: Sesiones
+-- Una fila por sesión abierta (app o web). Se guarda el hash
+-- SHA-256 del token, nunca el token.
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS Sesiones (
+  HashToken        CHAR(64)  NOT NULL,
+  IdUsuario        INT       NOT NULL,
+  FechaCaducidad   DATETIME  NOT NULL,
+
+  PRIMARY KEY (HashToken),
+  KEY ix_sesiones_usuario (IdUsuario),
+  CONSTRAINT fk_sesiones_usuario FOREIGN KEY (IdUsuario)
+    REFERENCES Usuarios (IdUsuario) ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------
+-- Tabla: RecuperacionesContrasenya
+-- Enlaces de recuperación de contraseña (válidos 1 hora, un solo uso).
+-- Se guarda el hash SHA-256 del token, nunca el token.
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS RecuperacionesContrasenya (
+  HashToken        CHAR(64)  NOT NULL,
+  IdUsuario        INT       NOT NULL,
+  FechaCaducidad   DATETIME  NOT NULL,
+  Usada            BOOLEAN   NOT NULL DEFAULT FALSE,
+
+  PRIMARY KEY (HashToken),
+  KEY ix_recuperaciones_usuario (IdUsuario),
+  CONSTRAINT fk_recuperaciones_usuario FOREIGN KEY (IdUsuario)
+    REFERENCES Usuarios (IdUsuario) ON DELETE CASCADE
 ) ENGINE = InnoDB;

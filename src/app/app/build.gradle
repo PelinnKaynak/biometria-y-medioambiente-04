@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace 'com.sensetech.aeris'
+    namespace 'com.example.aeris'
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId "com.sensetech.aeris"
+        applicationId "com.example.aeris"
         minSdk 29
         targetSdk 37
         versionCode 1

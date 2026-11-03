@@ -9,9 +9,11 @@
 // Fecha:       03/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
 // ---------------------------------------------------------------------------
-package com.sensetech.aeris;
+package com.example.aeris;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -19,7 +21,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import java.util.Map;
 
@@ -33,6 +38,22 @@ public class RegistroActivity extends AppCompatActivity {
     private ProgressBar progreso;
 
     private final LogicaFakeRegistro logica = new LogicaFakeRegistro();
+
+    // Android 17 (API 37) pide permiso para conectar con la red local (el servidor
+    // está en 10.0.2.2 o en la IP del ordenador en la Wi-Fi).
+    static final String PERMISO_RED_LOCAL = "android.permission.ACCESS_LOCAL_NETWORK";
+    static final int API_ANDROID_17 = 37;
+
+    // Pregunta el permiso y, si se concede, envía el registro
+    private final ActivityResultLauncher<String> pedirPermisoRedLocal =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), concedido -> {
+                if (concedido) {
+                    enviarRegistro();
+                } else {
+                    errorGeneral.setText(R.string.registro_permiso_red_denegado);
+                    errorGeneral.setVisibility(View.VISIBLE);
+                }
+            });
 
     // -----------------------------------------------------------------------
     // onCreate() -->       (lo llama Android al abrir la pantalla)
@@ -67,22 +88,48 @@ public class RegistroActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // pulsarContinuar() -->
-    // What it does: checks the form; if it is correct, sends it to the server,
+    // What it does: checks the form; if it is correct, sends it to the server
+    //               (asking first for the local network permission on Android 17),
     //               and if not, shows the errors and does not create the account.
     // -----------------------------------------------------------------------
     private void pulsarContinuar() {
-        String nombre = texto(campoNombre);
-        String apellidos = texto(campoApellidos);
-        String correo = texto(campoCorreo);
-        String contrasena = campoContrasena.getText().toString();
-        String confirmacion = campoConfirmacion.getText().toString();
-
-        Map<String, String> errores =
-                ValidadorRegistro.validar(nombre, apellidos, correo, contrasena, confirmacion);
+        Map<String, String> errores = ValidadorRegistro.validar(
+                texto(campoNombre), texto(campoApellidos), texto(campoCorreo),
+                campoContrasena.getText().toString(), campoConfirmacion.getText().toString());
         mostrarErrores(errores);
         if (!errores.isEmpty()) {
             return;
         }
+
+        if (necesitaPermisoRedLocal()) {
+            pedirPermisoRedLocal.launch(PERMISO_RED_LOCAL);
+        } else {
+            enviarRegistro();
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // necesitaPermisoRedLocal() --x
+    // B <--
+    // What it does: true on Android 17 or newer if the local network permission
+    //               has not been given yet. Older Android versions do not need it.
+    // -----------------------------------------------------------------------
+    private boolean necesitaPermisoRedLocal() {
+        return Build.VERSION.SDK_INT >= API_ANDROID_17
+                && ContextCompat.checkSelfPermission(this, PERMISO_RED_LOCAL)
+                   != PackageManager.PERMISSION_GRANTED;
+    }
+
+    // -----------------------------------------------------------------------
+    // enviarRegistro() -->
+    // What it does: sends the (already checked) form to the server and reacts
+    //               to the answer: opens Vincular sensor, or shows the error.
+    // -----------------------------------------------------------------------
+    private void enviarRegistro() {
+        String nombre = texto(campoNombre);
+        String apellidos = texto(campoApellidos);
+        String correo = texto(campoCorreo);
+        String contrasena = campoContrasena.getText().toString();
 
         mostrarEnviando(true);
         logica.registrarUsuario(nombre, apellidos, correo, contrasena,

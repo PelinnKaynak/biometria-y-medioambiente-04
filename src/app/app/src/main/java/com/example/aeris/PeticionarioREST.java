@@ -8,7 +8,7 @@
 //              por un hilo de fondo con Executor; la interfaz no cambia.
 // Copyright:   (c) Jordi Bataller i Mascarell - EPSG-UPV
 // ---------------------------------------------------------------------------
-package com.sensetech.aeris;
+package com.example.aeris;
 
 import android.os.Handler;
 import android.os.Looper;

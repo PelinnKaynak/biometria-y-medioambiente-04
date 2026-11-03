@@ -7,7 +7,7 @@
 // Fecha:       03/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
 // ---------------------------------------------------------------------------
-package com.sensetech.aeris;
+package com.example.aeris;
 
 import android.os.Bundle;
 

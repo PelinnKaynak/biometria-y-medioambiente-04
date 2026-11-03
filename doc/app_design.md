@@ -1,6 +1,6 @@
 # Diseño del componente: app (App Android del portador)
 
-**Equipo:** 04 – SenseTech · **Sprint:** 2 · **Implementación:** `src/app/` (paquete `com.sensetech.aeris`, Java, Android 10 o superior)
+**Equipo:** 04 – SenseTech · **Sprint:** 2 · **Implementación:** `src/app/` (paquete `com.example.aeris`, Java, Android 10 o superior)
 
 ---
 

@@ -22,4 +22,5 @@
     <string name="vincular_titulo">Vincular sensor</string>
     <string name="vincular_texto">Cuenta creada. Aquí podrás buscar tu sensor por Bluetooth y vincularlo a tu cuenta (tarea T005).</string>
     <string name="vincular_omitir">Omitir por ahora</string>
+    <string name="registro_permiso_red_denegado">Para crear la cuenta, AERIS necesita permiso para conectar con dispositivos de la red local.</string>
 </resources>

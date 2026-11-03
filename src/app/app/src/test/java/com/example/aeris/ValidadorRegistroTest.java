@@ -5,7 +5,7 @@
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
 // ---------------------------------------------------------------------------
-package com.sensetech.aeris;
+package com.example.aeris;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
