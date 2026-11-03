@@ -2,7 +2,7 @@
 
 AERIS es una plataforma de crowdsensing para medir la calidad del aire. Cada portador lleva un pequeño nodo con un sensor de ozono que envía sus mediciones al móvil por Bluetooth. La app las sube a un servidor y con ellas se construye un mapa de la contaminación que cualquiera puede consultar en la web.
 
-El proyecto lo desarrolla el equipo 04 de la asignatura Proyecto Aplicaciones de Biometría y Medio Ambiente con la empresa SenseTech. Trabajamos con Scrum en sprints de unas tres semanas.
+El proyecto lo desarrolla el equipo 04 de la asignatura Proyecto Aplicaciones de Biometría y Medio Ambiente para la empresa SenseTech. Trabajamos con Scrum en sprints de unas tres semanas.
 
 ## Cómo funciona
 
@@ -17,6 +17,19 @@ Web: mapa público, Mi cuenta y panel de administración
 ```
 
 Además, un modelo de aprendizaje automático predice el nivel de ozono de las próximas 48 horas a partir del histórico de las estaciones oficiales y de los datos meteorológicos de AEMET.
+
+## Tecnologías
+
+| Componente | Carpeta | Tecnología |
+|---|---|---|
+| Nodo sensor | `src/nodo` | C++ para Arduino (SparkFun nRF52840) |
+| App del portador | `src/app` | Java (Android) |
+| Servidor REST | `src/servidor_rest` | Node.js con Express |
+| Lógica de negocio | `src/logica` | Node.js |
+| Base de datos | `src/bd` | MySQL |
+| Web pública y Mi cuenta | `src/web_publica` | HTML, CSS y JavaScript |
+| Panel de administración | `src/web_admin` | HTML, CSS y JavaScript |
+| Previsión de ozono (IA) | `src/prevision` | Python con pandas y scikit-learn |
 
 ## Tipos de usuario
 

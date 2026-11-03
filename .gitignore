@@ -1,0 +1,33 @@
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.iml
+
+# Node (servidor y pruebas de la web)
+node_modules/
+npm-debug.log*
+coverage/
+.env
+
+# Android (Java)
+.gradle/
+build/
+local.properties
+captures/
+*.apk
+*.aab
+*.keystore
+
+# Python (previsión)
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+src/prevision/datos/
+
+# Arduino
+*.hex
+*.elf
