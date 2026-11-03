@@ -58,7 +58,6 @@ RespuestaREST = ( codigo: Z, cuerpo: Text )
                                     --------- LogicaFakeRegistro ---------------------
                                     |
                                     | URL_SERVIDOR: Text
-                                    | MODO_SIMULADO: B
                                     | CODIGO_CREADO: Z
                                     | CODIGO_CORREO_YA_REGISTRADO: Z
                                     |
@@ -73,8 +72,6 @@ RespuestaREST = ( codigo: Z, cuerpo: Text )
                                     |
                                     |    correo: Text --> normalizarCorreo() --x
                                     |    Text <--
-                                    |
-                                    |    correo: Text --> simularRegistro() --x
                                     |
                                     |
   nombre: Text                  --> registrarUsuario() -->
@@ -149,7 +146,7 @@ RespuestaREST = ( codigo: Z, cuerpo: Text )
 - **Contraseña:** el teléfono la envía tal cual por la petición; el **servidor** la guarda cifrada (criterio de H001, tarea T016). El teléfono nunca la guarda.
 - **Correo:** se envía sin espacios y en minúsculas (`normalizarCorreo()`), para que `Pelin@AERIS.es` y `pelin@aeris.es` sean la misma cuenta.
 - **Contraseña segura:** mínimo 8 caracteres, con al menos una letra y un número.
-- **Modo simulado:** mientras no exista el servidor (T016), `MODO_SIMULADO = true` y `simularRegistro()` responde como el servidor tras 0,6 s: `409` para `ana@aeris.es` (o un correo ya registrado en la misma ejecución) y `201` para el resto. Cuando el servidor esté listo se pone `MODO_SIMULADO = false` y se ajusta `URL_SERVIDOR`.
+- **Sin datos simulados:** la app no simula respuestas. El resultado siempre viene del servidor, que consulta la tabla `Usuarios` de la BD (ver `doc/bd_design.md`). Si el servidor no está en marcha, la app muestra el error de conexión.
 - **URL_SERVIDOR:** en el emulador es `http://10.0.2.2:8080`; en un teléfono real, la IPv4 del ordenador en la misma Wi‑Fi.
 - **Sesión:** al crear la cuenta, `Sesion.iniciar()` guarda el correo en `SharedPreferences`; la sesión sigue abierta al cerrar y volver a abrir la app.
 - **Tras el registro** se abre `VincularSensorActivity`, con la opción «Omitir por ahora». En este sprint es una pantalla provisional; la búsqueda por Bluetooth se programa en T005 (H019).
