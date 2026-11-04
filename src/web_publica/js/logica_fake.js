@@ -6,6 +6,7 @@
 // ------------------------------------------------------------
 
 const CLAVE_SESION = "aeris_usuario";
+const TOKEN_PRUEBA = "token-prueba";
 
 class LogicaFake {
 
@@ -19,6 +20,7 @@ class LogicaFake {
   constructor(retardo_ms = 300) {
     this.retardo_ms = retardo_ms;
     this.solicitudes = [];
+    this.tokenUsado = false;
     this.usuarios = [
       {
         credenciales: { correo: "admin@aeris.es", contrasena: "admin1234" },
@@ -46,8 +48,8 @@ class LogicaFake {
 
     const correo = credenciales.correo.trim().toLowerCase();
     const encontrado = this.usuarios.find(u =>
-      u.credenciales.correo === correo &&
-      u.credenciales.contrasena === credenciales.contrasena
+        u.credenciales.correo === correo &&
+        u.credenciales.contrasena === credenciales.contrasena
     );
 
     if (!encontrado) {
@@ -73,6 +75,24 @@ class LogicaFake {
   async solicitarRecuperacion(correo) {
     await esperar(this.retardo_ms);
     this.solicitudes.push(correo.trim().toLowerCase());
+    return { correcto: true, error: "" };
+  }
+
+  // --------------------------------------------------------
+  // token: Text, contrasena: Text --> restablecerContrasena() -->
+  //       r: ResultadoOperacion <--
+  //
+  // Simula el cambio de contraseña desde el enlace del correo.
+  // Solo acepta el token de prueba "token-prueba" y, como el
+  // servidor real, solo una vez.
+  // --------------------------------------------------------
+  async restablecerContrasena(token, contrasena) {
+    await esperar(this.retardo_ms);
+    if (token !== TOKEN_PRUEBA || this.tokenUsado) {
+      return { correcto: false, error: "El enlace no es válido o ha caducado. Pide uno nuevo" };
+    }
+    this.tokenUsado = true;
+    this.usuarios[1].credenciales.contrasena = contrasena;
     return { correcto: true, error: "" };
   }
 
@@ -107,5 +127,5 @@ function esperar(ms) {
 }
 
 if (typeof module !== "undefined") {
-  module.exports = { LogicaFake, CLAVE_SESION };
+  module.exports = { LogicaFake, CLAVE_SESION, TOKEN_PRUEBA };
 }

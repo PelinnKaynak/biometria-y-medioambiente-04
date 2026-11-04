@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nodos · Panel de AERIS</title>
+    <link rel="icon" href="../web_publica/img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="../web_publica/img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="../web_publica/img/apple-touch-icon.png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="../web_publica/css/estilos.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/panel_nodos.css">
+</head>
+<body class="pagina-admin">
+
+<!-- Menú lateral (en móvil se abre con ☰) -->
+<aside id="menu-lateral" class="menu-lateral">
+    <div class="menu-cabecera">
+        <img src="../web_publica/img/logo-aeris.svg" alt="AERIS" class="logo-menu">
+        <button id="boton-cerrar-menu" class="boton-icono solo-movil" type="button" aria-label="Cerrar el menú">
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+    <nav class="menu-opciones" aria-label="Panel de administración">
+        <a href="panel_nodos.html" class="opcion-menu activa" aria-current="page">
+            <span class="icono icono-nodos"></span>Nodos</a>
+        <a href="usuarios.html" class="opcion-menu"><span class="icono icono-usuarios"></span>Usuarios</a>
+        <a href="historico.html" class="opcion-menu"><span class="icono icono-historico"></span>Histórico</a>
+        <a href="campanas.html" class="opcion-menu"><span class="icono icono-campanas"></span>Campañas</a>
+        <a href="zonas_sensibles.html" class="opcion-menu"><span class="icono icono-zonas"></span>Zonas sensibles</a>
+    </nav>
+    <a id="boton-salir" class="boton-salir" href="../web_publica/login.html">
+        <span class="icono icono-salir"></span>Salir
+    </a>
+</aside>
+
+<main class="contenido">
+
+    <!-- Barra superior del móvil -->
+    <div class="barra-movil solo-movil">
+        <img src="../web_publica/img/logo-aeris.svg" alt="AERIS" class="logo-barra">
+        <button id="boton-menu" class="boton-icono" type="button" aria-label="Abrir el menú"
+                aria-controls="menu-lateral" aria-expanded="false">
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6H21M3 12H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+
+    <header class="cabecera-panel">
+        <h1>Nodos</h1>
+        <div class="filtros">
+            <label class="buscador">
+                <span class="icono icono-buscar"></span>
+                <input id="buscador" type="search" placeholder="Buscar por ID o portador"
+                       aria-label="Buscar por ID o portador">
+            </label>
+            <select id="filtro-estado" class="desplegable" aria-label="Filtrar por estado">
+                <option value="todos">Estado: todos</option>
+                <option value="activos">Activos</option>
+                <option value="inactivos">Inactivos</option>
+                <option value="calibrar">Por calibrar</option>
+            </select>
+        </div>
+    </header>
+
+    <p id="aviso-error" class="aviso-panel oculto" role="alert"></p>
+
+    <section class="resumen" aria-label="Resumen de nodos">
+        <article class="tarjeta-dato">
+            <span class="etiqueta-dato">Total</span>
+            <strong id="dato-total" class="valor-dato">–</strong>
+            <span class="circulo-icono morado"><span class="icono icono-total"></span></span>
+        </article>
+        <article class="tarjeta-dato">
+            <span class="etiqueta-dato">Activos</span>
+            <strong id="dato-activos" class="valor-dato">–</strong>
+            <span class="circulo-icono verde"><span class="icono icono-activos"></span></span>
+        </article>
+        <article class="tarjeta-dato">
+            <span class="etiqueta-dato">Inactivos +24h</span>
+            <strong id="dato-inactivos24h" class="valor-dato">–</strong>
+            <span class="circulo-icono amarillo"><span class="icono icono-aviso"></span></span>
+        </article>
+        <article class="tarjeta-dato">
+            <span class="etiqueta-dato">Inactivos +7 días</span>
+            <strong id="dato-inactivos7d" class="valor-dato">–</strong>
+            <span class="circulo-icono rojo"><span class="icono icono-inactivos"></span></span>
+        </article>
+        <article class="tarjeta-dato">
+            <span class="etiqueta-dato">Por calibrar</span>
+            <strong id="dato-porCalibrar" class="valor-dato">–</strong>
+            <span class="circulo-icono amarillo"><span class="icono icono-aviso"></span></span>
+        </article>
+    </section>
+
+    <div class="pestanas solo-movil" role="tablist">
+        <button class="pestana activa" data-vista="lista" role="tab" aria-selected="true" type="button">Lista</button>
+        <button class="pestana" data-vista="mapa" role="tab" aria-selected="false" type="button">Mapa</button>
+    </div>
+
+    <section id="zona-datos" class="zona-datos" data-vista="lista">
+
+        <div class="caja-mapa">
+            <div id="mapa" class="mapa" aria-label="Mapa de nodos"></div>
+            <div class="leyenda">
+                <span><i class="punto verde"></i>activo</span>
+                <span><i class="punto rojo"></i>inactivo</span>
+                <span><i class="punto amarillo"></i>calibrar</span>
+            </div>
+        </div>
+
+        <div class="caja-lista">
+            <div class="cabecera-lista" aria-hidden="true">
+                <span>ID</span><span>Portador</span><span class="derecha">Sin datos</span>
+                <span class="derecha">Batería</span><span>Aviso</span>
+            </div>
+            <ul id="lista-nodos" class="lista-nodos"></ul>
+            <p id="sin-resultados" class="sin-resultados oculto">No hay nodos que coincidan con la búsqueda.</p>
+
+            <div class="paginacion">
+                <span id="texto-paginacion"></span>
+                <div class="flechas">
+                    <button id="boton-anterior" class="boton-icono" type="button" aria-label="Página anterior">‹</button>
+                    <button id="boton-siguiente" class="boton-icono" type="button" aria-label="Página siguiente">›</button>
+                </div>
+            </div>
+            <button id="boton-ver-mas" class="ver-mas solo-movil oculto" type="button">Ver más</button>
+        </div>
+    </section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/nodos.js"></script>
+<script src="js/logica_admin_fake.js"></script>
+<script src="js/logica_admin_real.js"></script>
+<script src="../web_publica/js/configuracion.js"></script>
+<script src="js/admin_comun.js"></script>
+<script src="js/panel_nodos.js"></script>
+</body>
+</html>

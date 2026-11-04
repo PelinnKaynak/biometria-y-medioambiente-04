@@ -1,0 +1,336 @@
+/* ------------------------------------------------------------
+   panel_nodos.css · pantalla de nodos del panel
+   Medidas del diseño de Figma (Panel de nodos y su versión móvil)
+   ------------------------------------------------------------ */
+
+.cabecera-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 42px;
+}
+
+.cabecera-panel h1 {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.filtros {
+    display: flex;
+    gap: 14px;
+}
+
+.buscador {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 275px;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    background: var(--blanco);
+    color: #8992B8;
+}
+.buscador input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: none;
+    color: var(--texto);
+    font: 400 14px "Inter", sans-serif;
+}
+.buscador input::placeholder { color: #8992B8; }
+.buscador:focus-within { outline: 2px solid var(--morado); border-color: transparent; }
+
+.desplegable {
+    height: 36px;
+    padding: 0 34px 0 14px;
+    border: 1px solid #D9DCE8;
+    border-radius: var(--radio);
+    background: var(--blanco) url("../../web_publica/img/icono-desplegable.svg") right 10px center / 14px no-repeat;
+    color: var(--texto);
+    font: 500 14px "Inter", sans-serif;
+    appearance: none;
+    cursor: pointer;
+}
+
+/* ---------- Tarjetas de resumen ---------- */
+
+.resumen {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 64px;
+}
+
+.tarjeta-dato {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 81px;
+    padding: 14px 9px;
+    border: 1px solid var(--borde);
+    border-radius: 14px;
+    background: var(--blanco);
+}
+
+.etiqueta-dato {
+    color: #8992B8;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.valor-dato {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.circulo-icono {
+    position: absolute;
+    top: 14px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+.circulo-icono.morado { background: rgba(121, 88, 167, 0.14); color: var(--morado); }
+.circulo-icono.verde { background: rgba(78, 156, 131, 0.14); color: var(--bueno); }
+.circulo-icono.amarillo { background: rgba(227, 179, 65, 0.16); color: var(--moderado); }
+.circulo-icono.rojo { background: rgba(217, 99, 107, 0.14); color: var(--malo); }
+
+/* ---------- Mapa y lista ---------- */
+
+.zona-datos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 37px;
+    height: calc(100vh - 360px);
+    min-height: 520px;
+    max-height: 708px;
+}
+
+.caja-mapa {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    background: #DCE9EE;
+}
+.mapa { width: 100%; height: 100%; }
+
+.leyenda {
+    position: absolute;
+    left: 6px;
+    bottom: 11px;
+    z-index: 500;
+    display: flex;
+    gap: 18px;
+    padding: 8px 12px;
+    border: 1px solid var(--borde);
+    border-radius: 14px;
+    background: var(--blanco);
+    color: #8992B8;
+    font-size: 14px;
+}
+.leyenda span { display: flex; align-items: center; gap: 6px; }
+
+.punto {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid var(--blanco);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--borde);
+}
+.punto.verde { background: var(--bueno); }
+.punto.rojo { background: var(--malo); }
+.punto.amarillo { background: var(--moderado); }
+
+.caja-lista {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    border: 1px solid var(--borde);
+    border-radius: 14px;
+    background: var(--blanco);
+}
+
+.cabecera-lista,
+.fila-nodo {
+    display: grid;
+    grid-template-columns: 70px 1fr 90px 70px 84px;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+}
+
+.cabecera-lista {
+    height: 62px;
+    border-bottom: 1px solid var(--borde);
+    color: #8992B8;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.derecha { text-align: right; }
+
+.lista-nodos {
+    flex: 1;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.fila-nodo {
+    min-height: 37px;
+    border-bottom: 1px solid var(--borde);
+    font-size: 14px;
+}
+.fila-nodo span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.celda-tiempo,
+.celda-bateria { text-align: right; }
+.fila-nodo.inactivo .celda-tiempo { color: var(--malo); font-weight: 600; }
+.celda-bateria.bateria-baja { color: var(--malo); }
+
+.etiqueta {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 9px;
+    font-size: 12px;
+    font-weight: 500;
+}
+.etiqueta-calibrar { background: rgba(227, 179, 65, 0.2); color: #A07A1F; }
+.etiqueta-inactivo { background: rgba(217, 99, 107, 0.14); color: var(--malo); }
+
+.sin-resultados {
+    padding: 24px 12px;
+    color: var(--texto-suave);
+    font-size: 14px;
+    text-align: center;
+}
+
+.paginacion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px 10px 14px;
+    border-top: 1px solid var(--borde);
+    font-size: 14px;
+}
+
+/* ---------- Pantallas medianas ---------- */
+
+@media (max-width: 1250px) {
+    .resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 32px; }
+    .zona-datos { gap: 20px; }
+    .cabecera-lista,
+    .fila-nodo { grid-template-columns: 62px 1fr 72px 56px 74px; }
+}
+
+/* ---------- Móvil (diseño de 390 px) ---------- */
+
+@media (max-width: 900px) {
+    .cabecera-panel {
+        flex-direction: column;
+        align-items: stretch;
+        margin-bottom: 14px;
+    }
+    .cabecera-panel h1 { font-size: 27px; }
+    .filtros { flex-direction: column; gap: 10px; }
+    .buscador { width: 100%; height: 40px; }
+    .desplegable { height: 40px; }
+
+    .resumen {
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .tarjeta-dato { min-height: 70px; padding: 8px 10px; gap: 4px; }
+    .circulo-icono { top: 6px; right: 6px; background: none !important; }
+
+    .pestanas {
+        display: flex;
+        gap: 0;
+        margin-bottom: 16px;
+        padding: 3px;
+        border-radius: var(--radio);
+        background: var(--morado-claro);
+    }
+    .pestana {
+        flex: 1;
+        height: 34px;
+        border: none;
+        border-radius: 8px;
+        background: none;
+        color: #8992B8;
+        font: 500 14px "Inter", sans-serif;
+        cursor: pointer;
+    }
+    .pestana.activa {
+        background: var(--blanco);
+        color: var(--morado);
+        font-weight: 600;
+        box-shadow: var(--sombra);
+    }
+
+    .zona-datos {
+        display: block;
+        height: auto;
+        max-height: none;
+        min-height: 0;
+    }
+    .zona-datos[data-vista="lista"] .caja-mapa { display: none; }
+    .zona-datos[data-vista="mapa"] .caja-lista { display: none; }
+    .caja-mapa { height: 60vh; min-height: 360px; }
+
+    .caja-lista { border: none; background: none; }
+    .cabecera-lista,
+    .paginacion { display: none; }
+
+    .lista-nodos { overflow: visible; }
+
+    .fila-nodo {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        grid-template-areas:
+      "id portador aviso"
+      "tiempo tiempo bateria";
+        gap: 10px 4px;
+        margin-bottom: 12px;
+        padding: 14px 12px;
+        border: 1px solid var(--borde);
+        border-radius: 14px;
+        background: var(--blanco);
+    }
+    .celda-id { grid-area: id; font-weight: 600; font-size: 15px; }
+    .celda-portador { grid-area: portador; font-weight: 600; font-size: 15px; }
+    .celda-portador::before { content: "· "; }
+    .celda-aviso { grid-area: aviso; }
+    .celda-tiempo { grid-area: tiempo; text-align: left; color: #8992B8; }
+    .celda-tiempo::before { content: "Sin datos: "; }
+    .celda-bateria { grid-area: bateria; color: var(--bueno); }
+    .celda-bateria::before { content: "Batería "; }
+
+    .ver-mas {
+        justify-content: center;
+        width: 100%;
+        margin-top: 4px;
+        padding: 10px;
+        border: none;
+        background: none;
+        color: var(--morado);
+        font: 600 15px "Inter", sans-serif;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    .ver-mas.oculto { display: none !important; }
+}
