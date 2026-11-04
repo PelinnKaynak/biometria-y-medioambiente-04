@@ -1,0 +1,24 @@
+{
+  "name": "biometria-y-medioambiente-04",
+  "version": "1.0.0",
+  "description": "AERIS es una plataforma de crowdsensing para medir la calidad del aire. Cada portador lleva un pequeño nodo con un sensor de ozono que envía sus mediciones al móvil por Bluetooth. La app las sube a un servidor y con ellas se construye un mapa de la contaminación que cualquiera puede consultar en la web.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PelinnKaynak/biometria-y-medioambiente-04.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PelinnKaynak/biometria-y-medioambiente-04/issues"
+  },
+  "homepage": "https://github.com/PelinnKaynak/biometria-y-medioambiente-04#readme",
+  "devDependencies": {
+    "jest": "^30.5.2",
+    "jest-environment-jsdom": "^30.5.2"
+  }
+}

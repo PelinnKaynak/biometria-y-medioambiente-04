@@ -1,0 +1,271 @@
+/* ------------------------------------------------------------
+   acceso.css · pantallas de acceso (iniciar sesión y recuperar contraseña)
+   Medidas sacadas del diseño de Figma (login, recuperar contraseña y correo enviado)
+   ------------------------------------------------------------ */
+
+.pagina-acceso {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 96px 24px 48px;
+}
+
+.boton-volver {
+  position: absolute;
+  top: 33px;
+  left: 37px;
+  padding: 14px 48px;
+  border: 1px solid var(--borde);
+  border-radius: 24px;
+  background: var(--blanco);
+  color: var(--texto);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.tarjeta-acceso {
+  display: grid;
+  grid-template-columns: 536fr 559fr;
+  width: 100%;
+  max-width: 1095px;
+  min-height: min(797px, calc(100vh - 140px));
+}
+
+.panel-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24px 0 0 24px;
+  background: linear-gradient(160deg, #EFEAF6, #C9C3E0);
+}
+
+.logo-grande { width: min(282px, 70%); }
+
+.panel-formulario {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 48px 58px;
+  border: 1px solid var(--borde);
+  border-radius: 0 14px 14px 0;
+  background: var(--blanco);
+  box-shadow: 0 4px 16px rgba(18, 61, 53, 0.06);
+}
+
+.logo-movil { display: none; }
+
+.panel-formulario h1 {
+  margin: 0 0 56px;
+  font-size: 36px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.formulario-acceso {
+  display: flex;
+  flex-direction: column;
+}
+
+.formulario-acceso label {
+  margin-bottom: 7px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.formulario-acceso .campo {
+  height: 52px;
+  margin-bottom: 24px;
+  font-size: 15px;
+}
+
+.formulario-acceso .campo::placeholder { color: #8992B8; }
+
+.formulario-acceso .campo.error { border-width: 1.5px; }
+
+.campo-con-icono { position: relative; }
+
+.campo-con-icono .campo { padding-right: 52px; }
+
+.boton-ojo {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.mensaje-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin: -10px 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #FDECEE;
+  color: var(--malo);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.mensaje-error.oculto { display: none; }
+
+.enlace-recuperar {
+  align-self: flex-start;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.boton-acceder {
+  align-self: center;
+  width: 220px;
+  height: 48px;
+  margin-top: 74px;
+  padding: 0;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #8B6BB8, #7958A7);
+  box-shadow: 0 4px 10px rgba(35, 117, 99, 0.22);
+}
+
+.boton-acceder:disabled { opacity: 0.6; cursor: wait; }
+
+/* ---------- Recuperar contraseña y correo enviado ---------- */
+
+.boton-ancho {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 4px;
+  text-decoration: none;
+}
+
+.texto-explicacion {
+  margin: 0 0 40px;
+  color: var(--texto-suave);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.nota {
+  margin: 20px 0 0;
+  color: #8992B8;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.paso-enviado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.paso-enviado.oculto { display: none; }
+
+.paso-enviado h1 { margin-bottom: 14px !important; }
+
+.paso-enviado .texto-explicacion { margin-bottom: 36px; }
+
+.icono-sobre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 34px;
+  border-radius: 50%;
+  background: var(--morado-claro);
+}
+
+.enlace-reenviar {
+  margin-top: 22px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--morado);
+  font: 500 14px "Inter", sans-serif;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.aviso-ok {
+  margin: 12px 0 0;
+  color: var(--bueno);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.aviso-ok.oculto { display: none; }
+
+#paso-formulario.oculto { display: none; }
+
+/* ---------- Pantallas medianas (tablet horizontal, portátil pequeño) ---------- */
+
+@media (max-width: 1100px) and (min-width: 801px) {
+  .panel-formulario { padding: 40px 40px; }
+  .panel-formulario h1 { font-size: 32px; margin-bottom: 40px; }
+  .boton-acceder { margin-top: 48px; }
+}
+
+/* ---------- Móvil y tablet vertical (diseño de 390 px) ----------
+   También se usa en móviles en horizontal, donde la altura es
+   demasiado pequeña para el diseño de dos columnas. */
+
+@media (max-width: 800px), (max-height: 560px) {
+  .pagina-acceso {
+    display: block;
+    padding: 0;
+    background: var(--blanco);
+  }
+
+  .boton-volver {
+    top: 20px;
+    left: 16px;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .tarjeta-acceso {
+    display: block;
+    min-height: 100vh;
+  }
+
+  .panel-logo { display: none; }
+
+  .panel-formulario {
+    justify-content: flex-start;
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: clamp(72px, 14vh, 130px) 16px 32px;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .logo-movil {
+    display: block;
+    width: 207px;
+    margin: 0 auto clamp(32px, 12vh, 130px);
+  }
+
+  .panel-formulario h1 {
+    margin-bottom: 24px;
+    font-size: 30px;
+    text-align: left;
+  }
+
+  .paso-enviado h1 { text-align: center; }
+
+  .boton-acceder {
+    width: 100%;
+    height: 52px;
+    margin-top: 40px;
+  }
+}

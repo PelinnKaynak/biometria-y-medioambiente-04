@@ -1,0 +1,69 @@
+/* ------------------------------------------------------------
+   estilos.css · estilos comunes de la web de AERIS
+   Colores y tipografía sacados del diseño de Figma
+   ------------------------------------------------------------ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root {
+  --morado: #7958A7;
+  --morado-oscuro: #5E3F8C;
+  --morado-claro: #EFEAF6;
+  --texto: #432E60;
+  --texto-suave: #5C5478;
+  --fondo: #F5F6FA;
+  --blanco: #FFFFFF;
+  --borde: #E3E5EF;
+  --bueno: #4E9C83;
+  --moderado: #E3B341;
+  --malo: #D9636B;
+  --radio: 10px;
+  --sombra: 0 4px 16px rgba(67, 46, 96, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  color: var(--texto);
+  background: var(--fondo);
+}
+
+a { color: var(--morado); font-weight: 600; }
+
+.boton {
+  display: inline-block;
+  padding: 14px 24px;
+  border: none;
+  border-radius: var(--radio);
+  background: linear-gradient(135deg, var(--morado), var(--morado-oscuro));
+  color: var(--blanco);
+  font: 600 16px "Inter", sans-serif;
+  cursor: pointer;
+  box-shadow: var(--sombra);
+}
+
+.boton:hover { filter: brightness(1.08); }
+
+.campo {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--blanco);
+  font: 400 16px "Inter", sans-serif;
+  color: var(--texto);
+}
+
+.campo:focus { outline: 2px solid var(--morado); border-color: transparent; }
+
+.campo.error { border-color: var(--malo); }
+
+.aviso-error {
+  color: var(--malo);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.oculto { display: none; }
