@@ -61,6 +61,35 @@ class LogicaFake {
   }
 
   // --------------------------------------------------------
+  // datos: DatosRegistro --> registrarUsuario() -->
+  //       r: ResultadoRegistro <--
+  //
+  // DatosRegistro = ( nombre: Text, apellidos: Text, correo: Text, contrasena: Text )
+  // ResultadoRegistro = ( correcto: B, usuario: Usuario, error: Text,
+  //                       campos: [ Text ], correoRepetido: B )
+  //
+  // Crea la cuenta como portador y deja la sesión iniciada.
+  // Si el correo ya tiene cuenta, lo indica en correoRepetido.
+  // --------------------------------------------------------
+  async registrarUsuario(datos) {
+    await esperar(this.retardo_ms);
+    const correo = datos.correo.trim().toLowerCase();
+    if (this.usuarios.some(u => u.credenciales.correo === correo)) {
+      return { correcto: false, usuario: null, error: "Ya hay una cuenta con ese correo",
+        campos: ["correo"], correoRepetido: true };
+    }
+    const usuario = {
+      id: this.usuarios.length + 1,
+      nombre: datos.nombre.trim(),
+      correo,
+      rol: "PORTADOR"
+    };
+    this.usuarios.push({ credenciales: { correo, contrasena: datos.contrasena }, usuario });
+    sessionStorage.setItem(CLAVE_SESION, JSON.stringify(usuario));
+    return { correcto: true, usuario, error: "", campos: [], correoRepetido: false };
+  }
+
+  // --------------------------------------------------------
   // correo: Text --> solicitarRecuperacion() -->
   //       r: ResultadoOperacion <--
   //
