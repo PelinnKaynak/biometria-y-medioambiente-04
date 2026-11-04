@@ -36,4 +36,70 @@
         <item name="android:layout_marginTop">4dp</item>
         <item name="android:visibility">gone</item>
     </style>
+
+    <!-- Opción del perfil: fila blanca de 46dp con borde (Figma: perfil) -->
+    <style name="AERIS.Fila" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">46dp</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:background">@drawable/fondo_fila</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">13dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <!-- Texto de la izquierda de una opción del perfil -->
+    <style name="AERIS.FilaTexto" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <!-- Valor o flecha de la derecha de una opción del perfil -->
+    <style name="AERIS.FilaFlecha" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:text">@string/flecha</item>
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <!-- Pestaña de la barra de navegación inferior -->
+    <style name="AERIS.Pestanya" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:background">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="AERIS.PestanyaIcono" parent="">
+        <item name="android:layout_width">24dp</item>
+        <item name="android:layout_height">24dp</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <style name="AERIS.PestanyaTexto" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:textColor">@color/texto_secundario</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
+    <!-- Forma de círculo para la foto de perfil (ShapeableImageView) -->
+    <style name="AERIS.FormaCirculo" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
 </resources>

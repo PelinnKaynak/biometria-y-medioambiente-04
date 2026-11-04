@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Avatar del usuario (Figma: perfil · avatar usuario) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <group>
+        <clip-path android:pathData="M48,96C74.51,96 96,74.51 96,48C96,21.49 74.51,0 48,0C21.49,0 0,21.49 0,48C0,74.51 21.49,96 48,96Z" />
+        <path android:pathData="M0,0h96v96h-96z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="0" android:startY="0"
+                    android:endX="96" android:endY="96"
+                    android:startColor="#EEF4F2"
+                    android:endColor="#C5D8D3" />
+            </aapt:attr>
+        </path>
+        <path android:pathData="M48,55C57.39,55 65,47.39 65,38C65,28.61 57.39,21 48,21C38.61,21 31,28.61 31,38C31,47.39 38.61,55 48,55Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="31" android:startY="21"
+                    android:endX="31" android:endY="55"
+                    android:startColor="#9677C2"
+                    android:endColor="#7958A7" />
+            </aapt:attr>
+        </path>
+        <path android:pathData="M14,96C14,76 29,64 48,64C67,64 82,76 82,96H14Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="14" android:startY="64"
+                    android:endX="14" android:endY="96"
+                    android:startColor="#9677C2"
+                    android:endColor="#7958A7" />
+            </aapt:attr>
+        </path>
+    </group>
+</vector>

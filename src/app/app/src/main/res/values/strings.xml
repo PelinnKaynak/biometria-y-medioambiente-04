@@ -55,8 +55,50 @@
 
     <!-- Pantalla de inicio provisional (hasta T006) -->
     <string name="inicio_saludo">Hola, %1$s</string>
-    <string name="inicio_texto">Has iniciado sesión. La pantalla de inicio con la calidad del aire llega en la tarea T006.</string>
-    <string name="inicio_cerrar_sesion">Cerrar sesión</string>
+    <string name="inicio_texto">Has iniciado sesión. La pantalla de inicio con la calidad del aire llega en la tarea T006. Tu perfil y «Cerrar sesión» están en la pestaña Perfil de abajo.</string>
+
+    <!-- Barra de navegación inferior (T010) -->
+    <string name="barra_inicio">Inicio</string>
+    <string name="barra_mapa">Mapa</string>
+    <string name="barra_mis_datos">Mis datos</string>
+    <string name="barra_info">Info</string>
+    <string name="barra_perfil">Perfil</string>
+
+    <!-- Perfil (T010) -->
+    <string name="perfil_titulo">Perfil</string>
+    <string name="perfil_avatar_descripcion">Foto de perfil</string>
+    <string name="perfil_editar_foto_descripcion">Cambiar la foto de perfil</string>
+    <string name="perfil_editar_datos">Editar mis datos</string>
+    <string name="perfil_mi_sensor">Mi sensor</string>
+    <string name="perfil_notificaciones">Notificaciones</string>
+    <string name="perfil_umbral">Umbral de alerta</string>
+    <string name="perfil_umbral_valor">Normal  &gt;</string>
+    <string name="perfil_puntos">Puntos y recompensas</string>
+    <string name="perfil_mis_lugares">Mis lugares</string>
+    <string name="perfil_premium">AERIS Premium</string>
+    <string name="perfil_premium_valor">Descubrir  &gt;</string>
+    <string name="perfil_cerrar_sesion">Cerrar sesión</string>
+    <string name="flecha">&gt;</string>
+    <string name="perfil_foto_titulo">Foto de perfil</string>
+    <string name="perfil_foto_camara">Hacer una foto</string>
+    <string name="perfil_foto_galeria">Elegir de la galería</string>
+    <string name="perfil_foto_sin_camara">No hay ninguna app de cámara en este teléfono.</string>
+    <string name="perfil_foto_quitar">Quitar la foto</string>
+    <string name="perfil_foto_no_valida">No se ha podido leer esa imagen.</string>
+
+    <!-- Editar mis datos (T010) -->
+    <string name="editar_titulo">Editar mis datos</string>
+    <string name="editar_subtitulo">Cambia tus datos o tu contraseña.</string>
+    <string name="editar_guardar">Guardar cambios</string>
+    <string name="editar_seccion_contrasena">Cambiar contraseña</string>
+    <string name="editar_contrasena_actual">Contraseña actual</string>
+    <string name="editar_contrasena_actual_pista">Tu contraseña actual</string>
+    <string name="editar_contrasena_nueva">Nueva contraseña</string>
+    <string name="editar_contrasena_nueva_pista">Mínimo 8 caracteres</string>
+    <string name="editar_contrasena_repetida">Repetir nueva contraseña</string>
+    <string name="editar_contrasena_repetida_pista">Repite la contraseña nueva</string>
+    <string name="editar_cambiar_contrasena">Cambiar contraseña</string>
+    <string name="editar_contrasena_cambiada">Contraseña cambiada. Se ha cerrado la sesión en tus otros dispositivos.</string>
 
     <!-- Bienvenida (T001) -->
     <string name="bienvenida_titulo">AERIS</string>

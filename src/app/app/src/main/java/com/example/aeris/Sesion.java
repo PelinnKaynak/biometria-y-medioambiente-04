@@ -69,6 +69,18 @@ public class Sesion {
     }
 
     // -----------------------------------------------------------------------
+    // contexto: Context, nombre: Text, correo: Text --> cambiarDatos() --x
+    // What it does: updates the saved name and email after «Editar mis datos»
+    //               (T010). The token does not change.
+    // -----------------------------------------------------------------------
+    public static void cambiarDatos(Context contexto, String nombre, String correo) {
+        preferencias(contexto).edit()
+                .putString(CLAVE_NOMBRE, nombre)
+                .putString(CLAVE_CORREO, correo)
+                .apply();
+    }
+
+    // -----------------------------------------------------------------------
     // contexto: Context --> cerrar() --x
     // What it does: forgets the session (log out). The server keeps nothing,
     //               so deleting the token is enough.

@@ -6,6 +6,7 @@
 // Autor:       Jordi Bataller i Mascarell (código original proporcionado)
 // Aportación:  Equipo 04 – se sustituye AsyncTask (obsoleta desde Android 11)
 //              por un hilo de fondo con Executor; la interfaz no cambia.
+//              En T010 se añade una versión con token de sesión.
 // Copyright:   (c) Jordi Bataller i Mascarell - EPSG-UPV
 // ---------------------------------------------------------------------------
 package com.example.aeris;
@@ -59,6 +60,18 @@ public class PeticionarioREST {
     // --------------------------------------------------------------------
     public void hacerPeticionREST(String metodo, String urlDestino, String cuerpo,
                                   RespuestaREST laRespuesta) {
+        hacerPeticionREST(metodo, urlDestino, cuerpo, null, laRespuesta);
+    }
+
+    // --------------------------------------------------------------------
+    // metodo: Text, urlDestino: Text, cuerpo: Text, token: Text | null --> hacerPeticionREST() -->
+    // RespuestaREST <--
+    // What it does: the same, but if there is a token it also sends the header
+    //               "Authorization: Bearer <token>" (routes that need a session,
+    //               such as GET /usuarioActual). Added by Equipo 04 (T010).
+    // --------------------------------------------------------------------
+    public void hacerPeticionREST(String metodo, String urlDestino, String cuerpo, String token,
+                                  RespuestaREST laRespuesta) {
         HILO_DE_FONDO.execute(() -> {
             int codigo = 0;
             String cuerpoRespuesta;
@@ -68,6 +81,9 @@ public class PeticionarioREST {
                 conexion.setReadTimeout(TIEMPO_RESPUESTA_MS);
                 conexion.setRequestMethod(metodo);
                 conexion.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+                if (token != null) {
+                    conexion.setRequestProperty("Authorization", "Bearer " + token);
+                }
 
                 if (!metodo.equals("GET") && cuerpo != null) {
                     conexion.setDoOutput(true);

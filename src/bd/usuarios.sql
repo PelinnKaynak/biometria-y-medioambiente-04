@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS Usuarios (
   estado        VARCHAR(20)   NOT NULL DEFAULT 'activo',
   umbralAlerta  DOUBLE        NULL,
   premiumHasta  DATETIME      NULL,
+  foto          MEDIUMTEXT    NULL,   -- foto de perfil: JPEG 256x256 en base64 (T010)
 
   PRIMARY KEY (idUsuario),
   UNIQUE KEY uk_usuarios_email (email),

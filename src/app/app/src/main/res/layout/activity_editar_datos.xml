@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla «Editar mis datos» (Figma: editar mis datos) · T010 -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/fondo"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true"
+    tools:context=".EditarDatosActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="27dp"
+        android:paddingTop="24dp"
+        android:paddingEnd="27dp"
+        android:paddingBottom="32dp">
+
+        <ImageView
+            android:id="@+id/botonVolver"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/fondo_boton_volver"
+            android:clickable="true"
+            android:contentDescription="@string/volver_descripcion"
+            android:focusable="true"
+            android:padding="10dp"
+            android:src="@drawable/ic_volver" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/editar_titulo"
+            android:textColor="@color/texto_principal"
+            android:textSize="28sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/editar_subtitulo"
+            android:textColor="@color/texto_secundario"
+            android:textSize="14sp" />
+
+        <!-- Datos: nombre y apellidos en la misma fila, y el correo -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="7dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/AERIS.Etiqueta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/registro_nombre" />
+
+                <EditText
+                    android:id="@+id/campoNombre"
+                    style="@style/AERIS.Campo"
+                    android:layout_width="match_parent"
+                    android:autofillHints="givenName"
+                    android:inputType="textPersonName|textCapWords" />
+
+                <TextView
+                    android:id="@+id/errorNombre"
+                    style="@style/AERIS.Error"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="7dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/AERIS.Etiqueta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/registro_apellidos" />
+
+                <EditText
+                    android:id="@+id/campoApellidos"
+                    style="@style/AERIS.Campo"
+                    android:layout_width="match_parent"
+                    android:autofillHints="familyName"
+                    android:inputType="textPersonName|textCapWords" />
+
+                <TextView
+                    android:id="@+id/errorApellidos"
+                    style="@style/AERIS.Error"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <TextView
+            style="@style/AERIS.Etiqueta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/registro_correo" />
+
+        <EditText
+            android:id="@+id/campoCorreo"
+            style="@style/AERIS.Campo"
+            android:layout_width="match_parent"
+            android:autofillHints="emailAddress"
+            android:inputType="textEmailAddress" />
+
+        <TextView
+            android:id="@+id/errorCorreo"
+            style="@style/AERIS.Error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/errorDatos"
+            style="@style/AERIS.Error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/botonGuardar"
+            android:layout_width="260dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/fondo_boton_principal"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/editar_guardar"
+            android:textColor="@color/blanco"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Cambiar contraseña -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="@string/editar_seccion_contrasena"
+            android:textColor="@color/texto_principal"
+            android:textSize="18sp" />
+
+        <TextView
+            style="@style/AERIS.Etiqueta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/editar_contrasena_actual" />
+
+        <EditText
+            android:id="@+id/campoContrasenaActual"
+            style="@style/AERIS.Campo"
+            android:layout_width="match_parent"
+            android:autofillHints="password"
+            android:hint="@string/editar_contrasena_actual_pista"
+            android:inputType="textPassword" />
+
+        <TextView
+            android:id="@+id/errorContrasenaActual"
+            style="@style/AERIS.Error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            style="@style/AERIS.Etiqueta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/editar_contrasena_nueva" />
+
+        <EditText
+            android:id="@+id/campoContrasenaNueva"
+            style="@style/AERIS.Campo"
+            android:layout_width="match_parent"
+            android:autofillHints="newPassword"
+            android:hint="@string/editar_contrasena_nueva_pista"
+            android:inputType="textPassword" />
+
+        <TextView
+            android:id="@+id/errorContrasenaNueva"
+            style="@style/AERIS.Error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            style="@style/AERIS.Etiqueta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/editar_contrasena_repetida" />
+
+        <EditText
+            android:id="@+id/campoContrasenaRepetida"
+            style="@style/AERIS.Campo"
+            android:layout_width="match_parent"
+            android:autofillHints="newPassword"
+            android:hint="@string/editar_contrasena_repetida_pista"
+            android:inputType="textPassword" />
+
+        <TextView
+            android:id="@+id/errorContrasenaRepetida"
+            style="@style/AERIS.Error"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/errorContrasena"
+            style="@style/AERIS.Error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center" />
+
+        <TextView
+            android:id="@+id/botonCambiarContrasena"
+            android:layout_width="260dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/fondo_boton_secundario"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="@string/editar_cambiar_contrasena"
+            android:textColor="@color/violeta"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Aviso en la propia pantalla cuando la contraseña se ha cambiado -->
+        <TextView
+            android:id="@+id/avisoContrasena"
+            style="@style/AERIS.Error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center"
+            android:text="@string/editar_contrasena_cambiada"
+            android:textColor="@color/violeta" />
+    </LinearLayout>
+</ScrollView>

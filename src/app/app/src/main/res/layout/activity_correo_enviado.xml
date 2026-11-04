@@ -90,5 +90,14 @@
             android:text="@string/enviado_reenviar"
             android:textColor="@color/violeta"
             android:textSize="13sp" />
+
+        <!-- Resultado de «Reenviar», en la propia pantalla -->
+        <TextView
+            android:id="@+id/mensajeReenvio"
+            style="@style/AERIS.Error"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center" />
     </LinearLayout>
 </ScrollView>

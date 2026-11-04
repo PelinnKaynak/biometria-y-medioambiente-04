@@ -2,7 +2,7 @@
 // Fichero:     ReglasREST.js
 // Descripción: Rutas REST de usuarios y autenticación. Cada ruta lee la
 //              petición, llama a la lógica y traduce el resultado a HTTP.
-//              Contrato completo en doc/servidor_rest_design.md. Tarea T016.
+//              Contrato completo en doc/servidor_rest_design.md. Tareas T016 y T010.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -16,6 +16,7 @@ const CODIGOS_HTTP = {
     DATOS_NO_VALIDOS: 400,
     TOKEN_NO_VALIDO: 400,
     CREDENCIALES_INCORRECTAS: 401,
+    CONTRASENA_INCORRECTA: 403,
     CORREO_NO_REGISTRADO: 404,
     CORREO_YA_REGISTRADO: 409
 };
@@ -42,9 +43,41 @@ function cargarReglasREST(servidor, logica) {
     }));
 
     // GET /usuarioActual  (Authorization: Bearer <token>)
-    //   200 { idUsuario, nombre, apellidos, correo, rol, fechaAlta, premiumHasta } · 401
+    //   200 { idUsuario, nombre, apellidos, correo, rol, fechaAlta, alertas, premiumHasta, foto } · 401
     servidor.get('/usuarioActual', requiereSesion(logica), envolver(async (peticion, respuesta) => {
         respuesta.status(200).json(await logica.obtenerUsuario(peticion.usuario.idUsuario));
+    }));
+
+    // POST /cambiarAlertas  { alertas: true | false }  (Authorization: Bearer <token>)
+    //   204 guardado · 400 alertas no es true ni false · 401 sin sesión      (T010)
+    servidor.post('/cambiarAlertas', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        await logica.cambiarAlertas(peticion.usuario.idUsuario, peticion.body.alertas);
+        respuesta.status(204).end();
+    }));
+
+    // POST /actualizarDatos  { nombre, apellidos, correo }  🔒            (T010)
+    //   200 { nombre, apellidos, correo } · 400 { error, campos } · 409 correo de otra cuenta · 401
+    servidor.post('/actualizarDatos', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const { nombre, apellidos, correo } = peticion.body;
+        respuesta.status(200).json(
+            await logica.actualizarDatos(peticion.usuario.idUsuario, nombre, apellidos, correo));
+    }));
+
+    // POST /cambiarContrasenya  { contrasenaActual, contrasenaNueva }  🔒  (T010)
+    //   200 { idUsuario, token, rol, nombre } (sesión nueva) · 400 contraseña débil
+    //   · 403 la contraseña actual no es correcta · 401
+    servidor.post('/cambiarContrasenya', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const { contrasenaActual, contrasenaNueva } = peticion.body;
+        respuesta.status(200).json(
+            await logica.cambiarContrasenya(peticion.usuario.idUsuario, contrasenaActual, contrasenaNueva));
+    }));
+
+    // POST /cambiarFoto  { foto: base64 | null }  🔒                        (T010)
+    //   204 guardada (null = quitar la foto) · 400 no es una imagen válida · 401
+    servidor.post('/cambiarFoto', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const foto = peticion.body.foto === undefined ? '' : peticion.body.foto;
+        await logica.cambiarFoto(peticion.usuario.idUsuario, foto);
+        respuesta.status(204).end();
     }));
 
     // POST /solicitarRecuperacion  { correo }

@@ -15,12 +15,14 @@ const nodemailer = require('nodemailer');
 // ---------------------------------------------------------------------------
 // config: { host, puerto, usuario, contrasenya, remitente }
 //     --> crearEnviadorCorreo()
-//     --> ( destinatario: Texto, asunto: Texto, texto: Texto ) --> Promesa
+//     --> ( destinatario: Texto, asunto: Texto, texto: Texto, extra: { html, adjuntos } ) --> Promesa
 // What it does: returns the function that Logica uses to send emails.
+//               extra is optional: an HTML version and attached files (for
+//               example the logos of the welcome email, with cid).
 // ---------------------------------------------------------------------------
 function crearEnviadorCorreo(config) {
     if (!config.host) {
-        return async (destinatario, asunto, texto) => {
+        return async (destinatario, asunto, texto, extra = {}) => {
             console.log(`\n[correo NO enviado: falta SMTP_HOST en .env]\nPara: ${destinatario}\nAsunto: ${asunto}\n${texto}\n`);
         };
     }
@@ -30,8 +32,11 @@ function crearEnviadorCorreo(config) {
         secure: Number(config.puerto) === 465,
         auth: config.usuario ? { user: config.usuario, pass: config.contrasenya } : undefined
     });
-    return async (destinatario, asunto, texto) => {
-        await transporte.sendMail({ from: config.remitente, to: destinatario, subject: asunto, text: texto });
+    return async (destinatario, asunto, texto, extra = {}) => {
+        await transporte.sendMail({
+            from: config.remitente, to: destinatario, subject: asunto, text: texto,
+            html: extra.html, attachments: extra.adjuntos
+        });
     };
 }
 

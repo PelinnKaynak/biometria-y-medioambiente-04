@@ -57,6 +57,28 @@
         <activity
             android:name=".VincularSensorActivity"
             android:exported="false" />
+
+        <!-- Perfil (T010): se abre desde la barra de navegación inferior -->
+        <activity
+            android:name=".PerfilActivity"
+            android:exported="false" />
+
+        <!-- Editar mis datos (T010): se abre desde el perfil -->
+        <activity
+            android:name=".EditarDatosActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Comparte con la app de cámara el fichero donde guarda la foto de perfil (T010) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fotos"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/rutas_fotos" />
+        </provider>
     </application>
 
 </manifest>

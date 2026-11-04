@@ -26,7 +26,7 @@ const CARPETA_WEB_PUBLICA = path.join(__dirname, '..', 'web_publica');
 // ---------------------------------------------------------------------------
 function crearServidor(logica, reglasExtra) {
     const servidor = express();
-    servidor.use(express.json({ limit: '100kb' }));
+    servidor.use(express.json({ limit: '300kb' }));   // 300 KB: cabe la foto de perfil (T010)
 
     // Páginas web estáticas (src/web_publica): http://localhost:8080/restablecer.html
     servidor.use(express.static(CARPETA_WEB_PUBLICA));
