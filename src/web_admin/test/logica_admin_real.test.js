@@ -42,10 +42,50 @@ test("obtenerNodosMapa() pide GET /nodos/mapa", async () => {
 
 test.each([
     [401, "La sesión ha caducado. Vuelve a iniciar sesión"],
-    [403, "Tu cuenta no tiene permiso para ver los nodos"],
+    [403, "Tu cuenta no tiene permiso para hacer esto"],
     [500, "Ha habido un error. Inténtalo de nuevo"]
 ])("con %i devuelve «%s»", async (status, mensaje) => {
     fetch.mockReturnValue(respuestaFalsa(status, {}));
     const r = await new LogicaAdminReal("").obtenerResumenNodos();
     expect(r).toEqual({ correcto: false, resumen: null, error: mensaje });
+});
+
+describe("usuarios", () => {
+    test("obtenerUsuarios() pide GET /usuarios con el filtro", async () => {
+        fetch.mockReturnValue(respuestaFalsa(200, { usuarios: [], total: 0 }));
+        await new LogicaAdminReal("").obtenerUsuarios({ busqueda: "ana", grupo: "tecnicos", estado: "activo", pagina: 1, porPagina: 10 });
+        expect(fetch.mock.calls[0][0]).toBe("/usuarios?busqueda=ana&grupo=tecnicos&estado=activo&pagina=1&porPagina=10");
+    });
+
+    test("crearUsuario() hace POST /usuarios y devuelve los campos erróneos", async () => {
+        fetch.mockReturnValue(respuestaFalsa(400, { error: "Datos no válidos", campos: ["nombre"] }));
+        const r = await new LogicaAdminReal("").crearUsuario({ nombre: "1", apellidos: "B", correo: "a@b.es", rol: "tecnico" });
+
+        const [url, opciones] = fetch.mock.calls[0];
+        expect(url).toBe("/usuarios");
+        expect(opciones.method).toBe("POST");
+        expect(opciones.headers["Content-Type"]).toBe("application/json");
+        expect(r).toEqual({ correcto: false, error: "Datos no válidos", campos: ["nombre"] });
+    });
+
+    test("crearUsuario() con 409 marca el correo", async () => {
+        fetch.mockReturnValue(respuestaFalsa(409, { error: "El correo ya tiene una cuenta" }));
+        const r = await new LogicaAdminReal("").crearUsuario({ nombre: "A", apellidos: "B", correo: "a@b.es", rol: "tecnico" });
+        expect(r.campos).toEqual(["correo"]);
+    });
+
+    test("cambiarRol() hace PATCH /usuarios/:id/rol", async () => {
+        fetch.mockReturnValue(respuestaFalsa(204));
+        const r = await new LogicaAdminReal("").cambiarRol(5, "tecnico");
+        expect(fetch.mock.calls[0][0]).toBe("/usuarios/5/rol");
+        expect(fetch.mock.calls[0][1].method).toBe("PATCH");
+        expect(r.correcto).toBe(true);
+    });
+
+    test("darDeBaja() hace POST /usuarios/baja con los ids", async () => {
+        fetch.mockReturnValue(respuestaFalsa(204));
+        await new LogicaAdminReal("").darDeBaja([3, 4]);
+        expect(fetch.mock.calls[0][0]).toBe("/usuarios/baja");
+        expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ ids: [3, 4] });
+    });
 });

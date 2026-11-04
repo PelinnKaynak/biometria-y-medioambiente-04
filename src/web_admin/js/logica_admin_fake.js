@@ -21,6 +21,8 @@ const NOMBRES_PRUEBA = [
     "Carla Peris", "Álex Serra"
 ];
 
+const APELLIDOS_PRUEBA = ["García", "Martí", "Llorca", "Sanchis", "Ortega", "Vidal", "Ribes", "Cano"];
+
 // Minutos sin datos de los nodos de prueba: la mayoría
 // recientes, algunos de más de 24 horas y otros de más de
 // una semana.
@@ -52,6 +54,7 @@ class LogicaAdminFake {
                 necesitaCalibrar: i % 9 === 4
             });
         }
+        this.usuarios = crearUsuariosPrueba(ahora, this.nodos);
     }
 
     // --------------------------------------------------------
@@ -151,6 +154,133 @@ class LogicaAdminFake {
             .sort((a, b) => new Date(a.ultimaMedicion) - new Date(b.ultimaMedicion));
         return encontrados;
     }
+
+    // --------------------------------------------------------
+    // r: ResultadoConteo <-- obtenerConteoUsuarios() <--
+    //
+    // ConteoUsuarios = ( todos: N, portadores: N, premium: N,
+    //                    administradores: N, tecnicos: N )
+    // ResultadoConteo = ( correcto: B, conteo: ConteoUsuarios, error: Text )
+    //
+    // Los usuarios dados de baja no cuentan.
+    // --------------------------------------------------------
+    async obtenerConteoUsuarios() {
+        await esperarAdmin(this.retardo_ms);
+        const vivos = this.usuarios.filter(u => u.estado !== "baja");
+        const conteo = {
+            todos: vivos.length,
+            portadores: vivos.filter(u => u.rol === "portador").length,
+            premium: vivos.filter(u => u.premium).length,
+            administradores: vivos.filter(u => u.rol === "administrador").length,
+            tecnicos: vivos.filter(u => u.rol === "tecnico").length
+        };
+        return { correcto: true, conteo, error: "" };
+    }
+
+    // --------------------------------------------------------
+    // filtro: FiltroUsuarios --> obtenerUsuarios() -->
+    //       r: ResultadoUsuarios <--
+    //
+    // FiltroUsuarios = ( busqueda: Text, grupo: Text, estado: Text,
+    //                    pagina: N, porPagina: N )
+    //   grupo: "todos" | "portadores" | "premium" | "administradores" | "tecnicos"
+    //   estado: "todos" | "activo" | "pendiente" | "baja"
+    // ResultadoUsuarios = ( correcto: B, usuarios: [ UsuarioAdmin ], total: N, error: Text )
+    //
+    // Busca por nombre, apellidos o correo y ordena del alta
+    // más reciente a la más antigua.
+    // --------------------------------------------------------
+    async obtenerUsuarios(filtro) {
+        await esperarAdmin(this.retardo_ms);
+        const busqueda = normalizarTexto(filtro.busqueda || "");
+        const grupo = filtro.grupo || "todos";
+        const estado = filtro.estado || "todos";
+        const rolDelGrupo = { portadores: "portador", administradores: "administrador", tecnicos: "tecnico" };
+
+        const encontrados = this.usuarios
+            .filter(u => !busqueda ||
+                normalizarTexto(u.nombre + " " + u.apellidos).includes(busqueda) ||
+                normalizarTexto(u.correo).includes(busqueda))
+            .filter(u => grupo === "todos" ||
+                (grupo === "premium" ? u.premium : u.rol === rolDelGrupo[grupo]))
+            .filter(u => estado === "todos" ? u.estado !== "baja" : u.estado === estado)
+            .sort((a, b) => new Date(b.fechaAlta) - new Date(a.fechaAlta));
+
+        const inicio = (filtro.pagina - 1) * filtro.porPagina;
+        return {
+            correcto: true,
+            usuarios: encontrados.slice(inicio, inicio + filtro.porPagina),
+            total: encontrados.length,
+            error: ""
+        };
+    }
+
+    // --------------------------------------------------------
+    // datos: NuevoUsuario --> crearUsuario() -->
+    //       r: ResultadoCreacion <--
+    //
+    // NuevoUsuario = ( nombre: Text, apellidos: Text, correo: Text, rol: Text )
+    // ResultadoCreacion = ( correcto: B, error: Text, campos: [ Text ] )
+    //
+    // Crea una cuenta de técnico o administrador en estado
+    // "pendiente": el servidor real le envía un correo para que
+    // elija su contraseña.
+    // --------------------------------------------------------
+    async crearUsuario(datos) {
+        await esperarAdmin(this.retardo_ms);
+        const correo = datos.correo.trim().toLowerCase();
+        if (this.usuarios.some(u => u.correo === correo)) {
+            return { correcto: false, error: "Ya hay una cuenta con ese correo", campos: ["correo"] };
+        }
+        this.usuarios.push({
+            idUsuario: this.usuarios.length + 1,
+            nombre: datos.nombre.trim(),
+            apellidos: datos.apellidos.trim(),
+            correo,
+            rol: datos.rol,
+            premium: false,
+            nodo: null,
+            estado: "pendiente",
+            fechaAlta: this.ahora.toISOString()
+        });
+        return { correcto: true, error: "", campos: [] };
+    }
+
+    // --------------------------------------------------------
+    // id_usuario: N, rol: Text --> cambiarRol() -->
+    //       r: ResultadoOperacion <--
+    //
+    // Un administrador no puede cambiarse su propio rol.
+    // --------------------------------------------------------
+    async cambiarRol(id_usuario, rol) {
+        await esperarAdmin(this.retardo_ms);
+        const actual = this.usuarioActual();
+        if (actual && actual.id === id_usuario) {
+            return { correcto: false, error: "No puedes cambiar tu propio rol" };
+        }
+        const usuario = this.usuarios.find(u => u.idUsuario === id_usuario);
+        if (!usuario) return { correcto: false, error: "El usuario no existe" };
+        usuario.rol = rol;
+        return { correcto: true, error: "" };
+    }
+
+    // --------------------------------------------------------
+    // ids: [ N ] --> darDeBaja() --> r: ResultadoOperacion <--
+    //
+    // Marca los usuarios como "baja". Un administrador no puede
+    // darse de baja a sí mismo.
+    // --------------------------------------------------------
+    async darDeBaja(ids) {
+        await esperarAdmin(this.retardo_ms);
+        const actual = this.usuarioActual();
+        if (actual && ids.includes(actual.id)) {
+            return { correcto: false, error: "No puedes darte de baja a ti mismo" };
+        }
+        for (const usuario of this.usuarios) {
+            if (ids.includes(usuario.idUsuario)) usuario.estado = "baja";
+        }
+        return { correcto: true, error: "" };
+    }
 }
 
 // --------------------------------------------------------
@@ -161,6 +291,44 @@ class LogicaAdminFake {
 // --------------------------------------------------------
 function normalizarTexto(texto) {
     return texto.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+}
+
+// --------------------------------------------------------
+// ahora: Fecha, nodos: [ Nodo ] --> crearUsuariosPrueba()
+//                               --> [ UsuarioAdmin ]
+//
+// UsuarioAdmin = ( idUsuario: N, nombre: Text, apellidos: Text,
+//                  correo: Text, rol: Text, premium: B, nodo: Text,
+//                  estado: Text, fechaAlta: Text )
+//
+// El usuario 1 es admin@aeris.es (el de la lógica fake del
+// login) y el 2 es laura@correo.es.
+// --------------------------------------------------------
+function crearUsuariosPrueba(ahora, nodos) {
+    const usuarios = [
+        { nombre: "Administración", apellidos: "AERIS", correo: "admin@aeris.es", rol: "administrador" },
+        { nombre: "Laura", apellidos: "Martínez", correo: "laura@correo.es", rol: "portador" }
+    ];
+    for (let i = 0; i < 40; i++) {
+        const [nombre] = NOMBRES_PRUEBA[i % NOMBRES_PRUEBA.length].split(" ");
+        const apellidos = APELLIDOS_PRUEBA[(i * 3) % APELLIDOS_PRUEBA.length];
+        usuarios.push({
+            nombre, apellidos,
+            correo: normalizarTexto(nombre + "." + apellidos + (i + 1)) + "@correo.es",
+            rol: i % 13 === 5 ? "tecnico" : i % 17 === 8 ? "administrador" : "portador"
+        });
+    }
+    return usuarios.map((u, i) => ({
+        idUsuario: i + 1,
+        nombre: u.nombre,
+        apellidos: u.apellidos,
+        correo: u.correo,
+        rol: u.rol,
+        premium: u.rol === "portador" && i % 4 === 1,
+        nodo: u.rol === "portador" && i % 3 !== 2 ? nodos[i % nodos.length].id : null,
+        estado: i > 1 && i % 11 === 7 ? "pendiente" : i > 1 && i % 19 === 10 ? "baja" : "activo",
+        fechaAlta: new Date(ahora.getTime() - (i * 2 + 1) * 86400000).toISOString()
+    }));
 }
 
 // --------------------------------------------------------
