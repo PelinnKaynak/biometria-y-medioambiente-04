@@ -52,7 +52,7 @@
     padding: 0 34px 0 14px;
     border: 1px solid #D9DCE8;
     border-radius: var(--radio);
-    background: var(--blanco) url("../../web_publica/img/icono-desplegable.svg") right 10px center / 14px no-repeat;
+    background: var(--blanco) url("data:image/svg+xml,<svg viewBox='0 0 14 14' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M3.5 5.25L7 8.75L10.5 5.25' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") right 10px center / 14px no-repeat;
     color: var(--texto);
     font: 500 14px "Inter", sans-serif;
     appearance: none;
