@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión · AERIS</title>
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="stylesheet" href="css/acceso.css">
+</head>
+<body class="pagina-acceso">
+
+  <a class="boton-volver" href="index.html">‹ volver</a>
+
+  <main class="tarjeta-acceso">
+
+    <section class="panel-logo" aria-hidden="true">
+      <img src="img/logo-aeris.svg" alt="" class="logo-grande">
+    </section>
+
+    <section class="panel-formulario">
+      <img src="img/logo-aeris.svg" alt="AERIS" class="logo-movil">
+
+      <h1>Iniciar sesión</h1>
+
+      <form id="formulario-login" class="formulario-acceso" novalidate>
+
+        <label for="correo">Correo electrónico</label>
+        <input id="correo" name="correo" type="email" class="campo"
+               placeholder="correo electrónico" autocomplete="username" maxlength="254" required>
+
+        <label for="contrasena">Contraseña</label>
+        <div class="campo-con-icono">
+          <input id="contrasena" name="contrasena" type="password" class="campo"
+                 placeholder="contraseña" autocomplete="current-password" maxlength="64" required>
+          <button id="boton-ojo" type="button" class="boton-ojo"
+                  aria-label="Mostrar contraseña" aria-pressed="false">
+            <img src="img/ojo-cerrado.svg" alt="">
+          </button>
+        </div>
+
+        <p id="mensaje-error" class="mensaje-error oculto" role="alert">
+          <span aria-hidden="true">⚠</span>
+          <span id="texto-error">Correo o contraseña incorrectos</span>
+        </p>
+
+        <a href="recuperar.html" class="enlace-recuperar">Recuperar contraseña</a>
+
+        <button type="submit" class="boton boton-acceder">Acceder</button>
+      </form>
+    </section>
+
+  </main>
+
+  <script src="js/logica_fake.js"></script>
+  <script src="js/logica_real.js"></script>
+  <script src="js/configuracion.js"></script>
+  <script src="js/validacion.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>
