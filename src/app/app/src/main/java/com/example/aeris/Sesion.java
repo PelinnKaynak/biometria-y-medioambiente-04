@@ -21,6 +21,7 @@ public class Sesion {
     private static final String CLAVE_TOKEN = "token";
     private static final String CLAVE_ROL = "rol";
     private static final String CLAVE_NOMBRE = "nombre";
+    private static final String CLAVE_ALERTAS = "alertas";
 
     // -----------------------------------------------------------------------
     // contexto: Context, correo: Text, datos: DatosSesion --> iniciar() --x
@@ -78,6 +79,22 @@ public class Sesion {
                 .putString(CLAVE_NOMBRE, nombre)
                 .putString(CLAVE_CORREO, correo)
                 .apply();
+    }
+
+    // -----------------------------------------------------------------------
+    // contexto: Context --> alertas() --x
+    // B <--
+    // contexto: Context, activadas: B --> guardarAlertas() --x
+    // What it does: remembers the last known value of «Notificaciones», so the
+    //               Perfil screen shows the switch in its place at once,
+    //               without moving it when the server answers (T010).
+    // -----------------------------------------------------------------------
+    public static boolean alertas(Context contexto) {
+        return preferencias(contexto).getBoolean(CLAVE_ALERTAS, true);
+    }
+
+    public static void guardarAlertas(Context contexto, boolean activadas) {
+        preferencias(contexto).edit().putBoolean(CLAVE_ALERTAS, activadas).apply();
     }
 
     // -----------------------------------------------------------------------

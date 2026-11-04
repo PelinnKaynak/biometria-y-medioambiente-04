@@ -97,8 +97,8 @@ public class PerfilActivity extends AppCompatActivity {
         // Mientras llegan los datos del servidor se ve lo guardado al iniciar sesión
         textoNombre.setText(textoONada(Sesion.nombre(this)));
         textoCorreo.setText(textoONada(Sesion.correoActual(this)));
-        interruptorNotificaciones.setEnabled(false);
-        interruptorNotificaciones.setOnCheckedChangeListener(alCambiarInterruptor);
+        // El interruptor sale ya en su posición guardada, sin animación
+        ponerInterruptor(Sesion.alertas(this));
 
         // Opciones de otras tareas (T011 Mi sensor, T019 Mis lugares…): aún no
         int[] opcionesProximamente = {
@@ -109,8 +109,8 @@ public class PerfilActivity extends AppCompatActivity {
             findViewById(id).setClickable(false);   // aún no hacen nada
         }
         findViewById(R.id.opcionNotificaciones).setOnClickListener(vista -> {
-            if (interruptorNotificaciones.isEnabled()) {
-                interruptorNotificaciones.toggle();
+            if (interruptorNotificaciones.isClickable()) {
+                interruptorNotificaciones.toggle();     // aquí sí se anima: lo ha tocado el usuario
             }
         });
         findViewById(R.id.opcionEditarDatos).setOnClickListener(vista ->
@@ -283,8 +283,8 @@ public class PerfilActivity extends AppCompatActivity {
         textoCorreo.setText(datos.correo);
         errorPerfil.setVisibility(View.GONE);
         mostrarFoto(datos.foto);
+        Sesion.guardarAlertas(this, datos.alertas);
         ponerInterruptor(datos.alertas);
-        interruptorNotificaciones.setEnabled(true);
     }
 
     // -----------------------------------------------------------------------
@@ -294,11 +294,12 @@ public class PerfilActivity extends AppCompatActivity {
     //               switch goes back and the error is shown.
     // -----------------------------------------------------------------------
     private void cambiarAlertas(boolean activado) {
-        interruptorNotificaciones.setEnabled(false);
+        interruptorNotificaciones.setClickable(false);   // sin cambiar su aspecto
         logica.cambiarAlertas(Sesion.token(this), activado, new LogicaFakePerfil.RespuestaCambio() {
             @Override
             public void cambioGuardado() {
-                interruptorNotificaciones.setEnabled(true);
+                Sesion.guardarAlertas(PerfilActivity.this, activado);
+                interruptorNotificaciones.setClickable(true);
             }
 
             @Override
@@ -309,7 +310,7 @@ public class PerfilActivity extends AppCompatActivity {
             @Override
             public void error(String mensaje) {
                 ponerInterruptor(!activado);
-                interruptorNotificaciones.setEnabled(true);
+                interruptorNotificaciones.setClickable(true);
                 mostrarError(mensaje);
             }
         });
@@ -317,11 +318,13 @@ public class PerfilActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // activado: B --> ponerInterruptor() -->
-    // What it does: moves the switch without calling cambiarAlertas().
+    // What it does: puts the switch in its place at once (no slide animation)
+    //               and without calling cambiarAlertas().
     // -----------------------------------------------------------------------
     private void ponerInterruptor(boolean activado) {
         interruptorNotificaciones.setOnCheckedChangeListener(null);
         interruptorNotificaciones.setChecked(activado);
+        interruptorNotificaciones.jumpDrawablesToCurrentState();
         interruptorNotificaciones.setOnCheckedChangeListener(alCambiarInterruptor);
     }
 
