@@ -39,12 +39,14 @@
     <string name="logo_descripcion">Logo de AERIS</string>
 
     <!-- Recuperar contraseña (T003) -->
-    <string name="recuperar_titulo">Recuperar contraseña</string>
-    <string name="recuperar_texto">Escribe el correo con el que te registraste y te enviaremos un enlace para crear una contraseña nueva.</string>
+    <string name="recuperar_titulo">¿Olvidaste tu contraseña?</string>
+    <string name="recuperar_texto">No pasa nada. Escribe el correo con el que te registraste y te enviaremos un enlace para crear una nueva.</string>
     <string name="recuperar_correo">Correo electrónico</string>
     <string name="recuperar_correo_pista">correo@ejemplo.com</string>
     <string name="recuperar_enviar">Enviar enlace</string>
     <string name="recuperar_enviando">Enviando…</string>
+    <string name="recuperar_te_acuerdas">¿Te has acordado?</string>
+    <string name="recuperar_inicia_sesion"><u>Inicia sesión</u></string>
 
     <!-- Revisa tu correo (T003) -->
     <string name="enviado_titulo">Revisa tu correo</string>
