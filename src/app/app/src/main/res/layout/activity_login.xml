@@ -119,7 +119,7 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/login_ver_contrasena"
                 android:padding="10dp"
-                android:src="@drawable/ic_ver_contrasena" />
+                android:src="@drawable/ic_ocultar_contrasena" />
         </LinearLayout>
 
         <TextView

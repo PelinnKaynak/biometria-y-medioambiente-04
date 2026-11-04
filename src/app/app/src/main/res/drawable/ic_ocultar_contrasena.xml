@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ojo tachado: la contraseña está oculta (pulsar para verla) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp" android:height="20dp"
+    android:viewportWidth="20" android:viewportHeight="20">
+    <path android:pathData="M1.6666,10C1.6666,10 4.5833,4.1667 10,4.1667C15.4166,4.1667 18.3333,10 18.3333,10C18.3333,10 15.4166,15.8334 10,15.8334C4.5833,15.8334 1.6666,10 1.6666,10Z"
+        android:strokeColor="@color/texto_secundario" android:strokeWidth="1.8"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M10,12.5C11.3807,12.5 12.5,11.3807 12.5,10C12.5,8.6193 11.3807,7.5 10,7.5C8.6193,7.5 7.5,8.6193 7.5,10C7.5,11.3807 8.6193,12.5 10,12.5Z"
+        android:strokeColor="@color/texto_secundario" android:strokeWidth="1.8"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <!-- Raya: borde del color del campo para separarla del ojo, y raya encima -->
+    <path android:pathData="M2.5,2.5L17.5,17.5"
+        android:strokeColor="@color/blanco" android:strokeWidth="3.8" android:strokeLineCap="round" />
+    <path android:pathData="M2.5,2.5L17.5,17.5"
+        android:strokeColor="@color/texto_secundario" android:strokeWidth="1.8" android:strokeLineCap="round" />
+</vector>

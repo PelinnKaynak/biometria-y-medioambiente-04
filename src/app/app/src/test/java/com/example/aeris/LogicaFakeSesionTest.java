@@ -33,6 +33,7 @@ public class LogicaFakeSesionTest {
         String llamado = "";
         String mensaje = "";
         @Override public void enlaceEnviado() { llamado = "enlaceEnviado"; }
+        @Override public void correoNoRegistrado() { llamado = "correoNoRegistrado"; }
         @Override public void error(String mensaje) { llamado = "error"; this.mensaje = mensaje; }
     }
 
@@ -91,6 +92,14 @@ public class LogicaFakeSesionTest {
         LogicaFakeSesion.notificarRecuperacion(0, r2);
         assertEquals("error", r2.llamado);
         assertTrue(r2.mensaje.contains("conexión"));
+    }
+
+    @Test
+    public void recuperacion_404CorreoNoRegistrado() {
+        RecuperacionApuntada r = new RecuperacionApuntada();
+        LogicaFakeSesion.notificarRecuperacion(404, r);
+        assertEquals("correoNoRegistrado", r.llamado);
+        assertEquals("No hay ninguna cuenta con este correo.", LogicaFakeSesion.MENSAJE_CORREO_NO_REGISTRADO);
     }
 
     @Test

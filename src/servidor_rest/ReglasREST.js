@@ -16,6 +16,7 @@ const CODIGOS_HTTP = {
     DATOS_NO_VALIDOS: 400,
     TOKEN_NO_VALIDO: 400,
     CREDENCIALES_INCORRECTAS: 401,
+    CORREO_NO_REGISTRADO: 404,
     CORREO_YA_REGISTRADO: 409
 };
 
@@ -47,10 +48,10 @@ function cargarReglasREST(servidor, logica) {
     }));
 
     // POST /solicitarRecuperacion  { correo }
-    //   200 siempre (no se revela si el correo tiene cuenta)
+    //   200 enlace enviado · 400 correo no válido · 404 el correo no tiene cuenta (no se envía nada)
     servidor.post('/solicitarRecuperacion', envolver(async (peticion, respuesta) => {
         await logica.solicitarRecuperacion(peticion.body.correo);
-        respuesta.status(200).json({ mensaje: 'Si el correo tiene una cuenta, te hemos enviado un enlace' });
+        respuesta.status(200).json({ mensaje: 'Te hemos enviado un enlace' });
     }));
 
     // POST /restablecerContrasenya  { token, contrasena }

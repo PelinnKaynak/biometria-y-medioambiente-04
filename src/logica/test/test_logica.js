@@ -128,7 +128,7 @@ describe('Logica (usuarios y autenticación)', function () {
 
     it('solicitarRecuperacion() con un correo registrado envía el enlace', async function () {
         await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
-        assert.strictEqual(await logica.solicitarRecuperacion('Pelin@aeris.es'), true);
+        await logica.solicitarRecuperacion('Pelin@aeris.es');
         assert.strictEqual(correos.length, 1);
         assert.strictEqual(correos[0].destinatario, 'pelin@aeris.es');
         assert.ok(correos[0].texto.includes(URL_RESTABLECER + '?token='));
@@ -139,9 +139,9 @@ describe('Logica (usuarios y autenticación)', function () {
         assert.ok(correos[0].texto.includes('30 minutos'));
     });
 
-    it('solicitarRecuperacion() con un correo no registrado no envía nada', async function () {
-        assert.strictEqual(await logica.solicitarRecuperacion('nadie@aeris.es'), false);
-        assert.strictEqual(await logica.solicitarRecuperacion('no-es-un-correo'), false);
+    it('solicitarRecuperacion() con un correo no registrado lanza CORREO_NO_REGISTRADO y no envía nada', async function () {
+        await assert.rejects(logica.solicitarRecuperacion('nadie@aeris.es'), { codigo: 'CORREO_NO_REGISTRADO' });
+        await assert.rejects(logica.solicitarRecuperacion('no-es-un-correo'), { codigo: 'DATOS_NO_VALIDOS' });
         assert.strictEqual(correos.length, 0);
     });
 

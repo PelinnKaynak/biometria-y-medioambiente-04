@@ -163,9 +163,15 @@ describe('API REST de usuarios y autenticación', function () {
         assert.match(correos[0].texto, /restablecer\.html\?token=[\w-]+\.[\w-]+/);
     });
 
-    it('POST /solicitarRecuperacion con un correo no registrado: 200 igual, pero no envía nada', async function () {
+    it('POST /solicitarRecuperacion con un correo no registrado: 404 y no envía nada', async function () {
         const r = await peticion('POST', '/solicitarRecuperacion', { correo: 'nadie@aeris.es' });
-        assert.strictEqual(r.codigo, 200);
+        assert.strictEqual(r.codigo, 404);
+        assert.strictEqual(r.cuerpo.error, 'No hay ninguna cuenta con este correo');
+        assert.strictEqual(correos.length, 0);
+    });
+
+    it('POST /solicitarRecuperacion con un correo mal formado: 400', async function () {
+        assert.strictEqual((await peticion('POST', '/solicitarRecuperacion', { correo: 'pelin@' })).codigo, 400);
         assert.strictEqual(correos.length, 0);
     });
 

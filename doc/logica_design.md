@@ -30,7 +30,7 @@ DatosUsuario   = ( idUsuario: N, nombre: Texto, apellidos: Texto,
 ConfigBD       = ( host: Texto, port: N, user: Texto, password: Texto, database: Texto )
 
 ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
-    codigo ∈ { DATOS_NO_VALIDOS, CORREO_YA_REGISTRADO,
+    codigo ∈ { DATOS_NO_VALIDOS, CORREO_YA_REGISTRADO, CORREO_NO_REGISTRADO,
                CREDENCIALES_INCORRECTAS, TOKEN_NO_VALIDO }
 ```
 
@@ -67,7 +67,7 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   DatosUsuario | null           <-- |
                                     |
   correo: Texto                 --> solicitarRecuperacion() -->
-  V/F                           <-- |     V si se ha enviado el correo
+                                    |     lanza DATOS_NO_VALIDOS, CORREO_NO_REGISTRADO
                                     |
   token: Texto                  --> restablecerContrasenya() -->
   contrasenaNueva: Texto            |     lanza DATOS_NO_VALIDOS, TOKEN_NO_VALIDO
@@ -143,7 +143,8 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
 - **Huella de la contraseña (`h`):** el token lleva 16 caracteres del SHA-256 de `passwordHash`. Si la contraseña cambia, la huella ya no coincide y todos los tokens anteriores dejan de valer.
 - **Cerrar sesión:** la app o la web borran su token. El servidor no guarda sesiones, así que no hay ruta para cerrarla.
 - **Rol al registrarse:** quien se registra desde la app es **portador** (columna `role` de `Usuarios`). Los demás roles los asigna el administrador (T030). Premium no es un rol: depende de `premiumHasta`.
-- **Mismo error de acceso:** `iniciarSesion()` lanza `CREDENCIALES_INCORRECTAS` tanto si el correo no existe como si la contraseña es incorrecta, para no revelar qué correos tienen cuenta. Por la misma razón el servidor responde igual a `/solicitarRecuperacion` exista o no el correo.
+- **Mismo error de acceso:** `iniciarSesion()` lanza `CREDENCIALES_INCORRECTAS` tanto si el correo no existe como si la contraseña es incorrecta, para no revelar qué correos tienen cuenta.
+- **Correo no registrado en la recuperación:** decisión del equipo: si el correo no tiene cuenta, `solicitarRecuperacion()` lanza `CORREO_NO_REGISTRADO`, no se envía ningún correo y la app avisa al usuario. (Revela qué correos tienen cuenta, igual que el registro con `CORREO_YA_REGISTRADO`.)
 - **Recuperación de contraseña sin tabla:** el enlace lleva un token firmado de tipo `"recuperacion"` válido 30 minutos: `urlRestablecer?token=...` (la página la hará la web). Al usarlo cambia la contraseña y, con ella, la huella: el mismo enlace ya no se puede volver a usar y todas las sesiones abiertas se cierran. Un token de recuperación no sirve como sesión (se comprueba el tipo).
 - **Validación en el servidor:** las mismas reglas que `ValidadorRegistro.java` de la app: nombre y apellidos solo con letras (con tilde, ñ…) separadas por un espacio, guion o apóstrofo, sin números ni símbolos como `_`, `@` o `.` (máx. 50 y 100 caracteres); correo con formato `nombre@dominio.ext`; contraseña de 8 caracteres con letra y número. El servidor nunca se fía de lo que llega.
 - **Correo normalizado:** sin espacios y en minúsculas, igual que la app.

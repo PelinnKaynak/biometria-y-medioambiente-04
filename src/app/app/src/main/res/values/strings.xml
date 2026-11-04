@@ -14,13 +14,13 @@
     <string name="registro_confirmacion_pista">Repite la contraseña</string>
     <string name="registro_continuar">Continuar</string>
     <string name="registro_ya_tienes_cuenta">¿Ya tienes cuenta?</string>
-    <string name="registro_inicia_sesion">Inicia sesión</string>
+    <string name="registro_inicia_sesion"><u>Inicia sesión</u></string>
     <string name="registro_enviando">Creando la cuenta…</string>
 
     <!-- Vincular sensor (pantalla provisional hasta T005) -->
     <string name="vincular_titulo">Vincular sensor</string>
     <string name="vincular_texto">Cuenta creada. Aquí podrás buscar tu sensor por Bluetooth y vincularlo a tu cuenta (tarea T005).</string>
-    <string name="vincular_omitir">Omitir por ahora</string>
+    <string name="vincular_omitir"><u>Omitir por ahora</u></string>
 
     <!-- Permiso de red local (Android 17) -->
     <string name="permiso_red_denegado">AERIS necesita permiso para conectar con dispositivos de la red local (el servidor).</string>
@@ -28,12 +28,13 @@
     <!-- Inicio de sesión (T003 / H002) -->
     <string name="login_correo_pista">correo electrónico</string>
     <string name="login_contrasena_pista">contraseña</string>
-    <string name="login_ver_contrasena">Mostrar u ocultar la contraseña</string>
-    <string name="login_recuperar">Recuperar contraseña</string>
+    <string name="login_ver_contrasena">Mostrar la contraseña</string>
+    <string name="login_ocultar_contrasena">Ocultar la contraseña</string>
+    <string name="login_recuperar"><u>Recuperar contraseña</u></string>
     <string name="login_acceder">Acceder</string>
     <string name="login_entrando">Entrando…</string>
     <string name="login_no_tienes_cuenta">¿No tienes cuenta?</string>
-    <string name="login_registrate">Regístrate</string>
+    <string name="login_registrate"><u>Regístrate</u></string>
     <string name="logo_descripcion">Logo de AERIS</string>
 
     <!-- Recuperar contraseña (T003) -->
@@ -48,7 +49,7 @@
     <string name="enviado_titulo">Revisa tu correo</string>
     <string name="enviado_texto">Te hemos enviado un enlace a %1$s para crear una contraseña nueva. El enlace caduca en 30 minutos.</string>
     <string name="enviado_volver_login">Volver a iniciar sesión</string>
-    <string name="enviado_reenviar">¿No te ha llegado? Reenviar</string>
+    <string name="enviado_reenviar">¿No te ha llegado? <u>Reenviar</u></string>
     <string name="enviado_reenviado">Te hemos enviado otro enlace.</string>
 
     <!-- Pantalla de inicio provisional (hasta T006) -->

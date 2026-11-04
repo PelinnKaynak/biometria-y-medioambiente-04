@@ -21,7 +21,7 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `POST /registrarUsuario` | `{ nombre, apellidos, correo, contrasena }` | **201** `{ idUsuario, token, rol, nombre }` · **400** `{ error, campos }` · **409** correo ya registrado |
 | `POST /iniciarSesion` | `{ correo, contrasena }` | **200** `{ idUsuario, token, rol, nombre }` · **401** correo o contraseña incorrectos |
 | `GET /usuarioActual` 🔒 | — | **200** `{ idUsuario, nombre, apellidos, correo, rol, fechaAlta, premiumHasta }` · **401** |
-| `POST /solicitarRecuperacion` | `{ correo }` | **200** siempre (si el correo tiene cuenta, se envía el enlace) |
+| `POST /solicitarRecuperacion` | `{ correo }` | **200** enlace enviado · **400** correo no válido · **404** el correo no tiene cuenta (no se envía nada) |
 | `GET /restablecer.html` | — | **200** página de `src/web_publica` para crear la contraseña nueva (la abre el enlace del correo) |
 | `POST /restablecerContrasenya` | `{ token, contrasena }` | **204** · **400** enlace no válido o caducado, o contraseña débil |
 
@@ -44,7 +44,7 @@ Errores comunes: **400** JSON mal formado · **401** sin sesión · **403** el r
   logica: Logica                    |
                                     |
   error: Error                  --> responderError() -->
-  respuesta: Response               |     ErrorLogica --> 400 / 401 / 409; otro --> 500
+  respuesta: Response               |     ErrorLogica --> 400 / 401 / 404 / 409; otro --> 500
                                     |
   funcion: (peticion, respuesta) --> Promesa
                                 --> envolver() --> Middleware

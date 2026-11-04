@@ -55,6 +55,12 @@ public class CorreoEnviadoActivity extends AppCompatActivity {
             }
 
             @Override
+            public void correoNoRegistrado() {
+                Toast.makeText(CorreoEnviadoActivity.this,
+                        LogicaFakeSesion.MENSAJE_CORREO_NO_REGISTRADO, Toast.LENGTH_LONG).show();
+            }
+
+            @Override
             public void error(String mensaje) {
                 Toast.makeText(CorreoEnviadoActivity.this, mensaje, Toast.LENGTH_LONG).show();
             }

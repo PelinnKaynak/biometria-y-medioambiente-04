@@ -217,7 +217,7 @@ DatosSesion = ( token: Text, rol: Text, nombre: Text )      // lo devuelve el se
                                     |     credencialesIncorrectas(), error(Text)
                                     |
   correo: Text                  --> solicitarRecuperacion() -->
-                                    |     callback: enlaceEnviado(), error(Text)
+                                    |     callback: enlaceEnviado(), correoNoRegistrado(), error(Text)
                                     |
                                     |    correo: Text, contrasena: Text --> crearJSONInicioSesion() --x
                                     |    Text <--
@@ -242,7 +242,7 @@ DatosSesion = ( token: Text, rol: Text, nombre: Text )      // lo devuelve el se
 LoginActivity:               onCreate(), pulsarAcceder(), enviarInicioSesion(), mostrarErrores(),
                              marcarCampo(), mostrarErrorGeneral(), cambiarVisibilidadContrasena(),
                              mostrarEnviando(), abrirInicio()
-RecuperarContrasenaActivity: onCreate(), pulsarEnviar(), enviarSolicitud()
+RecuperarContrasenaActivity: onCreate(), pulsarEnviar(), enviarSolicitud(), mostrarErrorCorreo()
 CorreoEnviadoActivity:       onCreate(), reenviar()
 InicioActivity (provisional hasta T006): onCreate(), cerrarSesion()
 ```
@@ -264,7 +264,7 @@ InicioActivity (provisional hasta T006): onCreate(), cerrarSesion()
 - **Primera pantalla:** hasta que exista la bienvenida (T001) la app se abre en `LoginActivity`; si ya hay sesión guardada, va directa a `InicioActivity`.
 - **Cerrar sesión:** `Sesion.cerrar()` borra el token del teléfono; el servidor no guarda sesiones.
 - **Login:** `POST /iniciarSesion` con `{"correo", "contrasena"}`. `200` → sesión iniciada; `401` → «Correo o contraseña incorrectos» (mismo mensaje si el correo no existe), se borra la contraseña escrita y no se da acceso.
-- **Recuperar contraseña:** `POST /solicitarRecuperacion` con `{"correo"}`. El servidor responde siempre `200` (no dice si el correo tiene cuenta) y, si la tiene, envía un enlace que caduca a los 30 minutos. «¿No te ha llegado? Reenviar» pide otro enlace.
+- **Recuperar contraseña:** `POST /solicitarRecuperacion` con `{"correo"}`. `200` → el servidor ha enviado un enlace que caduca a los 30 minutos y se abre «Revisa tu correo»; `404` → el correo no tiene cuenta: no se envía nada y la app muestra «No hay ninguna cuenta con este correo.» debajo del campo. «¿No te ha llegado? Reenviar» pide otro enlace.
 - **Tras el registro** se abre `VincularSensorActivity`, con la opción «Omitir por ahora» (abre el inicio). En este sprint es una pantalla provisional; la búsqueda por Bluetooth se programa en T005 (H019).
 - **Inicio provisional:** `InicioActivity` solo saluda y permite cerrar sesión; la pantalla de inicio real es T006.
 - **PeticionarioREST:** es el código proporcionado por el profesor, con la misma interfaz, pero sin `AsyncTask` (obsoleta desde Android 11): la petición se hace en un hilo de fondo (`Executor`) y el callback se llama en el hilo principal.

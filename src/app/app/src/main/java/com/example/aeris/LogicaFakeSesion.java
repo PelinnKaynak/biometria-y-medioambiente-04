@@ -18,9 +18,11 @@ public class LogicaFakeSesion {
 
     static final int CODIGO_OK = 200;
     static final int CODIGO_CREDENCIALES_INCORRECTAS = 401;
+    static final int CODIGO_CORREO_NO_REGISTRADO = 404;
     static final int CODIGO_SIN_CONEXION = 0;
 
     static final String MENSAJE_CREDENCIALES_INCORRECTAS = "Correo o contraseña incorrectos";
+    static final String MENSAJE_CORREO_NO_REGISTRADO = "No hay ninguna cuenta con este correo.";
     static final String MENSAJE_SIN_CONEXION = "No hay conexión con el servidor. Inténtalo de nuevo.";
 
     // -----------------------------------------------------------------------
@@ -41,6 +43,8 @@ public class LogicaFakeSesion {
     public interface RespuestaRecuperacion {
         // enlaceEnviado() -->                            (200)
         void enlaceEnviado();
+        // correoNoRegistrado() -->                       (404: no se envía ningún correo)
+        void correoNoRegistrado();
         // mensaje: Text --> error() -->
         void error(String mensaje);
     }
@@ -67,8 +71,8 @@ public class LogicaFakeSesion {
     // -----------------------------------------------------------------------
     // correo: Text --> solicitarRecuperacion() -->
     // (misma firma que solicitarRecuperacion() de la lógica del servidor)
-    // What it does: sends POST /solicitarRecuperacion. The server always
-    //               answers 200 (it does not say if the email exists).
+    // What it does: sends POST /solicitarRecuperacion. 200 -> the link was
+    //               sent; 404 -> the email has no account and nothing is sent.
     // -----------------------------------------------------------------------
     public void solicitarRecuperacion(String correo, final RespuestaRecuperacion respuesta) {
         String cuerpo;
@@ -119,11 +123,14 @@ public class LogicaFakeSesion {
 
     // -----------------------------------------------------------------------
     // codigo: Z --> notificarRecuperacion() --x
-    // What it does: 200 -> enlaceEnviado(); anything else -> error().
+    // What it does: 200 -> enlaceEnviado(); 404 -> correoNoRegistrado();
+    //               anything else -> error().
     // -----------------------------------------------------------------------
     static void notificarRecuperacion(int codigo, RespuestaRecuperacion respuesta) {
         if (codigo == CODIGO_OK) {
             respuesta.enlaceEnviado();
+        } else if (codigo == CODIGO_CORREO_NO_REGISTRADO) {
+            respuesta.correoNoRegistrado();
         } else if (codigo == CODIGO_SIN_CONEXION) {
             respuesta.error(MENSAJE_SIN_CONEXION);
         } else {

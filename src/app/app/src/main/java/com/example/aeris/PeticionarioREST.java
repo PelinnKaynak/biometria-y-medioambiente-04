@@ -30,7 +30,10 @@ import java.util.concurrent.Executors;
 public class PeticionarioREST {
 
     private static final String ETIQUETA_LOG = "PeticionarioREST";
-    private static final int TIEMPO_MAXIMO_MS = 5000;
+    // Conectar con el servidor: 5 s. Esperar la respuesta: 20 s, porque algunas
+    // peticiones tardan más (por ejemplo, /solicitarRecuperacion envía un correo con Gmail).
+    private static final int TIEMPO_CONEXION_MS = 5000;
+    private static final int TIEMPO_RESPUESTA_MS = 20000;
 
     private static final ExecutorService HILO_DE_FONDO = Executors.newSingleThreadExecutor();
     private static final Handler HILO_PRINCIPAL = new Handler(Looper.getMainLooper());
@@ -61,8 +64,8 @@ public class PeticionarioREST {
             String cuerpoRespuesta;
             try {
                 HttpURLConnection conexion = (HttpURLConnection) new URL(urlDestino).openConnection();
-                conexion.setConnectTimeout(TIEMPO_MAXIMO_MS);
-                conexion.setReadTimeout(TIEMPO_MAXIMO_MS);
+                conexion.setConnectTimeout(TIEMPO_CONEXION_MS);
+                conexion.setReadTimeout(TIEMPO_RESPUESTA_MS);
                 conexion.setRequestMethod(metodo);
                 conexion.setRequestProperty("Content-Type", "application/json; charset=utf-8");
 

@@ -17,6 +17,7 @@ import android.text.method.HideReturnsTransformationMethod;
 import android.text.method.PasswordTransformationMethod;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -34,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
     private View marcoCorreo, marcoContrasena;
     private TextView errorCorreo, errorContrasena, errorGeneral, botonAcceder;
     private ProgressBar progreso;
+    private ImageView botonVerContrasena;
     private boolean contrasenaVisible = false;
 
     private final LogicaFakeSesion logica = new LogicaFakeSesion();
@@ -73,7 +75,8 @@ public class LoginActivity extends AppCompatActivity {
         progreso = findViewById(R.id.progreso);
 
         findViewById(R.id.botonVolver).setOnClickListener(vista -> finish());
-        findViewById(R.id.botonVerContrasena).setOnClickListener(vista -> cambiarVisibilidadContrasena());
+        botonVerContrasena = findViewById(R.id.botonVerContrasena);
+        botonVerContrasena.setOnClickListener(vista -> cambiarVisibilidadContrasena());
         findViewById(R.id.enlaceRecuperar).setOnClickListener(vista ->
                 startActivity(new Intent(this, RecuperarContrasenaActivity.class)));
         findViewById(R.id.enlaceRegistrate).setOnClickListener(vista ->
@@ -164,7 +167,9 @@ public class LoginActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // cambiarVisibilidadContrasena() -->
-    // What it does: the eye icon shows or hides the password.
+    // What it does: the eye icon shows or hides the password. The icon says
+    //               how the password is now: crossed-out eye = hidden,
+    //               open eye = visible.
     // -----------------------------------------------------------------------
     private void cambiarVisibilidadContrasena() {
         contrasenaVisible = !contrasenaVisible;
@@ -172,6 +177,10 @@ public class LoginActivity extends AppCompatActivity {
                 ? HideReturnsTransformationMethod.getInstance()
                 : PasswordTransformationMethod.getInstance());
         campoContrasena.setSelection(campoContrasena.getText().length());
+        botonVerContrasena.setImageResource(contrasenaVisible
+                ? R.drawable.ic_ver_contrasena : R.drawable.ic_ocultar_contrasena);
+        botonVerContrasena.setContentDescription(getString(contrasenaVisible
+                ? R.string.login_ocultar_contrasena : R.string.login_ver_contrasena));
     }
 
     // -----------------------------------------------------------------------

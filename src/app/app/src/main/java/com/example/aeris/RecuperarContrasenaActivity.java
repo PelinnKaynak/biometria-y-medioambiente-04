@@ -2,7 +2,7 @@
 // Fichero:     RecuperarContrasenaActivity.java
 // Descripción: Pantalla «Recuperar contraseña» (Figma). Pide el correo y
 //              solicita al servidor que envíe el enlace; después abre «Revisa
-//              tu correo». Diseño en doc/app_design.md. Tarea T003 · H002.
+//              tu correo». Si el correo no tiene cuenta, lo dice y no envía nada. Diseño en doc/app_design.md. Tarea T003 · H002.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       04/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -63,9 +63,7 @@ public class RecuperarContrasenaActivity extends AppCompatActivity {
     // -----------------------------------------------------------------------
     private void pulsarEnviar() {
         String error = ValidadorLogin.validarCorreo(campoCorreo.getText().toString());
-        campoCorreo.setBackgroundResource(error == null ? R.drawable.fondo_campo : R.drawable.fondo_campo_error);
-        errorCorreo.setText(error);
-        errorCorreo.setVisibility(error == null ? View.GONE : View.VISIBLE);
+        mostrarErrorCorreo(error);
         errorGeneral.setVisibility(View.GONE);
         if (error != null) {
             return;
@@ -95,11 +93,27 @@ public class RecuperarContrasenaActivity extends AppCompatActivity {
             }
 
             @Override
+            public void correoNoRegistrado() {
+                mostrarEnviando(false);
+                mostrarErrorCorreo(LogicaFakeSesion.MENSAJE_CORREO_NO_REGISTRADO);
+            }
+
+            @Override
             public void error(String mensaje) {
                 mostrarEnviando(false);
                 mostrarErrorGeneral(mensaje);
             }
         });
+    }
+
+    // -----------------------------------------------------------------------
+    // mensaje: Text | null --> mostrarErrorCorreo() -->
+    // What it does: red border and message under the email (or clears it if null).
+    // -----------------------------------------------------------------------
+    private void mostrarErrorCorreo(String mensaje) {
+        campoCorreo.setBackgroundResource(mensaje == null ? R.drawable.fondo_campo : R.drawable.fondo_campo_error);
+        errorCorreo.setText(mensaje);
+        errorCorreo.setVisibility(mensaje == null ? View.GONE : View.VISIBLE);
     }
 
     private void mostrarErrorGeneral(String mensaje) {

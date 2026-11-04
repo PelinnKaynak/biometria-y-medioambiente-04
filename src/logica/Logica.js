@@ -24,7 +24,7 @@ const TIPO_RECUPERACION = 'recuperacion';
 
 // ---------------------------------------------------------------------------
 // ErrorLogica: error con un código que el servidor REST traduce a HTTP.
-//   codigo ∈ { DATOS_NO_VALIDOS, CORREO_YA_REGISTRADO,
+//   codigo ∈ { DATOS_NO_VALIDOS, CORREO_YA_REGISTRADO, CORREO_NO_REGISTRADO,
 //              CREDENCIALES_INCORRECTAS, TOKEN_NO_VALIDO }
 // ---------------------------------------------------------------------------
 class ErrorLogica extends Error {
@@ -165,21 +165,21 @@ class Logica {
     }
 
     // -----------------------------------------------------------------------
-    // correo: Texto --> solicitarRecuperacion() --> V/F
+    // correo: Texto --> solicitarRecuperacion() -->
     // What it does: if the email has an account, makes a signed recovery token
-    //               (30 minutes) and sends the link by email. Returns true if an
-    //               email was sent. The REST server answers the same in both
-    //               cases.
+    //               (30 minutes) and sends the link by email.
+    //               Throws DATOS_NO_VALIDOS if the email is not valid and
+    //               CORREO_NO_REGISTRADO if it has no account (no email is sent).
     // -----------------------------------------------------------------------
     async solicitarRecuperacion(correo) {
         if (!Validador.esCorreoValido(correo)) {
-            return false;
+            throw new ErrorLogica('DATOS_NO_VALIDOS', 'El correo no tiene un formato válido', ['correo']);
         }
         const correoNormalizado = Validador.normalizarCorreo(correo);
         const [filas] = await this.conexion.execute(
             'SELECT idUsuario, nombre, passwordHash FROM Usuarios WHERE email = ?', [correoNormalizado]);
         if (filas.length !== 1) {
-            return false;
+            throw new ErrorLogica('CORREO_NO_REGISTRADO', 'No hay ninguna cuenta con este correo');
         }
 
         const token = this.crearToken(filas[0], TIPO_RECUPERACION, DURACION_RECUPERACION_SEGUNDOS);
@@ -191,7 +191,6 @@ class Logica {
             `Para crear una contraseña nueva abre este enlace (válido durante ${DURACION_RECUPERACION_SEGUNDOS / 60} minutos):\n` +
             `${enlace}\n\n` +
             'Si no lo has pedido tú, ignora este correo.\n\nEl equipo de AERIS');
-        return true;
     }
 
     // -----------------------------------------------------------------------
