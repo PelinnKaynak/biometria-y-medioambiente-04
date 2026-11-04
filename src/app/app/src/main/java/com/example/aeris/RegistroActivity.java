@@ -73,8 +73,14 @@ public class RegistroActivity extends AppCompatActivity {
         progreso = findViewById(R.id.progreso);
 
         findViewById(R.id.botonVolver).setOnClickListener(vista -> finish());
-        // Al registro se llega desde el inicio de sesión: volver a él es cerrar esta pantalla
-        findViewById(R.id.enlaceIniciarSesion).setOnClickListener(vista -> finish());
+        // «Inicia sesión»: cambia el registro por el login (si el login ya estaba
+        // abierto debajo, vuelve a ese mismo)
+        findViewById(R.id.enlaceIniciarSesion).setOnClickListener(vista -> {
+            Intent intent = new Intent(this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
+        });
         botonContinuar.setOnClickListener(vista -> pulsarContinuar());
     }
 

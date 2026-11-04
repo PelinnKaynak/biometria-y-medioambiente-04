@@ -36,11 +36,11 @@ public class InicioActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // cerrarSesion() -->
-    // What it does: forgets the session and goes back to the log-in screen.
+    // What it does: forgets the session and goes back to the welcome screen.
     // -----------------------------------------------------------------------
     private void cerrarSesion() {
         Sesion.cerrar(this);
-        Intent intent = new Intent(this, LoginActivity.class);
+        Intent intent = new Intent(this, BienvenidaActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();

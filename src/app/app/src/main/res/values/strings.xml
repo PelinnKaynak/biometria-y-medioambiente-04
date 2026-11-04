@@ -3,6 +3,7 @@
 
     <!-- Registro (T002 / H001) -->
     <string name="volver">‹  volver</string>
+    <string name="volver_descripcion">Volver</string>
     <string name="registro_titulo">Crear cuenta</string>
     <string name="registro_subtitulo">Regístrate para empezar a medir el aire que respiras.</string>
     <string name="registro_nombre">Nombre</string>
@@ -56,4 +57,15 @@
     <string name="inicio_saludo">Hola, %1$s</string>
     <string name="inicio_texto">Has iniciado sesión. La pantalla de inicio con la calidad del aire llega en la tarea T006.</string>
     <string name="inicio_cerrar_sesion">Cerrar sesión</string>
+
+    <!-- Bienvenida (T001) -->
+    <string name="bienvenida_titulo">AERIS</string>
+    <string name="bienvenida_texto">Mide la calidad del aire que respiras con tu sensor y consulta el mapa de tu ciudad.</string>
+    <string name="bienvenida_iniciar_sesion">Iniciar sesión</string>
+    <string name="bienvenida_registrarte">Registrarte</string>
+    <string name="bienvenida_ver_mapa"><u>Ver el mapa sin cuenta</u></string>
+
+    <!-- Mapa sin cuenta (provisional) -->
+    <string name="mapa_titulo">Mapa del aire</string>
+    <string name="mapa_texto">Aquí podrás ver el mapa de la calidad del aire de tu ciudad sin crear una cuenta. El mapa llega en su propia tarea.</string>
 </resources>

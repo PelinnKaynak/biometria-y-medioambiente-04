@@ -18,17 +18,16 @@
         android:paddingEnd="27dp"
         android:paddingBottom="32dp">
 
-        <TextView
+        <ImageView
             android:id="@+id/botonVolver"
-            android:layout_width="105dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="11dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:background="@drawable/fondo_boton_volver"
-            android:gravity="center"
-            android:text="@string/volver"
-            android:textColor="@color/texto_principal"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:clickable="true"
+            android:contentDescription="@string/volver_descripcion"
+            android:focusable="true"
+            android:padding="10dp"
+            android:src="@drawable/ic_volver" />
 
         <TextView
             android:layout_width="wrap_content"

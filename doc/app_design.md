@@ -4,6 +4,29 @@
 
 ---
 
+## 0. Bienvenida (T001)
+
+Pantalla de Figma «bienvenida». Es la primera pantalla de la app (`LAUNCHER`).
+
+```text
+BienvenidaActivity --(hay sesión guardada: Sesion.haySesion())--> InicioActivity
+BienvenidaActivity --«Iniciar sesión»--> LoginActivity
+                   --«Registrarte»----> RegistroActivity
+                   --«Ver el mapa sin cuenta»--> MapaSinCuentaActivity   (provisional hasta la tarea del mapa)
+```
+
+```text
+BienvenidaActivity:     onCreate()
+MapaSinCuentaActivity:  onCreate()        (provisional)
+```
+
+- Arriba, degradado `verde_suave → fondo` (`fondo_bienvenida.xml`) con el logo; abajo, título, texto y botones, como en Figma.
+- Al iniciar sesión o registrarse se cierran la bienvenida y el login (`FLAG_ACTIVITY_CLEAR_TASK`): «atrás» desde el inicio sale de la app.
+- «Cerrar sesión» vuelve a la bienvenida.
+- Entre registro y login se usa `FLAG_ACTIVITY_CLEAR_TOP` para no abrir dos veces la misma pantalla.
+
+---
+
 ## 1. Registro de usuario (T002 · H001)
 
 La pantalla de registro solo muestra datos y reacciona a los toques. Las comprobaciones están en `ValidadorRegistro` y la llamada al servidor en `LogicaFakeRegistro`, que ofrece la misma firma que `registrarUsuario()` de la lógica de negocio del servidor (`logica_design.md`).
@@ -159,7 +182,7 @@ Guarda en `SharedPreferences` el correo y los datos de sesión que devuelve el s
 Pantallas de Figma: «login», «recuperar contraseña» y «correo enviado». «Entrar con huella» no se hace en este sprint.
 
 ```text
-LoginActivity --(hay sesión guardada)--> InicioActivity
+BienvenidaActivity --> LoginActivity
 LoginActivity --> ValidadorLogin.validar()
               --> LogicaFakeSesion.iniciarSesion() --> PeticionarioREST --> POST /iniciarSesion
               --> Sesion.iniciar() --> InicioActivity
@@ -261,7 +284,7 @@ InicioActivity (provisional hasta T006): onCreate(), cerrarSesion()
 - **Permiso de red local (Android 17):** desde Android 17 (API 37) una app con `targetSdk 37` necesita el permiso `ACCESS_LOCAL_NETWORK` (grupo «Dispositivos cercanos») para conectar con direcciones de la red local, como `10.0.2.2` o la IP del ordenador en la Wi‑Fi. `RegistroActivity` lo pide al pulsar «Continuar» (`necesitaPermisoRedLocal()`) y, si se concede, llama a `enviarRegistro()`. En versiones anteriores no se pide.
 - **URL_SERVIDOR:** en el emulador es `http://10.0.2.2:8080`; en un teléfono real, la IPv4 del ordenador en la misma Wi‑Fi.
 - **Sesión:** el servidor devuelve un token al registrarse (201) y al iniciar sesión (200). `Sesion.iniciar()` lo guarda con el correo, el rol y el nombre en `SharedPreferences`, así la sesión sigue abierta al cerrar y volver a abrir la app. Las peticiones que necesiten sesión enviarán `Authorization: Bearer <token>`.
-- **Primera pantalla:** hasta que exista la bienvenida (T001) la app se abre en `LoginActivity`; si ya hay sesión guardada, va directa a `InicioActivity`.
+- **Primera pantalla:** `BienvenidaActivity` (T001); si ya hay sesión guardada, va directa a `InicioActivity`.
 - **Cerrar sesión:** `Sesion.cerrar()` borra el token del teléfono; el servidor no guarda sesiones.
 - **Login:** `POST /iniciarSesion` con `{"correo", "contrasena"}`. `200` → sesión iniciada; `401` → «Correo o contraseña incorrectos» (mismo mensaje si el correo no existe), se borra la contraseña escrita y no se da acceso.
 - **Recuperar contraseña:** `POST /solicitarRecuperacion` con `{"correo"}`. `200` → el servidor ha enviado un enlace que caduca a los 30 minutos y se abre «Revisa tu correo»; `404` → el correo no tiene cuenta: no se envía nada y la app muestra «No hay ninguna cuenta con este correo.» debajo del campo. «¿No te ha llegado? Reenviar» pide otro enlace.

@@ -17,17 +17,24 @@
         android:theme="@style/Theme.AERIS"
         android:usesCleartextTraffic="true">
 
-        <!-- Primera pantalla provisional: el inicio de sesión (si ya hay sesión, abre el inicio).
-             En T001 la bienvenida pasa a ser la primera -->
+        <!-- Primera pantalla: la bienvenida (T001). Si ya hay sesión, abre directamente el inicio -->
         <activity
-            android:name=".LoginActivity"
-            android:exported="true"
-            android:windowSoftInputMode="adjustResize">
+            android:name=".BienvenidaActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".MapaSinCuentaActivity"
+            android:exported="false" />
 
         <activity
             android:name=".RegistroActivity"

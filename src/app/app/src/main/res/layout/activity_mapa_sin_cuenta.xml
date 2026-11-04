@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mapa sin cuenta: pantalla PROVISIONAL hasta la tarea del mapa -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/fondo"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    android:padding="27dp"
+    tools:context=".MapaSinCuentaActivity">
+
+    <ImageView
+            android:id="@+id/botonVolver"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/fondo_boton_volver"
+            android:clickable="true"
+            android:contentDescription="@string/volver_descripcion"
+            android:focusable="true"
+            android:padding="10dp"
+            android:src="@drawable/ic_volver" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:text="@string/mapa_titulo"
+        android:textColor="@color/texto_principal"
+        android:textSize="28sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/mapa_texto"
+        android:textColor="@color/texto_secundario"
+        android:textSize="14sp" />
+</LinearLayout>

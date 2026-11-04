@@ -1,8 +1,7 @@
 // ---------------------------------------------------------------------------
 // Fichero:     LoginActivity.java
-// Descripción: Pantalla de inicio de sesión (Figma: «login»). Primera pantalla
-//              de la app hasta que exista la bienvenida (T001): si ya hay una
-//              sesión guardada abre directamente el inicio. Comprueba el
+// Descripción: Pantalla de inicio de sesión (Figma: «login»). Se abre desde la
+//              bienvenida (T001) o desde el registro. Comprueba el
 //              formulario con ValidadorLogin y pide a LogicaFakeSesion que
 //              inicie la sesión. Diseño en doc/app_design.md. Tarea T003 · H002.
 // Autores:     Equipo 04 – SenseTech
@@ -52,16 +51,11 @@ public class LoginActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // onCreate() -->       (lo llama Android al abrir la pantalla)
-    // What it does: if a session is saved, opens the home screen at once;
-    //               if not, shows the form and connects the buttons.
+    // What it does: shows the form and connects the buttons.
     // -----------------------------------------------------------------------
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (Sesion.haySesion(this)) {
-            abrirInicio();
-            return;
-        }
         setContentView(R.layout.activity_login);
 
         campoCorreo = findViewById(R.id.campoCorreo);
@@ -79,8 +73,8 @@ public class LoginActivity extends AppCompatActivity {
         botonVerContrasena.setOnClickListener(vista -> cambiarVisibilidadContrasena());
         findViewById(R.id.enlaceRecuperar).setOnClickListener(vista ->
                 startActivity(new Intent(this, RecuperarContrasenaActivity.class)));
-        findViewById(R.id.enlaceRegistrate).setOnClickListener(vista ->
-                startActivity(new Intent(this, RegistroActivity.class)));
+        // Si el registro ya está abierto debajo, se vuelve a él en lugar de abrir otro
+        findViewById(R.id.enlaceRegistrate).setOnClickListener(vista -> abrirSinRepetir(RegistroActivity.class));
         botonAcceder.setOnClickListener(vista -> pulsarAcceder());
     }
 
@@ -195,11 +189,25 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     // -----------------------------------------------------------------------
+    // pantalla: Clase --> abrirSinRepetir() -->
+    // What it does: opens that screen; if it is already open below this one,
+    //               goes back to it instead of opening a second copy.
+    // -----------------------------------------------------------------------
+    private void abrirSinRepetir(Class<?> pantalla) {
+        Intent intent = new Intent(this, pantalla);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+    }
+
+    // -----------------------------------------------------------------------
     // abrirInicio() -->
-    // What it does: opens the home screen and closes this one.
+    // What it does: opens the home screen and closes all the others
+    //               (bienvenida and login), so «back» does not return to them.
     // -----------------------------------------------------------------------
     private void abrirInicio() {
-        startActivity(new Intent(this, InicioActivity.class));
+        Intent intent = new Intent(this, InicioActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         finish();
     }
 }
