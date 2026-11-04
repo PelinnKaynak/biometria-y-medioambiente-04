@@ -63,6 +63,17 @@ describe('ValidadorUsuario', function () {
             ['nombre', 'apellidos', 'correo', 'contrasena']);
     });
 
+    it('nombre y apellidos: solo letras, espacios, guiones y apóstrofos', function () {
+        assert.strictEqual(Validador.esNombreValido('María José', 50), true);
+        assert.strictEqual(Validador.esNombreValido('Núñez García-López', 100), true);
+        assert.strictEqual(Validador.esNombreValido("O'Connor", 100), true);
+        for (const malo of ['Pelin2', 'Pe_lin', 'Pelin@', 'Pelin.', '-Pelin', 'Ana  María', 'a'.repeat(51)]) {
+            assert.strictEqual(Validador.esNombreValido(malo, 50), false, malo);
+        }
+        assert.deepStrictEqual(Validador.validarRegistro('Pelin3', 'Kay_nak', 'pelin@aeris.es', 'aire2026'),
+            ['nombre', 'apellidos']);
+    });
+
     it('correo con formato incorrecto', function () {
         assert.strictEqual(Validador.esCorreoValido('pelin@'), false);
         assert.strictEqual(Validador.esCorreoValido('pelin@aeris'), false);

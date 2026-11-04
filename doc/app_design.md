@@ -31,6 +31,8 @@ RespuestaREST = ( codigo: Z, cuerpo: Text )
                                     --------- ValidadorRegistro ----------------------
                                     |
                                     | LONGITUD_MINIMA_CONTRASENA: N
+                                    | LONGITUD_MAXIMA_NOMBRE: N = 50
+                                    | LONGITUD_MAXIMA_APELLIDOS: N = 100
                                     |
                                     |
   nombre: Text                  --> validar() --x
@@ -41,6 +43,9 @@ RespuestaREST = ( codigo: Z, cuerpo: Text )
   ErroresFormulario             <-- |
                                     |
                                     |    texto: Text --> estaVacio() --x
+                                    |    B <--
+                                    |
+                                    |    texto: Text, longitudMaxima: N --> esNombreValido() --x
                                     |    B <--
                                     |
                                     |    correo: Text --> esCorreoValido() --x
@@ -145,8 +150,11 @@ RespuestaREST = ( codigo: Z, cuerpo: Text )
 - **Petición REST:** `POST /registrarUsuario` con el cuerpo `{"nombre": ..., "apellidos": ..., "correo": ..., "contrasena": ...}`. Respuestas: `201` cuenta creada, `409` el correo ya tiene cuenta, `400` datos incorrectos, `500` error del servidor. Si no hay conexión el código es `0`.
 - **Contraseña:** el teléfono la envía tal cual por la petición; el **servidor** la guarda cifrada (criterio de H001, tarea T016). El teléfono nunca la guarda.
 - **Correo:** se envía sin espacios y en minúsculas (`normalizarCorreo()`), para que `Pelin@AERIS.es` y `pelin@aeris.es` sean la misma cuenta.
+- **Nombre y apellidos:** solo letras (también con tilde, ñ, ç…) separadas por un espacio, guion o apóstrofo: «María José», «García-López», «O'Connor». No se aceptan números ni símbolos como `_`, `@` o `.`. Máximo 50 caracteres el nombre y 100 los apellidos.
+- **Formato del correo:** `nombre@dominio.ext` (por ejemplo, `pelin@aeris` no es válido).
 - **Contraseña segura:** mínimo 8 caracteres, con al menos una letra y un número.
 - **Sin datos simulados:** la app no simula respuestas. El resultado siempre viene del servidor, que consulta la tabla `Usuarios` de la BD (ver `doc/bd_design.md`). Si el servidor no está en marcha, la app muestra el error de conexión.
+- **Permiso de red local (Android 17):** desde Android 17 (API 37) una app con `targetSdk 37` necesita el permiso `ACCESS_LOCAL_NETWORK` (grupo «Dispositivos cercanos») para conectar con direcciones de la red local, como `10.0.2.2` o la IP del ordenador en la Wi‑Fi. `RegistroActivity` lo pide al pulsar «Continuar» (`necesitaPermisoRedLocal()`) y, si se concede, llama a `enviarRegistro()`. En versiones anteriores no se pide.
 - **URL_SERVIDOR:** en el emulador es `http://10.0.2.2:8080`; en un teléfono real, la IPv4 del ordenador en la misma Wi‑Fi.
 - **Sesión:** al crear la cuenta, `Sesion.iniciar()` guarda el correo en `SharedPreferences`; la sesión sigue abierta al cerrar y volver a abrir la app.
 - **Tras el registro** se abre `VincularSensorActivity`, con la opción «Omitir por ahora». En este sprint es una pantalla provisional; la búsqueda por Bluetooth se programa en T005 (H019).

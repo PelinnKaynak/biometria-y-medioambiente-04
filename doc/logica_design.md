@@ -126,6 +126,7 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   Lista<Texto>                  <-- |     campos erróneos; vacía si todo está bien
                                     |
   texto: Texto                  --> estaVacio() --x            --> V/F
+  texto: Texto, longitudMaxima: N --> esNombreValido() --x      --> V/F
   correo: Texto                 --> esCorreoValido() --x       --> V/F
   contrasena: Texto             --> esContrasenaSegura() --x   --> V/F
   correo: Texto                 --> normalizarCorreo() --x     --> Texto
@@ -144,7 +145,7 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
 - **Rol al registrarse:** quien se registra desde la app es **portador** (columna `role` de `Usuarios`). Los demás roles los asigna el administrador (T030). Premium no es un rol: depende de `premiumHasta`.
 - **Mismo error de acceso:** `iniciarSesion()` lanza `CREDENCIALES_INCORRECTAS` tanto si el correo no existe como si la contraseña es incorrecta, para no revelar qué correos tienen cuenta. Por la misma razón el servidor responde igual a `/solicitarRecuperacion` exista o no el correo.
 - **Recuperación de contraseña sin tabla:** el enlace lleva un token firmado de tipo `"recuperacion"` válido 60 minutos: `urlRestablecer?token=...` (la página la hará la web). Al usarlo cambia la contraseña y, con ella, la huella: el mismo enlace ya no se puede volver a usar y todas las sesiones abiertas se cierran. Un token de recuperación no sirve como sesión (se comprueba el tipo).
-- **Validación en el servidor:** las mismas reglas que `ValidadorRegistro.java` de la app (correo, contraseña de 8 caracteres con letra y número). El servidor nunca se fía de lo que llega.
+- **Validación en el servidor:** las mismas reglas que `ValidadorRegistro.java` de la app: nombre y apellidos solo con letras (con tilde, ñ…) separadas por un espacio, guion o apóstrofo, sin números ni símbolos como `_`, `@` o `.` (máx. 50 y 100 caracteres); correo con formato `nombre@dominio.ext`; contraseña de 8 caracteres con letra y número. El servidor nunca se fía de lo que llega.
 - **Correo normalizado:** sin espacios y en minúsculas, igual que la app.
 - **Fechas:** en UTC (`UTC_TIMESTAMP()`).
 

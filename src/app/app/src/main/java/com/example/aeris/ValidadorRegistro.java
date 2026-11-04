@@ -1,8 +1,9 @@
 // ---------------------------------------------------------------------------
 // Fichero:     ValidadorRegistro.java
 // Descripción: Comprueba los datos del formulario de registro antes de
-//              enviarlos al servidor (campos vacíos, formato del correo,
-//              contraseña segura y confirmación). No usa clases de Android,
+//              enviarlos al servidor (campos vacíos, nombre y apellidos
+//              solo con letras, formato del correo, contraseña segura y
+//              confirmación). No usa clases de Android,
 //              así se puede probar con JUnit sin teléfono.
 //              Diseño en doc/app_design.md. Tarea T002 · historia H001.
 // Autores:     Equipo 04 – SenseTech
@@ -28,6 +29,13 @@ public class ValidadorRegistro {
 
     public static final int LONGITUD_MINIMA_CONTRASENA = 8;
 
+    public static final int LONGITUD_MAXIMA_NOMBRE = 50;
+    public static final int LONGITUD_MAXIMA_APELLIDOS = 100;
+
+    // Letras (también con tilde, ñ, ç…) separadas por un espacio, guion o apóstrofo:
+    // "María José", "García-López", "O'Connor". Sin números ni otros símbolos.
+    private static final Pattern FORMATO_NOMBRE =
+            Pattern.compile("^\\p{L}+([ '’-]\\p{L}+)*$");
     private static final Pattern FORMATO_CORREO =
             Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
     private static final Pattern TIENE_LETRA = Pattern.compile(".*[A-Za-zÁÉÍÓÚÜÑáéíóúüñ].*");
@@ -47,9 +55,13 @@ public class ValidadorRegistro {
 
         if (estaVacio(nombre)) {
             errores.put(CAMPO_NOMBRE, "Escribe tu nombre.");
+        } else if (!esNombreValido(nombre, LONGITUD_MAXIMA_NOMBRE)) {
+            errores.put(CAMPO_NOMBRE, "El nombre solo puede tener letras, espacios, guiones o apóstrofos.");
         }
         if (estaVacio(apellidos)) {
             errores.put(CAMPO_APELLIDOS, "Escribe tus apellidos.");
+        } else if (!esNombreValido(apellidos, LONGITUD_MAXIMA_APELLIDOS)) {
+            errores.put(CAMPO_APELLIDOS, "Los apellidos solo pueden tener letras, espacios, guiones o apóstrofos.");
         }
 
         if (estaVacio(correo)) {
@@ -81,6 +93,21 @@ public class ValidadorRegistro {
     // -----------------------------------------------------------------------
     static boolean estaVacio(String texto) {
         return texto == null || texto.trim().isEmpty();
+    }
+
+    // -----------------------------------------------------------------------
+    // texto: Text, longitudMaxima: N --> esNombreValido() --x
+    // B <--
+    // What it does: true if it only has letters (accents included) separated by
+    //               one space, hyphen or apostrophe, and is not too long.
+    //               Numbers and symbols such as _ @ . are not allowed.
+    // -----------------------------------------------------------------------
+    static boolean esNombreValido(String texto, int longitudMaxima) {
+        if (texto == null) {
+            return false;
+        }
+        String limpio = texto.trim();
+        return limpio.length() <= longitudMaxima && FORMATO_NOMBRE.matcher(limpio).matches();
     }
 
     // -----------------------------------------------------------------------

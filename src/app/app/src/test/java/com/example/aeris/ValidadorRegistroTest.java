@@ -86,4 +86,39 @@ public class ValidadorRegistroTest {
         Map<String, String> errores = validarCon("Pelin", "Kaynak", "pelin@", "aire2026", "aire2026");
         assertEquals("El correo no tiene un formato válido.", errores.get(ValidadorRegistro.CAMPO_CORREO));
     }
+
+    @Test
+    public void nombresConTildesEspaciosGuionesYApostrofos_sonValidos() {
+        assertTrue(ValidadorRegistro.esNombreValido("María José", 50));
+        assertTrue(ValidadorRegistro.esNombreValido("Núñez García-López", 100));
+        assertTrue(ValidadorRegistro.esNombreValido("O'Connor", 100));
+        assertTrue(ValidadorRegistro.esNombreValido("  Pelin  ", 50));
+    }
+
+    @Test
+    public void nombresConNumerosOSimbolos_noSonValidos() {
+        assertFalse(ValidadorRegistro.esNombreValido("Pelin2", 50));
+        assertFalse(ValidadorRegistro.esNombreValido("Pe_lin", 50));
+        assertFalse(ValidadorRegistro.esNombreValido("Pelin@", 50));
+        assertFalse(ValidadorRegistro.esNombreValido("Pelin.", 50));
+        assertFalse(ValidadorRegistro.esNombreValido("-Pelin", 50));
+        assertFalse(ValidadorRegistro.esNombreValido("Ana  María", 50));
+        assertFalse(ValidadorRegistro.esNombreValido("a".repeat(51), 50));
+    }
+
+    @Test
+    public void nombreYApellidosConNumeros_errorEnCadaCampo() {
+        Map<String, String> errores = validarCon("Pelin3", "Kay_nak", "pelin@aeris.es", "aire2026", "aire2026");
+        assertEquals(2, errores.size());
+        assertEquals("El nombre solo puede tener letras, espacios, guiones o apóstrofos.",
+                errores.get(ValidadorRegistro.CAMPO_NOMBRE));
+        assertTrue(errores.containsKey(ValidadorRegistro.CAMPO_APELLIDOS));
+    }
+
+    @Test
+    public void correoMalFormado_errorEnCorreo() {
+        Map<String, String> errores = validarCon("Pelin", "Kaynak", "pelin@aeris", "aire2026", "aire2026");
+        assertEquals(1, errores.size());
+        assertEquals("El correo no tiene un formato válido.", errores.get(ValidadorRegistro.CAMPO_CORREO));
+    }
 }

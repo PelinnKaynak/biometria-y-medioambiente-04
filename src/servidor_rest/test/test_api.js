@@ -93,6 +93,14 @@ describe('API REST de usuarios y autenticación', function () {
         assert.deepStrictEqual(r.cuerpo.campos, ['apellidos', 'correo', 'contrasena']);
     });
 
+    it('POST /registrarUsuario con números o símbolos en el nombre: 400 y no se guarda', async function () {
+        const r = await peticion('POST', '/registrarUsuario', { ...PELIN, nombre: 'Pelin_2', apellidos: 'Kaynak3' });
+        assert.strictEqual(r.codigo, 400);
+        assert.deepStrictEqual(r.cuerpo.campos, ['nombre', 'apellidos']);
+        const [filas] = await logica.conexion.query('SELECT COUNT(*) AS n FROM Usuarios');
+        assert.strictEqual(filas[0].n, 0);
+    });
+
     it('JSON mal formado: 400 · ruta que no existe: 404', async function () {
         assert.strictEqual((await peticion('POST', '/registrarUsuario', '{nombre:')).codigo, 400);
         assert.strictEqual((await peticion('GET', '/noExiste')).codigo, 404);

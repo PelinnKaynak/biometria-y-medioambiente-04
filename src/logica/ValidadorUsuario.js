@@ -14,6 +14,8 @@ const LONGITUD_MINIMA_CONTRASENA = 8;
 const LONGITUD_MAXIMA = { nombre: 50, apellidos: 100, correo: 255 };
 // Mismos patrones que ValidadorRegistro.java (app)
 const PATRON_CORREO = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+// Letras (con tilde, ñ…) separadas por un espacio, guion o apóstrofo, como en la app
+const PATRON_NOMBRE = /^\p{L}+([ '’-]\p{L}+)*$/u;
 const PATRON_LETRA = /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/;
 const PATRON_NUMERO = /[0-9]/;
 
@@ -24,10 +26,10 @@ const PATRON_NUMERO = /[0-9]/;
 // ---------------------------------------------------------------------------
 function validarRegistro(nombre, apellidos, correo, contrasena) {
     const erroneos = [];
-    if (estaVacio(nombre) || nombre.trim().length > LONGITUD_MAXIMA.nombre) {
+    if (!esNombreValido(nombre, LONGITUD_MAXIMA.nombre)) {
         erroneos.push('nombre');
     }
-    if (estaVacio(apellidos) || apellidos.trim().length > LONGITUD_MAXIMA.apellidos) {
+    if (!esNombreValido(apellidos, LONGITUD_MAXIMA.apellidos)) {
         erroneos.push('apellidos');
     }
     if (!esCorreoValido(correo)) {
@@ -45,6 +47,20 @@ function validarRegistro(nombre, apellidos, correo, contrasena) {
 // ---------------------------------------------------------------------------
 function estaVacio(texto) {
     return typeof texto !== 'string' || texto.trim().length === 0;
+}
+
+// ---------------------------------------------------------------------------
+// texto: Texto, longitudMaxima: N --> esNombreValido() --> V/F
+// What it does: true if it only has letters (accents included) separated by
+//               one space, hyphen or apostrophe, and is not too long.
+//               Numbers and symbols such as _ @ . are not allowed.
+// ---------------------------------------------------------------------------
+function esNombreValido(texto, longitudMaxima) {
+    if (estaVacio(texto)) {
+        return false;
+    }
+    const limpio = texto.trim();
+    return limpio.length <= longitudMaxima && PATRON_NOMBRE.test(limpio);
 }
 
 // ---------------------------------------------------------------------------
@@ -78,5 +94,5 @@ function normalizarCorreo(correo) {
 
 module.exports = {
     LONGITUD_MINIMA_CONTRASENA,
-    validarRegistro, estaVacio, esCorreoValido, esContrasenaSegura, normalizarCorreo
+    validarRegistro, estaVacio, esNombreValido, esCorreoValido, esContrasenaSegura, normalizarCorreo
 };
