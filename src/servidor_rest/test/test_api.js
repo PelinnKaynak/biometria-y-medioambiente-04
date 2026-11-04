@@ -179,6 +179,13 @@ describe('API REST de usuarios y autenticación', function () {
         assert.strictEqual((await peticion('POST', '/restablecerContrasenya', { token, contrasena: 'otra2026' })).codigo, 400);
     });
 
+    it('GET /restablecer.html: el servidor sirve la página del enlace de recuperación', async function () {
+        const r = await fetch(url + '/restablecer.html');
+        assert.strictEqual(r.status, 200);
+        assert.match(r.headers.get('content-type'), /text\/html/);
+        assert.ok((await r.text()).includes('/restablecerContrasenya'));
+    });
+
     // --- Autorizacion.extraerToken ------------------------------------------
 
     it('extraerToken() solo acepta "Bearer <token>"', function () {

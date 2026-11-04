@@ -18,7 +18,7 @@ const Validador = require('./ValidadorUsuario');
 
 const ROL_PORTADOR = 'portador';        // rol de quien se registra desde la app
 const DURACION_SESION_SEGUNDOS = 30 * 24 * 60 * 60;      // 30 días
-const DURACION_RECUPERACION_SEGUNDOS = 60 * 60;          // 1 hora
+const DURACION_RECUPERACION_SEGUNDOS = 30 * 60;          // 30 minutos (criterio de T003)
 const TIPO_SESION = 'sesion';
 const TIPO_RECUPERACION = 'recuperacion';
 
@@ -167,7 +167,7 @@ class Logica {
     // -----------------------------------------------------------------------
     // correo: Texto --> solicitarRecuperacion() --> V/F
     // What it does: if the email has an account, makes a signed recovery token
-    //               (1 hour) and sends the link by email. Returns true if an
+    //               (30 minutes) and sends the link by email. Returns true if an
     //               email was sent. The REST server answers the same in both
     //               cases.
     // -----------------------------------------------------------------------

@@ -73,7 +73,7 @@ RespuestaREST = ( codigo: Z, cuerpo: Text )
                                     |    codigo: Z --> interpretarCodigo() --x
                                     |    ResultadoRegistro <--
                                     |
-                                    |    codigo: Z --> notificarResultado() --x
+                                    |    codigo: Z, cuerpo: Text --> notificarResultado() --x
                                     |
                                     |    correo: Text --> normalizarCorreo() --x
                                     |    Text <--
@@ -112,15 +112,24 @@ RespuestaREST = ( codigo: Z, cuerpo: Text )
                                     -------------------------------------------------
 ```
 
-### Clase Sesion (NUEVA)
+### Clase Sesion (MODIFICADA en T003)
+
+Guarda en `SharedPreferences` el correo y los datos de sesión que devuelve el servidor (token, rol y nombre).
 
 ```text
                                     --------- Sesion ---------------------------------
                                     |
-  contexto: Context, correo: Text --> iniciar() --x
+  contexto: Context             --> iniciar() --x
+  correo: Text                      |
+  datos: DatosSesion                |
                                     |
-  contexto: Context             --> correoActual() --x
-  Text                          <-- |
+  contexto: Context             --> haySesion() --x
+  B                             <-- |
+                                    |
+  contexto: Context             --> token() --x          --> Text | null
+  contexto: Context             --> rol() --x            --> Text | null
+  contexto: Context             --> nombre() --x         --> Text | null
+  contexto: Context             --> correoActual() --x   --> Text | null
                                     |
   contexto: Context             --> cerrar() --x
                                     |
@@ -145,7 +154,102 @@ RespuestaREST = ( codigo: Z, cuerpo: Text )
 
 ---
 
-## 2. Aclaraciones del diseño
+## 2. Inicio de sesión y recuperación de contraseña (T003 · H002)
+
+Pantallas de Figma: «login», «recuperar contraseña» y «correo enviado». «Entrar con huella» no se hace en este sprint.
+
+```text
+LoginActivity --(hay sesión guardada)--> InicioActivity
+LoginActivity --> ValidadorLogin.validar()
+              --> LogicaFakeSesion.iniciarSesion() --> PeticionarioREST --> POST /iniciarSesion
+              --> Sesion.iniciar() --> InicioActivity
+LoginActivity --> RegistroActivity  («Regístrate»)
+LoginActivity --> RecuperarContrasenaActivity --> LogicaFakeSesion.solicitarRecuperacion()
+              --> POST /solicitarRecuperacion --> CorreoEnviadoActivity («Revisa tu correo»)
+InicioActivity --(«Cerrar sesión»: Sesion.cerrar())--> LoginActivity
+```
+
+### Tipos
+
+```text
+DatosSesion = ( token: Text, rol: Text, nombre: Text )      // lo devuelve el servidor (200 y 201)
+```
+
+### Clase DatosSesion (NUEVA)
+
+```text
+                                    --------- DatosSesion ----------------------------
+                                    |
+                                    | token: Text, rol: Text, nombre: Text
+                                    |
+  cuerpo: Text                  --> desdeJSON() --x
+  DatosSesion | null            <-- |     null si no es JSON o no tiene token
+                                    |
+                                    -------------------------------------------------
+```
+
+### Clase ValidadorLogin (NUEVA)
+
+```text
+                                    --------- ValidadorLogin -------------------------
+                                    |
+  correo: Text                  --> validar() --x
+  contrasena: Text                  |     correo escrito y con formato válido;
+  ErroresFormulario             <-- |     contraseña escrita (sus reglas las comprueba el servidor)
+                                    |
+  correo: Text                  --> validarCorreo() --x
+  Text | null                   <-- |     mensaje de error o null (también para «Recuperar contraseña»)
+                                    |
+                                    -------------------------------------------------
+```
+
+### Clase LogicaFakeSesion (NUEVA)
+
+```text
+                                    --------- LogicaFakeSesion -----------------------
+                                    |
+                                    | CODIGO_OK: Z = 200
+                                    | CODIGO_CREDENCIALES_INCORRECTAS: Z = 401
+                                    | MENSAJE_CREDENCIALES_INCORRECTAS: Text = "Correo o contraseña incorrectos"
+                                    |
+  correo: Text                  --> iniciarSesion() -->
+  contrasena: Text                  |     callback: sesionIniciada(DatosSesion),
+                                    |     credencialesIncorrectas(), error(Text)
+                                    |
+  correo: Text                  --> solicitarRecuperacion() -->
+                                    |     callback: enlaceEnviado(), error(Text)
+                                    |
+                                    |    correo: Text, contrasena: Text --> crearJSONInicioSesion() --x
+                                    |    Text <--
+                                    |
+                                    |    codigo: Z, cuerpo: Text --> notificarInicioSesion() --x
+                                    |
+                                    |    codigo: Z --> notificarRecuperacion() --x
+                                    |
+                                    -------------------------------------------------
+```
+
+### Clase PermisoRedLocal (NUEVA)
+
+```text
+  contexto: Context             --> hayQuePedirlo() --x
+  B                             <-- |     V en Android 17+ si falta ACCESS_LOCAL_NETWORK
+```
+
+### Pantallas (NUEVAS)
+
+```text
+LoginActivity:               onCreate(), pulsarAcceder(), enviarInicioSesion(), mostrarErrores(),
+                             marcarCampo(), mostrarErrorGeneral(), cambiarVisibilidadContrasena(),
+                             mostrarEnviando(), abrirInicio()
+RecuperarContrasenaActivity: onCreate(), pulsarEnviar(), enviarSolicitud()
+CorreoEnviadoActivity:       onCreate(), reenviar()
+InicioActivity (provisional hasta T006): onCreate(), cerrarSesion()
+```
+
+---
+
+## 3. Aclaraciones del diseño
 
 - **Petición REST:** `POST /registrarUsuario` con el cuerpo `{"nombre": ..., "apellidos": ..., "correo": ..., "contrasena": ...}`. Respuestas: `201` cuenta creada, `409` el correo ya tiene cuenta, `400` datos incorrectos, `500` error del servidor. Si no hay conexión el código es `0`.
 - **Contraseña:** el teléfono la envía tal cual por la petición; el **servidor** la guarda cifrada (criterio de H001, tarea T016). El teléfono nunca la guarda.
@@ -156,16 +260,20 @@ RespuestaREST = ( codigo: Z, cuerpo: Text )
 - **Sin datos simulados:** la app no simula respuestas. El resultado siempre viene del servidor, que consulta la tabla `Usuarios` de la BD (ver `doc/bd_design.md`). Si el servidor no está en marcha, la app muestra el error de conexión.
 - **Permiso de red local (Android 17):** desde Android 17 (API 37) una app con `targetSdk 37` necesita el permiso `ACCESS_LOCAL_NETWORK` (grupo «Dispositivos cercanos») para conectar con direcciones de la red local, como `10.0.2.2` o la IP del ordenador en la Wi‑Fi. `RegistroActivity` lo pide al pulsar «Continuar» (`necesitaPermisoRedLocal()`) y, si se concede, llama a `enviarRegistro()`. En versiones anteriores no se pide.
 - **URL_SERVIDOR:** en el emulador es `http://10.0.2.2:8080`; en un teléfono real, la IPv4 del ordenador en la misma Wi‑Fi.
-- **Sesión:** al crear la cuenta, `Sesion.iniciar()` guarda el correo en `SharedPreferences`; la sesión sigue abierta al cerrar y volver a abrir la app.
-- **Tras el registro** se abre `VincularSensorActivity`, con la opción «Omitir por ahora». En este sprint es una pantalla provisional; la búsqueda por Bluetooth se programa en T005 (H019).
-- **Pantalla de inicio provisional:** hasta que exista la bienvenida (T001), la app se abre en el registro.
+- **Sesión:** el servidor devuelve un token al registrarse (201) y al iniciar sesión (200). `Sesion.iniciar()` lo guarda con el correo, el rol y el nombre en `SharedPreferences`, así la sesión sigue abierta al cerrar y volver a abrir la app. Las peticiones que necesiten sesión enviarán `Authorization: Bearer <token>`.
+- **Primera pantalla:** hasta que exista la bienvenida (T001) la app se abre en `LoginActivity`; si ya hay sesión guardada, va directa a `InicioActivity`.
+- **Cerrar sesión:** `Sesion.cerrar()` borra el token del teléfono; el servidor no guarda sesiones.
+- **Login:** `POST /iniciarSesion` con `{"correo", "contrasena"}`. `200` → sesión iniciada; `401` → «Correo o contraseña incorrectos» (mismo mensaje si el correo no existe), se borra la contraseña escrita y no se da acceso.
+- **Recuperar contraseña:** `POST /solicitarRecuperacion` con `{"correo"}`. El servidor responde siempre `200` (no dice si el correo tiene cuenta) y, si la tiene, envía un enlace que caduca a los 30 minutos. «¿No te ha llegado? Reenviar» pide otro enlace.
+- **Tras el registro** se abre `VincularSensorActivity`, con la opción «Omitir por ahora» (abre el inicio). En este sprint es una pantalla provisional; la búsqueda por Bluetooth se programa en T005 (H019).
+- **Inicio provisional:** `InicioActivity` solo saluda y permite cerrar sesión; la pantalla de inicio real es T006.
 - **PeticionarioREST:** es el código proporcionado por el profesor, con la misma interfaz, pero sin `AsyncTask` (obsoleta desde Android 11): la petición se hace en un hilo de fondo (`Executor`) y el callback se llama en el hilo principal.
 - **Visibilidad:** los métodos auxiliares de `ValidadorRegistro` y `LogicaFakeRegistro` son de paquete (sin `public`) para poder probarlos con JUnit; ninguna otra clase los usa.
 
 ---
 
-## 3. Reglas generales
+## 4. Reglas generales
 
 - **Lenguaje:** Java 11, Android 10 (API 29) o superior.
 - **Cabecera de fichero** con nombre, descripción, autores, fecha y copyright; **cabecera de cada método** con su diseño lógico en la notación de la asignatura y una línea `What it does:`.
-- **Tests automáticos (JUnit 4):** `ValidadorRegistroTest` (campos vacíos, correo, contraseña segura, confirmación) y `LogicaFakeRegistroTest` (JSON enviado y respuesta para 201, 409, 500 y sin conexión). Se ejecutan con `./gradlew test` desde `src/app`.
+- **Tests automáticos (JUnit 4):** `ValidadorRegistroTest` (campos vacíos, nombre y apellidos, correo, contraseña segura, confirmación), `LogicaFakeRegistroTest` (JSON enviado y respuesta para 201 con token, 409, 500 y sin conexión), `ValidadorLoginTest` (campos vacíos y correo) y `LogicaFakeSesionTest` (JSON enviado, 200 con token, 401, 500, sin conexión y recuperación). Se ejecutan con `./gradlew test` desde `src/app`.

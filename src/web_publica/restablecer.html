@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!-- ---------------------------------------------------------------------------
+     Fichero:     restablecer.html
+     Descripción: Página a la que lleva el enlace del correo «Recuperar
+                  contraseña». Lee el token de la URL, pide la contraseña nueva
+                  (dos veces) y la envía con POST /restablecerContrasenya.
+                  La sirve el servidor REST: http://localhost:8080/restablecer.html
+                  Diseño en doc/web_publica_design.md. Tarea T003 / T016 · H002.
+     Autores:     Equipo 04 – SenseTech
+     Fecha:       04/11/2026
+     --------------------------------------------------------------------------- -->
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AERIS · Nueva contraseña</title>
+    <style>
+        :root {
+            --fondo: #F5F6FA; --blanco: #FFFFFF; --texto: #432E60; --texto2: #8992B8;
+            --borde: #E3E5EF; --violeta: #7958A7; --violeta-claro: #8A68BA;
+            --error: #D9534F; --ok: #2E7D5B;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: var(--fondo); color: var(--texto);
+            font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif; padding: 24px 16px;
+        }
+        main {
+            width: 100%; max-width: 400px; background: var(--blanco); border-radius: 16px;
+            padding: 32px 28px; box-shadow: 0 8px 30px rgba(67, 46, 96, 0.08);
+        }
+        .marca { text-align: center; color: var(--violeta-claro); letter-spacing: 6px; font-weight: 600; margin: 0 0 20px; }
+        h1 { font-size: 26px; margin: 0 0 8px; }
+        p.texto { color: var(--texto2); font-size: 14px; margin: 0 0 22px; line-height: 1.45; }
+        label { display: block; font-size: 12px; font-weight: 700; margin: 14px 0 4px; }
+        input {
+            width: 100%; height: 44px; border: 1px solid var(--borde); border-radius: 10px;
+            padding: 0 14px; font-size: 15px; color: var(--texto); background: var(--blanco);
+        }
+        input:focus { outline: 2px solid var(--violeta-claro); outline-offset: 1px; }
+        input.con-error { border-color: var(--error); }
+        .error { color: var(--error); font-size: 12px; margin-top: 4px; min-height: 0; }
+        button {
+            width: 100%; height: 46px; margin-top: 24px; border: 0; border-radius: 12px; cursor: pointer;
+            color: var(--blanco); font-size: 16px; font-weight: 700;
+            background: linear-gradient(90deg, var(--violeta-claro), var(--violeta));
+        }
+        button:disabled { opacity: 0.6; cursor: default; }
+        .mensaje { margin-top: 18px; font-size: 14px; text-align: center; }
+        .mensaje.ok { color: var(--ok); }
+        .mensaje.mal { color: var(--error); }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+<main>
+    <p class="marca">AERIS</p>
+    <h1>Nueva contraseña</h1>
+    <p class="texto">Escribe tu contraseña nueva. Mínimo 8 caracteres, con al menos una letra y un número.</p>
+
+    <form id="formulario" novalidate>
+        <label for="contrasena">Contraseña nueva</label>
+        <input id="contrasena" type="password" autocomplete="new-password" required>
+        <div id="errorContrasena" class="error"></div>
+
+        <label for="confirmacion">Repite la contraseña</label>
+        <input id="confirmacion" type="password" autocomplete="new-password" required>
+        <div id="errorConfirmacion" class="error"></div>
+
+        <button id="boton" type="submit">Guardar contraseña</button>
+    </form>
+
+    <p id="mensaje" class="mensaje" hidden></p>
+</main>
+
+<script>
+    'use strict';
+
+    // Mismas reglas que la app (ValidadorRegistro.esContrasenaSegura) y el servidor
+    const LONGITUD_MINIMA = 8;
+    const token = new URLSearchParams(location.search).get('token');
+
+    const formulario = document.getElementById('formulario');
+    const campoContrasena = document.getElementById('contrasena');
+    const campoConfirmacion = document.getElementById('confirmacion');
+    const boton = document.getElementById('boton');
+    const mensaje = document.getElementById('mensaje');
+
+    // -------------------------------------------------------------------------
+    // contrasena: Texto --> esContrasenaSegura() --> V/F
+    // What it does: at least 8 characters, one letter and one number.
+    // -------------------------------------------------------------------------
+    function esContrasenaSegura(contrasena) {
+        return contrasena.length >= LONGITUD_MINIMA
+            && /[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(contrasena)
+            && /[0-9]/.test(contrasena);
+    }
+
+    // -------------------------------------------------------------------------
+    // campo: Input, idError: Texto, texto: Texto | null --> marcar() -->
+    // What it does: shows (or clears) the error under a field.
+    // -------------------------------------------------------------------------
+    function marcar(campo, idError, texto) {
+        campo.classList.toggle('con-error', Boolean(texto));
+        document.getElementById(idError).textContent = texto || '';
+    }
+
+    // -------------------------------------------------------------------------
+    // texto: Texto, bien: V/F --> mostrarMensaje() -->
+    // -------------------------------------------------------------------------
+    function mostrarMensaje(texto, bien) {
+        mensaje.textContent = texto;
+        mensaje.className = 'mensaje ' + (bien ? 'ok' : 'mal');
+        mensaje.hidden = false;
+    }
+
+    if (!token) {
+        formulario.hidden = true;
+        mostrarMensaje('El enlace no es válido. Pide uno nuevo desde la app.', false);
+    }
+
+    // -------------------------------------------------------------------------
+    // evento --> enviar() -->
+    // What it does: checks both fields and sends POST /restablecerContrasenya.
+    //               204 -> done; 400 -> the link expired or was already used.
+    // -------------------------------------------------------------------------
+    formulario.addEventListener('submit', async (evento) => {
+        evento.preventDefault();
+        const contrasena = campoContrasena.value;
+        const confirmacion = campoConfirmacion.value;
+
+        const errorContrasena = !contrasena ? 'Escribe una contraseña.'
+            : !esContrasenaSegura(contrasena) ? 'Mínimo 8 caracteres, con al menos una letra y un número.' : null;
+        const errorConfirmacion = !confirmacion ? 'Repite la contraseña.'
+            : confirmacion !== contrasena ? 'Las contraseñas no coinciden.' : null;
+        marcar(campoContrasena, 'errorContrasena', errorContrasena);
+        marcar(campoConfirmacion, 'errorConfirmacion', errorConfirmacion);
+        mensaje.hidden = true;
+        if (errorContrasena || errorConfirmacion) {
+            return;
+        }
+
+        boton.disabled = true;
+        boton.textContent = 'Guardando…';
+        try {
+            const respuesta = await fetch('/restablecerContrasenya', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, contrasena })
+            });
+            if (respuesta.status === 204) {
+                formulario.hidden = true;
+                mostrarMensaje('Contraseña cambiada. Ya puedes iniciar sesión en la app con la contraseña nueva.', true);
+                return;
+            }
+            const cuerpo = await respuesta.json().catch(() => ({}));
+            mostrarMensaje(respuesta.status === 400 && !cuerpo.campos
+                ? 'El enlace ha caducado o ya se ha usado. Pide uno nuevo desde la app.'
+                : (cuerpo.error || 'No se ha podido cambiar la contraseña.'), false);
+        } catch (error) {
+            mostrarMensaje('No hay conexión con el servidor. Inténtalo de nuevo.', false);
+        } finally {
+            boton.disabled = false;
+            boton.textContent = 'Guardar contraseña';
+        }
+    });
+</script>
+</body>
+</html>

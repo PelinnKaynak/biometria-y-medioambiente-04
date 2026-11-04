@@ -16,11 +16,16 @@ import org.junit.Test;
 
 public class LogicaFakeRegistroTest {
 
+    // Respuesta del servidor a POST /registrarUsuario (201)
+    static final String CUERPO_SESION =
+            "{\"idUsuario\":1,\"token\":\"abc.123\",\"rol\":\"portador\",\"nombre\":\"Pelin\"}";
+
     // Callback de prueba que apunta qué método se ha llamado
     private static class RespuestaApuntada implements LogicaFakeRegistro.RespuestaRegistro {
         String llamado = "";
         String mensaje = "";
-        @Override public void registrado() { llamado = "registrado"; }
+        DatosSesion datos;
+        @Override public void registrado(DatosSesion datos) { llamado = "registrado"; this.datos = datos; }
         @Override public void correoYaRegistrado() { llamado = "correoYaRegistrado"; }
         @Override public void error(String mensaje) { llamado = "error"; this.mensaje = mensaje; }
     }
@@ -49,21 +54,31 @@ public class LogicaFakeRegistroTest {
     @Test
     public void codigo201_llamaARegistrado() {
         RespuestaApuntada respuesta = new RespuestaApuntada();
-        LogicaFakeRegistro.notificarResultado(201, respuesta);
+        LogicaFakeRegistro.notificarResultado(201, CUERPO_SESION, respuesta);
         assertEquals("registrado", respuesta.llamado);
+        assertEquals("abc.123", respuesta.datos.token);
+        assertEquals("portador", respuesta.datos.rol);
+        assertEquals("Pelin", respuesta.datos.nombre);
+    }
+
+    @Test
+    public void codigo201SinToken_llamaAError() {
+        RespuestaApuntada respuesta = new RespuestaApuntada();
+        LogicaFakeRegistro.notificarResultado(201, "", respuesta);
+        assertEquals("error", respuesta.llamado);
     }
 
     @Test
     public void codigo409_llamaACorreoYaRegistrado() {
         RespuestaApuntada respuesta = new RespuestaApuntada();
-        LogicaFakeRegistro.notificarResultado(409, respuesta);
+        LogicaFakeRegistro.notificarResultado(409, "", respuesta);
         assertEquals("correoYaRegistrado", respuesta.llamado);
     }
 
     @Test
     public void codigo500_llamaAErrorConElCodigo() {
         RespuestaApuntada respuesta = new RespuestaApuntada();
-        LogicaFakeRegistro.notificarResultado(500, respuesta);
+        LogicaFakeRegistro.notificarResultado(500, "", respuesta);
         assertEquals("error", respuesta.llamado);
         assertTrue(respuesta.mensaje.contains("500"));
     }
@@ -71,7 +86,7 @@ public class LogicaFakeRegistroTest {
     @Test
     public void sinConexion_llamaAErrorDeConexion() {
         RespuestaApuntada respuesta = new RespuestaApuntada();
-        LogicaFakeRegistro.notificarResultado(0, respuesta);
+        LogicaFakeRegistro.notificarResultado(0, "", respuesta);
         assertEquals("error", respuesta.llamado);
         assertTrue(respuesta.mensaje.contains("conexión"));
     }

@@ -9,6 +9,7 @@
 // ---------------------------------------------------------------------------
 package com.example.aeris;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,12 +19,16 @@ public class VincularSensorActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // onCreate() -->       (lo llama Android al abrir la pantalla)
-    // What it does: shows the screen; "Omitir por ahora" closes it (until T005).
+    // What it does: shows the screen; "Omitir por ahora" opens the home screen
+    //               (until T005 adds the Bluetooth search).
     // -----------------------------------------------------------------------
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vincular_sensor);
-        findViewById(R.id.enlaceOmitir).setOnClickListener(vista -> finish());
+        findViewById(R.id.enlaceOmitir).setOnClickListener(vista -> {
+            startActivity(new Intent(this, InicioActivity.class));
+            finish();
+        });
     }
 }

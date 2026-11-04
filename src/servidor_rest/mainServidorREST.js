@@ -30,7 +30,9 @@ async function main() {
         puerto: entorno.SMTP_PUERTO,
         usuario: entorno.SMTP_USUARIO,
         contrasenya: entorno.SMTP_CONTRASENYA,
-        remitente: entorno.SMTP_REMITENTE || 'AERIS <no-responder@aeris.es>'
+        // Gmail solo deja enviar desde la propia cuenta: por defecto, el remitente es SMTP_USUARIO
+        remitente: entorno.SMTP_REMITENTE
+            || (entorno.SMTP_USUARIO ? `AERIS <${entorno.SMTP_USUARIO}>` : 'AERIS <no-responder@aeris.es>')
     });
 
     // Clave secreta que firma los tokens de sesión y de recuperación.

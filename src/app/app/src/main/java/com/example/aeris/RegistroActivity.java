@@ -12,19 +12,15 @@
 package com.example.aeris;
 
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import java.util.Map;
 
@@ -39,18 +35,14 @@ public class RegistroActivity extends AppCompatActivity {
 
     private final LogicaFakeRegistro logica = new LogicaFakeRegistro();
 
-    // Android 17 (API 37) pide permiso para conectar con la red local (el servidor
-    // está en 10.0.2.2 o en la IP del ordenador en la Wi-Fi).
-    static final String PERMISO_RED_LOCAL = "android.permission.ACCESS_LOCAL_NETWORK";
-    static final int API_ANDROID_17 = 37;
-
+    // Android 17 pide permiso para conectar con la red local (ver PermisoRedLocal).
     // Pregunta el permiso y, si se concede, envía el registro
     private final ActivityResultLauncher<String> pedirPermisoRedLocal =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), concedido -> {
                 if (concedido) {
                     enviarRegistro();
                 } else {
-                    errorGeneral.setText(R.string.registro_permiso_red_denegado);
+                    errorGeneral.setText(R.string.permiso_red_denegado);
                     errorGeneral.setVisibility(View.VISIBLE);
                 }
             });
@@ -81,8 +73,8 @@ public class RegistroActivity extends AppCompatActivity {
         progreso = findViewById(R.id.progreso);
 
         findViewById(R.id.botonVolver).setOnClickListener(vista -> finish());
-        findViewById(R.id.enlaceIniciarSesion).setOnClickListener(vista ->
-                Toast.makeText(this, R.string.registro_login_pendiente, Toast.LENGTH_SHORT).show());
+        // Al registro se llega desde el inicio de sesión: volver a él es cerrar esta pantalla
+        findViewById(R.id.enlaceIniciarSesion).setOnClickListener(vista -> finish());
         botonContinuar.setOnClickListener(vista -> pulsarContinuar());
     }
 
@@ -101,23 +93,11 @@ public class RegistroActivity extends AppCompatActivity {
             return;
         }
 
-        if (necesitaPermisoRedLocal()) {
-            pedirPermisoRedLocal.launch(PERMISO_RED_LOCAL);
+        if (PermisoRedLocal.hayQuePedirlo(this)) {
+            pedirPermisoRedLocal.launch(PermisoRedLocal.PERMISO);
         } else {
             enviarRegistro();
         }
-    }
-
-    // -----------------------------------------------------------------------
-    // necesitaPermisoRedLocal() --x
-    // B <--
-    // What it does: true on Android 17 or newer if the local network permission
-    //               has not been given yet. Older Android versions do not need it.
-    // -----------------------------------------------------------------------
-    private boolean necesitaPermisoRedLocal() {
-        return Build.VERSION.SDK_INT >= API_ANDROID_17
-                && ContextCompat.checkSelfPermission(this, PERMISO_RED_LOCAL)
-                   != PackageManager.PERMISSION_GRANTED;
     }
 
     // -----------------------------------------------------------------------
@@ -135,9 +115,9 @@ public class RegistroActivity extends AppCompatActivity {
         logica.registrarUsuario(nombre, apellidos, correo, contrasena,
                 new LogicaFakeRegistro.RespuestaRegistro() {
                     @Override
-                    public void registrado() {
+                    public void registrado(DatosSesion datos) {
                         mostrarEnviando(false);
-                        Sesion.iniciar(RegistroActivity.this, LogicaFakeRegistro.normalizarCorreo(correo));
+                        Sesion.iniciar(RegistroActivity.this, LogicaFakeRegistro.normalizarCorreo(correo), datos);
                         abrirVincularSensor();
                     }
 
@@ -221,11 +201,13 @@ public class RegistroActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // abrirVincularSensor() -->
-    // What it does: opens the Vincular sensor screen and closes this one,
-    //               so that "back" does not return to the form.
+    // What it does: opens the Vincular sensor screen and closes the others
+    //               (registro and login), so that "back" does not return to them.
     // -----------------------------------------------------------------------
     private void abrirVincularSensor() {
-        startActivity(new Intent(this, VincularSensorActivity.class));
+        Intent intent = new Intent(this, VincularSensorActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
         finish();
     }
 

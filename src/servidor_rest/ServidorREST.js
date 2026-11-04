@@ -2,7 +2,9 @@
 // Fichero:     ServidorREST.js
 // Descripción: Crea la aplicación Express con el cuerpo JSON, las reglas
 //              REST y las respuestas 400 (JSON mal formado) y 404 (ruta que
-//              no existe). No arranca el servidor: lo hace mainServidorREST.js
+//              no existe), y sirve las páginas de src/web_publica (por ahora
+//              restablecer.html, la del enlace de recuperar contraseña).
+//              No arranca el servidor: lo hace mainServidorREST.js
 //              y, en los tests, el propio test.
 //              Diseño en doc/servidor_rest_design.md. Tarea T016.
 // Autores:     Equipo 04 – SenseTech
@@ -11,8 +13,11 @@
 // ---------------------------------------------------------------------------
 'use strict';
 
+const path = require('path');
 const express = require('express');
 const { cargarReglasREST } = require('./ReglasREST');
+
+const CARPETA_WEB_PUBLICA = path.join(__dirname, '..', 'web_publica');
 
 // ---------------------------------------------------------------------------
 // logica: Logica, reglasExtra: ( servidor: Express ) --> crearServidor() --> Express
@@ -22,6 +27,9 @@ const { cargarReglasREST } = require('./ReglasREST');
 function crearServidor(logica, reglasExtra) {
     const servidor = express();
     servidor.use(express.json({ limit: '100kb' }));
+
+    // Páginas web estáticas (src/web_publica): http://localhost:8080/restablecer.html
+    servidor.use(express.static(CARPETA_WEB_PUBLICA));
 
     cargarReglasREST(servidor, logica);
     if (reglasExtra) {

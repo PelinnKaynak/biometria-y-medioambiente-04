@@ -24,7 +24,7 @@ public class LogicaFakeRegistro {
     // Dirección del servidor REST:
     //   emulador       -> http://10.0.2.2:8080 (el ordenador que ejecuta el emulador)
     //   teléfono real  -> http://<IPv4 del ordenador en la misma Wi-Fi>:8080
-    private static final String URL_SERVIDOR = "http://10.0.2.2:8080";
+    static final String URL_SERVIDOR = "http://10.0.2.2:8080";
 
     static final int CODIGO_CREADO = 201;
     static final int CODIGO_CORREO_YA_REGISTRADO = 409;
@@ -37,10 +37,11 @@ public class LogicaFakeRegistro {
     // -----------------------------------------------------------------------
     public interface RespuestaRegistro {
         // ------------------------------------------------------------
-        // registrado() -->
+        // datos: DatosSesion --> registrado() -->
         // What it does: called when the server created the account (201).
+        //               The server also opens the session and sends its token.
         // ------------------------------------------------------------
-        void registrado();
+        void registrado(DatosSesion datos);
 
         // ------------------------------------------------------------
         // correoYaRegistrado() -->
@@ -76,7 +77,7 @@ public class LogicaFakeRegistro {
                 "POST",
                 URL_SERVIDOR + "/registrarUsuario",
                 cuerpo,
-                (codigo, cuerpoRespuesta) -> notificarResultado(codigo, respuesta));
+                (codigo, cuerpoRespuesta) -> notificarResultado(codigo, cuerpoRespuesta, respuesta));
     }
 
     // -----------------------------------------------------------------------
@@ -112,14 +113,20 @@ public class LogicaFakeRegistro {
     }
 
     // -----------------------------------------------------------------------
-    // codigo: Z --> notificarResultado() --x
+    // codigo: Z, cuerpo: Text --> notificarResultado() --x
     // (el callback respuesta se omite en la notación)
     // What it does: calls the right method of the callback for that answer code.
+    //               With 201 it reads the session data (token) from the body.
     // -----------------------------------------------------------------------
-    static void notificarResultado(int codigo, RespuestaRegistro respuesta) {
+    static void notificarResultado(int codigo, String cuerpo, RespuestaRegistro respuesta) {
         switch (interpretarCodigo(codigo)) {
             case REGISTRADO:
-                respuesta.registrado();
+                DatosSesion datos = DatosSesion.desdeJSON(cuerpo);
+                if (datos != null) {
+                    respuesta.registrado(datos);
+                } else {
+                    respuesta.error("Respuesta del servidor no válida.");
+                }
                 break;
             case CORREO_YA_REGISTRADO:
                 respuesta.correoYaRegistrado();

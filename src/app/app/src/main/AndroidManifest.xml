@@ -17,9 +17,10 @@
         android:theme="@style/Theme.AERIS"
         android:usesCleartextTraffic="true">
 
-        <!-- Pantalla de inicio provisional: el registro. En T001 la bienvenida pasa a ser la primera -->
+        <!-- Primera pantalla provisional: el inicio de sesión (si ya hay sesión, abre el inicio).
+             En T001 la bienvenida pasa a ser la primera -->
         <activity
-            android:name=".RegistroActivity"
+            android:name=".LoginActivity"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -27,6 +28,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".RegistroActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".RecuperarContrasenaActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <activity
+            android:name=".CorreoEnviadoActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".InicioActivity"
+            android:exported="false" />
 
         <activity
             android:name=".VincularSensorActivity"

@@ -132,7 +132,11 @@ describe('Logica (usuarios y autenticación)', function () {
         assert.strictEqual(correos.length, 1);
         assert.strictEqual(correos[0].destinatario, 'pelin@aeris.es');
         assert.ok(correos[0].texto.includes(URL_RESTABLECER + '?token='));
-        assert.ok(Seguridad.leerToken(tokenDelUltimoCorreo(), CLAVE));
+        const datos = Seguridad.leerToken(tokenDelUltimoCorreo(), CLAVE);
+        assert.ok(datos);
+        const minutos = (datos.exp - Date.now() / 1000) / 60;
+        assert.ok(minutos > 29 && minutos <= 30, 'el enlace caduca a los 30 minutos');
+        assert.ok(correos[0].texto.includes('30 minutos'));
     });
 
     it('solicitarRecuperacion() con un correo no registrado no envía nada', async function () {
