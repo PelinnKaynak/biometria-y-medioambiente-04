@@ -92,7 +92,10 @@
     <string name="editar_titulo">Editar mis datos</string>
     <string name="editar_subtitulo">Cambia tus datos o tu contraseña.</string>
     <string name="editar_guardar">Guardar cambios</string>
-    <string name="editar_seccion_contrasena">Cambiar contraseña</string>
+    <string name="editar_seccion_datos">Tus datos</string>
+    <string name="editar_seccion_datos_texto">Tu nombre y el correo con el que inicias sesión.</string>
+    <string name="editar_seccion_contrasena">Contraseña</string>
+    <string name="editar_seccion_contrasena_texto">Para cambiarla, escribe primero la actual.</string>
     <string name="editar_contrasena_actual">Contraseña actual</string>
     <string name="editar_contrasena_actual_pista">Tu contraseña actual</string>
     <string name="editar_contrasena_nueva">Nueva contraseña</string>

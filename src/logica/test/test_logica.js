@@ -109,6 +109,21 @@ describe('Logica (usuarios y autenticación)', function () {
         await logica.iniciarSesion('pelin@aeris.es', 'ozono2027');
     });
 
+    it('restablecerContrasenya() con la misma contraseña que la actual lanza DATOS_NO_VALIDOS', async function () {
+        await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.solicitarRecuperacion('pelin@aeris.es');
+        const token = correos[0].texto.match(/token=(\S+)/)[1];
+        await assert.rejects(logica.restablecerContrasenya(token, 'aire2026'),
+            (e) => e.codigo === 'DATOS_NO_VALIDOS' && e.message.includes('distinta de la actual'));
+        await logica.restablecerContrasenya(token, 'ozono2027');      // el enlace sigue valiendo
+    });
+
+    it('cambiarContrasenya() con la misma contraseña que la actual lanza DATOS_NO_VALIDOS', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await assert.rejects(logica.cambiarContrasenya(sesion.idUsuario, 'aire2026', 'aire2026'),
+            { codigo: 'DATOS_NO_VALIDOS' });
+    });
+
     it('cambiarContrasenya() con la actual incorrecta o una nueva débil lanza un error', async function () {
         const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
         await assert.rejects(logica.cambiarContrasenya(sesion.idUsuario, 'otra1234', 'ozono2027'),

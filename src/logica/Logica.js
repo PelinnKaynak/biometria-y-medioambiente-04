@@ -40,6 +40,7 @@ class ErrorLogica extends Error {
 }
 
 const TAMANYO_MAXIMO_FOTO = 200000;     // caracteres en base64 (unos 150 KB)
+const MENSAJE_CONTRASENA_IGUAL = 'La contraseña nueva tiene que ser distinta de la actual';
 
 // ---------------------------------------------------------------------------
 // foto: Texto --> esFotoValida() --> V/F
@@ -251,6 +252,9 @@ class Logica {
         if (!correcta) {
             throw new ErrorLogica('CONTRASENA_INCORRECTA', 'La contraseña actual no es correcta');
         }
+        if (contrasenaNueva === contrasenaActual) {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', MENSAJE_CONTRASENA_IGUAL, ['contrasenaNueva']);
+        }
         const hash = await Seguridad.calcularHash(contrasenaNueva);
         await this.conexion.execute('UPDATE Usuarios SET passwordHash = ? WHERE idUsuario = ?', [hash, idUsuario]);
         return this.crearSesion(idUsuario);
@@ -311,7 +315,7 @@ class Logica {
     // -----------------------------------------------------------------------
     // token: Texto, contrasenaNueva: Texto --> restablecerContrasenya() -->
     // What it does: changes the password if the link token is valid and not
-    //               expired. As the password changes, the same link cannot be
+    //               expired and the new one is not the same as the current one. As the password changes, the same link cannot be
     //               used again and all the open sessions stop working.
     //               Throws DATOS_NO_VALIDOS or TOKEN_NO_VALIDO.
     // -----------------------------------------------------------------------
@@ -322,6 +326,9 @@ class Logica {
         const usuario = await this.leerTokenDeUsuario(token, TIPO_RECUPERACION);
         if (!usuario) {
             throw new ErrorLogica('TOKEN_NO_VALIDO', 'El enlace no es válido o ha caducado');
+        }
+        if (await Seguridad.comprobarContrasenya(contrasenaNueva, usuario.passwordHash)) {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', MENSAJE_CONTRASENA_IGUAL, ['contrasena']);
         }
         const hash = await Seguridad.calcularHash(contrasenaNueva);
         await this.conexion.execute('UPDATE Usuarios SET passwordHash = ? WHERE idUsuario = ?',

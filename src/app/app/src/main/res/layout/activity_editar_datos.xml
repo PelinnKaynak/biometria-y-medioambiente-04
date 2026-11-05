@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pantalla «Editar mis datos» (Figma: editar mis datos) · T010 -->
+<!-- Pantalla «Editar mis datos» (Figma: editar mis datos) · T010.
+     Dos tarjetas: «Tus datos» y «Contraseña», cada una con su botón. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -13,9 +14,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="27dp"
+        android:paddingStart="20dp"
         android:paddingTop="24dp"
-        android:paddingEnd="27dp"
+        android:paddingEnd="20dp"
         android:paddingBottom="32dp">
 
         <ImageView
@@ -32,7 +33,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="22dp"
             android:text="@string/editar_titulo"
             android:textColor="@color/texto_principal"
             android:textSize="28sp"
@@ -46,217 +47,263 @@
             android:textColor="@color/texto_secundario"
             android:textSize="14sp" />
 
-        <!-- Datos: nombre y apellidos en la misma fila, y el correo -->
+        <!-- Tarjeta 1: Tus datos -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:orientation="horizontal">
+            android:background="@drawable/fondo_tarjeta"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/editar_seccion_datos"
+                android:textColor="@color/texto_principal"
+                android:textSize="18sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/editar_seccion_datos_texto"
+                android:textColor="@color/texto_secundario"
+                android:textSize="13sp" />
 
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="7dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
 
-                <TextView
-                    style="@style/AERIS.Etiqueta"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/registro_nombre" />
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                <EditText
-                    android:id="@+id/campoNombre"
-                    style="@style/AERIS.Campo"
-                    android:layout_width="match_parent"
-                    android:autofillHints="givenName"
-                    android:inputType="textPersonName|textCapWords" />
+                    <TextView
+                        style="@style/AERIS.Etiqueta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/registro_nombre" />
 
-                <TextView
-                    android:id="@+id/errorNombre"
-                    style="@style/AERIS.Error"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    <EditText
+                        android:id="@+id/campoNombre"
+                        style="@style/AERIS.Campo"
+                        android:layout_width="match_parent"
+                        android:layout_height="46dp"
+                        android:autofillHints="givenName"
+                        android:inputType="textPersonName|textCapWords" />
+
+                    <TextView
+                        android:id="@+id/errorNombre"
+                        style="@style/AERIS.Error"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/AERIS.Etiqueta"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/registro_apellidos" />
+
+                    <EditText
+                        android:id="@+id/campoApellidos"
+                        style="@style/AERIS.Campo"
+                        android:layout_width="match_parent"
+                        android:layout_height="46dp"
+                        android:autofillHints="familyName"
+                        android:inputType="textPersonName|textCapWords" />
+
+                    <TextView
+                        android:id="@+id/errorApellidos"
+                        style="@style/AERIS.Error"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
             </LinearLayout>
 
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                style="@style/AERIS.Etiqueta"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="7dp"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:layout_marginTop="12dp"
+                android:text="@string/registro_correo" />
 
-                <TextView
-                    style="@style/AERIS.Etiqueta"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/registro_apellidos" />
+            <EditText
+                android:id="@+id/campoCorreo"
+                style="@style/AERIS.Campo"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:autofillHints="emailAddress"
+                android:inputType="textEmailAddress" />
 
-                <EditText
-                    android:id="@+id/campoApellidos"
-                    style="@style/AERIS.Campo"
-                    android:layout_width="match_parent"
-                    android:autofillHints="familyName"
-                    android:inputType="textPersonName|textCapWords" />
+            <TextView
+                android:id="@+id/errorCorreo"
+                style="@style/AERIS.Error"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-                <TextView
-                    android:id="@+id/errorApellidos"
-                    style="@style/AERIS.Error"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
-            </LinearLayout>
+            <TextView
+                android:id="@+id/errorDatos"
+                style="@style/AERIS.Error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center" />
 
+            <TextView
+                android:id="@+id/botonGuardar"
+                android:layout_width="180dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/fondo_boton_principal"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/editar_guardar"
+                android:textColor="@color/blanco"
+                android:textSize="15sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
-        <TextView
-            style="@style/AERIS.Etiqueta"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/registro_correo" />
-
-        <EditText
-            android:id="@+id/campoCorreo"
-            style="@style/AERIS.Campo"
-            android:layout_width="match_parent"
-            android:autofillHints="emailAddress"
-            android:inputType="textEmailAddress" />
-
-        <TextView
-            android:id="@+id/errorCorreo"
-            style="@style/AERIS.Error"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <TextView
-            android:id="@+id/errorDatos"
-            style="@style/AERIS.Error"
+        <!-- Tarjeta 2: Contraseña -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center" />
+            android:layout_marginTop="20dp"
+            android:background="@drawable/fondo_tarjeta"
+            android:orientation="vertical"
+            android:padding="18dp">
 
-        <TextView
-            android:id="@+id/botonGuardar"
-            android:layout_width="180dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/fondo_boton_principal"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/editar_guardar"
-            android:textColor="@color/blanco"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/editar_seccion_contrasena"
+                android:textColor="@color/texto_principal"
+                android:textSize="18sp" />
 
-        <!-- Cambiar contraseña -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="@string/editar_seccion_contrasena"
-            android:textColor="@color/texto_principal"
-            android:textSize="18sp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/editar_seccion_contrasena_texto"
+                android:textColor="@color/texto_secundario"
+                android:textSize="13sp" />
 
-        <TextView
-            style="@style/AERIS.Etiqueta"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:text="@string/editar_contrasena_actual" />
+            <TextView
+                style="@style/AERIS.Etiqueta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/editar_contrasena_actual" />
 
-        <EditText
-            android:id="@+id/campoContrasenaActual"
-            style="@style/AERIS.Campo"
-            android:layout_width="match_parent"
-            android:autofillHints="password"
-            android:hint="@string/editar_contrasena_actual_pista"
-            android:inputType="textPassword" />
+            <EditText
+                android:id="@+id/campoContrasenaActual"
+                style="@style/AERIS.Campo"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:autofillHints="password"
+                android:hint="@string/editar_contrasena_actual_pista"
+                android:inputType="textPassword" />
 
-        <TextView
-            android:id="@+id/errorContrasenaActual"
-            style="@style/AERIS.Error"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/errorContrasenaActual"
+                style="@style/AERIS.Error"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-        <TextView
-            style="@style/AERIS.Etiqueta"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/editar_contrasena_nueva" />
+            <TextView
+                style="@style/AERIS.Etiqueta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/editar_contrasena_nueva" />
 
-        <EditText
-            android:id="@+id/campoContrasenaNueva"
-            style="@style/AERIS.Campo"
-            android:layout_width="match_parent"
-            android:autofillHints="newPassword"
-            android:hint="@string/editar_contrasena_nueva_pista"
-            android:inputType="textPassword" />
+            <EditText
+                android:id="@+id/campoContrasenaNueva"
+                style="@style/AERIS.Campo"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:autofillHints="newPassword"
+                android:hint="@string/editar_contrasena_nueva_pista"
+                android:inputType="textPassword" />
 
-        <TextView
-            android:id="@+id/errorContrasenaNueva"
-            style="@style/AERIS.Error"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/errorContrasenaNueva"
+                style="@style/AERIS.Error"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-        <TextView
-            style="@style/AERIS.Etiqueta"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/editar_contrasena_repetida" />
+            <TextView
+                style="@style/AERIS.Etiqueta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/editar_contrasena_repetida" />
 
-        <EditText
-            android:id="@+id/campoContrasenaRepetida"
-            style="@style/AERIS.Campo"
-            android:layout_width="match_parent"
-            android:autofillHints="newPassword"
-            android:hint="@string/editar_contrasena_repetida_pista"
-            android:inputType="textPassword" />
+            <EditText
+                android:id="@+id/campoContrasenaRepetida"
+                style="@style/AERIS.Campo"
+                android:layout_width="match_parent"
+                android:layout_height="46dp"
+                android:autofillHints="newPassword"
+                android:hint="@string/editar_contrasena_repetida_pista"
+                android:inputType="textPassword" />
 
-        <TextView
-            android:id="@+id/errorContrasenaRepetida"
-            style="@style/AERIS.Error"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/errorContrasenaRepetida"
+                style="@style/AERIS.Error"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
 
-        <TextView
-            android:id="@+id/errorContrasena"
-            style="@style/AERIS.Error"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:gravity="center" />
+            <TextView
+                android:id="@+id/errorContrasena"
+                style="@style/AERIS.Error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center" />
 
-        <TextView
-            android:id="@+id/botonCambiarContrasena"
-            android:layout_width="180dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="14dp"
-            android:background="@drawable/fondo_boton_secundario"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/editar_cambiar_contrasena"
-            android:textColor="@color/violeta"
-            android:textSize="15sp"
-            android:textStyle="bold" />
+            <TextView
+                android:id="@+id/botonCambiarContrasena"
+                android:layout_width="180dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/fondo_boton_secundario"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/editar_cambiar_contrasena"
+                android:textColor="@color/violeta"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
-        <!-- Aviso en la propia pantalla cuando la contraseña se ha cambiado -->
-        <TextView
-            android:id="@+id/avisoContrasena"
-            style="@style/AERIS.Error"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center"
-            android:text="@string/editar_contrasena_cambiada"
-            android:textColor="@color/violeta" />
+            <TextView
+                android:id="@+id/avisoContrasena"
+                style="@style/AERIS.Error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="@string/editar_contrasena_cambiada"
+                android:textColor="@color/violeta" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>
