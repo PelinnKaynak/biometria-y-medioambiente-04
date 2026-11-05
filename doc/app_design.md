@@ -9,14 +9,15 @@
 Pantalla de Figma «bienvenida». Es la primera pantalla de la app (`LAUNCHER`).
 
 ```text
-BienvenidaActivity --(hay sesión guardada: Sesion.haySesion())--> InicioActivity
+BienvenidaActivity --(hay sesión guardada y GET /usuarioActual responde 200 o no hay conexión)--> InicioActivity
+BienvenidaActivity --(GET /usuarioActual responde 401: la contraseña cambió en otro dispositivo)--> Sesion.cerrar(), se queda en la bienvenida
 BienvenidaActivity --«Iniciar sesión»--> LoginActivity
                    --«Registrarte»----> RegistroActivity
                    --«Ver el mapa sin cuenta»--> MapaSinCuentaActivity   (provisional hasta la tarea del mapa)
 ```
 
 ```text
-BienvenidaActivity:     onCreate()
+BienvenidaActivity:     onCreate(), comprobarSesion(), abrirInicio()
 MapaSinCuentaActivity:  onCreate()        (provisional)
 ```
 
@@ -458,7 +459,7 @@ InicioActivity (MODIFICADA): ya no tiene «Cerrar sesión»; tiene la barra de n
 - **Permiso de red local (Android 17):** desde Android 17 (API 37) una app con `targetSdk 37` necesita el permiso `ACCESS_LOCAL_NETWORK` (grupo «Dispositivos cercanos») para conectar con direcciones de la red local, como `10.0.2.2` o la IP del ordenador en la Wi‑Fi. `RegistroActivity` lo pide al pulsar «Continuar» (`necesitaPermisoRedLocal()`) y, si se concede, llama a `enviarRegistro()`. En versiones anteriores no se pide.
 - **URL_SERVIDOR:** en el emulador es `http://10.0.2.2:8080`; en un teléfono real, la IPv4 del ordenador en la misma Wi‑Fi.
 - **Sesión:** el servidor devuelve un token al registrarse (201) y al iniciar sesión (200). `Sesion.iniciar()` lo guarda con el correo, el rol y el nombre en `SharedPreferences`, así la sesión sigue abierta al cerrar y volver a abrir la app. Las peticiones que necesiten sesión enviarán `Authorization: Bearer <token>`.
-- **Primera pantalla:** `BienvenidaActivity` (T001); si ya hay sesión guardada, va directa a `InicioActivity`.
+- **Primera pantalla:** `BienvenidaActivity` (T001). Si hay sesión guardada, mientras se ve solo el logo pregunta `GET /usuarioActual`: `200` → `InicioActivity`; `401` (por ejemplo, la contraseña se ha cambiado en otro teléfono, lo que invalida los tokens antiguos) → `Sesion.cerrar()` y se muestran los botones de la bienvenida; sin conexión → `InicioActivity` igualmente, para no echar a nadie por estar sin internet.
 - **Cerrar sesión:** `Sesion.cerrar()` borra el token del teléfono; el servidor no guarda sesiones.
 - **Login:** `POST /iniciarSesion` con `{"correo", "contrasena"}`. `200` → sesión iniciada; `401` → «Correo o contraseña incorrectos» (mismo mensaje si el correo no existe), se borra la contraseña escrita y no se da acceso.
 - **Recuperar contraseña:** `POST /solicitarRecuperacion` con `{"correo"}`. `200` → el servidor ha enviado un enlace que caduca a los 30 minutos y se abre «Revisa tu correo»; `404` → el correo no tiene cuenta: no se envía nada y la app muestra «No hay ninguna cuenta con este correo.» debajo del campo. «¿No te ha llegado? Reenviar» pide otro enlace.
@@ -471,7 +472,7 @@ InicioActivity (MODIFICADA): ya no tiene «Cerrar sesión»; tiene la barra de n
 - **Foto de perfil:** al tocar el avatar o el lápiz se elige «Hacer una foto» (la app de cámara guarda la foto en `cache/fotos/camara.jpg`, compartido con `FileProvider`; no hace falta el permiso `CAMERA`) o «Elegir de la galería» (selector de fotos de Android, sin permisos). La foto se recorta en cuadrado, se reduce a 256×256 y se envía como JPEG en base64 con `POST /cambiarFoto`; se guarda en la columna `foto` de `Usuarios`, así se ve en cualquier teléfono. Si ya hay foto, aparece también «Quitar la foto» (`{"foto": null}`). Se muestra recortada en círculo (`ShapeableImageView`).
 - **Editar mis datos:** al abrirse pide `GET /usuarioActual` y rellena nombre, apellidos y correo. «Guardar cambios» los comprueba con las reglas del registro y envía `POST /actualizarDatos`: `200` → se actualizan el nombre y el correo guardados en `Sesion` y se vuelve al perfil, que se recarga en `onResume()`; `409` → «Este correo ya tiene una cuenta.» debajo del correo.
 - **Tecla Enter (`TeclaEnter.pulsaBoton()`):** en el último campo de cada formulario el teclado muestra «Hecho» y Enter pulsa el botón: contraseña → «Acceder» (login), repetir contraseña → «Continuar» (registro), correo → «Enviar enlace» (recuperar contraseña), correo → «Guardar cambios» y repetir contraseña nueva → «Cambiar contraseña» (editar mis datos). Si el botón está desactivado (enviando), no hace nada.
-- **Mensajes en la pantalla, sin avisos emergentes (Toast):** los errores y las confirmaciones se escriben en la propia pantalla: en el perfil, en rojo debajo del correo; en «Editar mis datos», debajo de cada botón («Contraseña cambiada…» en violeta); en «Revisa tu correo», debajo de «Reenviar». Al guardar los datos no sale ningún mensaje: se vuelve al perfil, que ya enseña los datos nuevos.
+- **Mensajes en la pantalla, sin avisos emergentes (Toast):** los errores y las confirmaciones se escriben en la propia pantalla: en el perfil, en rojo debajo del correo; en «Editar mis datos», los errores debajo de cada botón y, al cambiar la contraseña, una etiqueta verde «✓ Cambiada» al lado del título «Contraseña»; en «Revisa tu correo», debajo de «Reenviar». Al guardar los datos no sale ningún mensaje: se vuelve al perfil, que ya enseña los datos nuevos.
 - **Cambiar contraseña:** pide la actual, la nueva (segura y distinta de la actual) y repetirla; `POST /cambiarContrasenya`. `200` → el servidor devuelve una sesión nueva, que se guarda con `Sesion.iniciar()` (la sesión de los otros teléfonos se cierra); `403` → «La contraseña actual no es correcta.» y se borra ese campo.
 - **Opciones de otras tareas:** «Mi sensor» (T011), «Umbral de alerta», «Puntos y recompensas», «Mis lugares» (T019) y «AERIS Premium» aún no hacen nada al pulsarlas. «Umbral de alerta» enseña «Normal», el valor por defecto (`umbralAlerta` NULL).
 - **Barra de navegación:** `barra_navegacion.xml` se añade con `<include>` y `BarraNavegacion.conectar()` la pinta y conecta. Inicio siempre queda debajo: desde cualquier pestaña se cierra la pantalla actual al cambiar (`cierraLaActual()`), así «atrás» vuelve a Inicio y «atrás» en Inicio sale de la app. Al volver a Inicio se reutiliza (`FLAG_ACTIVITY_CLEAR_TOP`). Las pestañas cambian sin animación.

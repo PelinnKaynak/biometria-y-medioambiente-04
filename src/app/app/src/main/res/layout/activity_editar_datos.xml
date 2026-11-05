@@ -2,6 +2,7 @@
 <!-- Pantalla «Editar mis datos» (Figma: editar mis datos) · T010.
      Dos tarjetas: «Tus datos» y «Contraseña», cada una con su botón. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -190,13 +191,40 @@
             android:orientation="vertical"
             android:padding="18dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <!-- Título y, cuando se cambia, la etiqueta verde «✓ Cambiada» al lado -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
-                android:text="@string/editar_seccion_contrasena"
-                android:textColor="@color/texto_principal"
-                android:textSize="18sp" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/editar_seccion_contrasena"
+                    android:textColor="@color/texto_principal"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/avisoContrasena"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/fondo_aviso_ok"
+                    android:drawablePadding="6dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:gravity="center_vertical"
+                    android:paddingStart="8dp"
+                    android:paddingTop="4dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="4dp"
+                    android:text="@string/editar_contrasena_cambiada"
+                    android:textColor="@color/verde_ok"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    app:drawableStartCompat="@drawable/ic_tic" />
+            </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"
@@ -295,15 +323,6 @@
                 android:textSize="15sp"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/avisoContrasena"
-                style="@style/AERIS.Error"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:gravity="center"
-                android:text="@string/editar_contrasena_cambiada"
-                android:textColor="@color/violeta" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

@@ -24,8 +24,9 @@
             android:src="@drawable/logo_aeris" />
     </FrameLayout>
 
-    <!-- Abajo: título, texto, botones y enlace al mapa -->
+    <!-- Abajo: título, texto, botones y enlace al mapa (oculto mientras se comprueba la sesión) -->
     <LinearLayout
+        android:id="@+id/panelBienvenida"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="48"

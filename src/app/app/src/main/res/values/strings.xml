@@ -103,7 +103,7 @@
     <string name="editar_contrasena_repetida">Repetir nueva contraseña</string>
     <string name="editar_contrasena_repetida_pista">Repite la contraseña nueva</string>
     <string name="editar_cambiar_contrasena">Cambiar contraseña</string>
-    <string name="editar_contrasena_cambiada">Contraseña cambiada. Se ha cerrado la sesión en tus otros dispositivos.</string>
+    <string name="editar_contrasena_cambiada">Cambiada</string>
 
     <!-- Bienvenida (T001) -->
     <string name="bienvenida_titulo">AERIS</string>
