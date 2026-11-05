@@ -20,7 +20,13 @@
 
     <!-- Vincular sensor (pantalla provisional hasta T005) -->
     <string name="vincular_titulo">Vincular sensor</string>
-    <string name="vincular_texto">Cuenta creada. Aquí podrás buscar tu sensor por Bluetooth y vincularlo a tu cuenta (tarea T005).</string>
+    <string name="vincular_texto">Activa el Bluetooth y la ubicación y acerca el sensor al teléfono.</string>
+    <string name="vincular_buscar">Buscar sensores</string>
+    <string name="vincular_buscando">Buscando sensores cercanos…</string>
+    <string name="vincular_ninguno">No hemos encontrado ningún sensor. Acércalo al teléfono y vuelve a buscar.</string>
+    <string name="vincular_encontrados">Sensores encontrados</string>
+    <string name="vincular_boton">Vincular</string>
+    <string name="vincular_mas_tarde">Podrás vincular tu sensor más tarde desde tu perfil.</string>
     <string name="vincular_omitir"><u>Omitir por ahora</u></string>
 
     <!-- Permiso de red local (Android 17) -->
