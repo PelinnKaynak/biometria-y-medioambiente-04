@@ -82,6 +82,7 @@ public class RegistroActivity extends AppCompatActivity {
             finish();
         });
         botonContinuar.setOnClickListener(vista -> pulsarContinuar());
+        TeclaEnter.pulsaBoton(campoConfirmacion, botonContinuar);   // Enter en el último campo = «Continuar»
     }
 
     // -----------------------------------------------------------------------

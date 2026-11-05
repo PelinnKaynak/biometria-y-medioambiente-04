@@ -62,6 +62,8 @@ public class EditarDatosActivity extends AppCompatActivity {
         findViewById(R.id.botonVolver).setOnClickListener(vista -> finish());
         botonGuardar.setOnClickListener(vista -> pulsarGuardar());
         botonCambiarContrasena.setOnClickListener(vista -> pulsarCambiarContrasena());
+        TeclaEnter.pulsaBoton(campoCorreo, botonGuardar);                   // Enter en el correo = «Guardar cambios»
+        TeclaEnter.pulsaBoton(campoRepetida, botonCambiarContrasena);       // Enter en la repetida = «Cambiar contraseña»
 
         cargarDatos();
     }

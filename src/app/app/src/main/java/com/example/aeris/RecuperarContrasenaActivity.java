@@ -56,6 +56,7 @@ public class RecuperarContrasenaActivity extends AppCompatActivity {
         findViewById(R.id.botonVolver).setOnClickListener(vista -> finish());
         findViewById(R.id.enlaceIniciarSesion).setOnClickListener(vista -> finish());   // vuelve al login
         botonEnviar.setOnClickListener(vista -> pulsarEnviar());
+        TeclaEnter.pulsaBoton(campoCorreo, botonEnviar);   // Enter en el correo = «Enviar enlace»
     }
 
     // -----------------------------------------------------------------------
