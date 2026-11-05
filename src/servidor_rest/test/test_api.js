@@ -40,7 +40,7 @@ describe('API REST de usuarios y autenticación', function () {
         await crearBDPruebas();
         logica = await Logica.crear(CONFIG_BD_PRUEBAS,
             async (destinatario, asunto, texto, extra) => {
-                if (!extra) correos.push({ destinatario, texto });   // la bienvenida (con HTML) no se apunta aquí
+                if (!asunto.includes('bienvenida')) correos.push({ destinatario, texto, extra });   // la bienvenida no se apunta aquí
             },
             'http://localhost:8080/restablecer.html', 'clave-de-pruebas');
 

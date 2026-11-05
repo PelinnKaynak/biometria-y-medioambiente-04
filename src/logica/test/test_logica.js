@@ -22,13 +22,13 @@ describe('Logica (usuarios y autenticación)', function () {
 
     let logica;
     let correos;        // correos de recuperación "enviados" en cada test
-    let bienvenidas;    // correos de bienvenida (los que llevan HTML)
+    let bienvenidas;    // correos de bienvenida
 
     before(async function () {
         await crearBDPruebas();     // también prueba que el script SQL funciona en una BD vacía
         logica = await Logica.crear(CONFIG_BD_PRUEBAS,
             async (destinatario, asunto, texto, extra) => {
-                (extra ? bienvenidas : correos).push({ destinatario, asunto, texto, extra });
+                (asunto.includes('bienvenida') ? bienvenidas : correos).push({ destinatario, asunto, texto, extra });
             },
             URL_RESTABLECER, CLAVE);
     });
@@ -154,6 +154,16 @@ describe('Logica (usuarios y autenticación)', function () {
         } finally {
             console.error = errorOriginal;
         }
+    });
+
+    it('el correo de recuperación lleva el enlace en el texto y en el botón del HTML, con los logos', async function () {
+        await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.solicitarRecuperacion('pelin@aeris.es');
+        const c = correos[0];
+        const enlace = c.texto.match(/(http\S+token=\S+)/)[1];
+        assert.ok(c.extra.html.includes(`href="${enlace}"`));
+        assert.ok(c.extra.html.includes('Crear contraseña nueva'));
+        assert.deepStrictEqual(c.extra.adjuntos.map((a) => a.cid), ['logo-aeris', 'logo-sensetech']);
     });
 
     it('el nombre no puede meter HTML en el correo de bienvenida', function () {

@@ -188,4 +188,5 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   correo: Texto, nombre: Texto  --> enviarBienvenida() --> Promesa      (nunca falla)
   nombre: Texto                 --> crearCorreoBienvenida() --> ( asunto, texto, html, adjuntos )
 ```
+- **Correo de recuperación (T003/T016):** `solicitarRecuperacion()` envía el correo de `CorreoRecuperacion.crearCorreoRecuperacion(nombre, enlace, minutos)`, con el mismo diseño que el de bienvenida: botón «Crear contraseña nueva» con el enlace y aviso de que caduca en 30 minutos y solo sirve una vez (el enlace escrito solo va en la versión de texto del correo, para las apps que no muestran HTML). Los dos correos usan el marco común `PlantillaCorreo.marcoCorreo()` (logo de AERIS arriba, pie con el logo de SenseTech).
 

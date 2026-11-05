@@ -17,6 +17,7 @@ const mysql = require('mysql2/promise');
 const Seguridad = require('./Seguridad');
 const Validador = require('./ValidadorUsuario');
 const { crearCorreoBienvenida } = require('./CorreoBienvenida');
+const { crearCorreoRecuperacion } = require('./CorreoRecuperacion');
 
 const ROL_PORTADOR = 'portador';        // rol de quien se registra desde la app
 const DURACION_SESION_SEGUNDOS = 30 * 24 * 60 * 60;      // 30 días
@@ -302,13 +303,9 @@ class Logica {
 
         const token = this.crearToken(filas[0], TIPO_RECUPERACION, DURACION_RECUPERACION_SEGUNDOS);
         const enlace = `${this.urlRestablecer}?token=${token}`;
-        await this.enviarCorreo(
-            correoNormalizado,
-            'AERIS · Recuperar la contraseña',
-            `Hola, ${filas[0].nombre}:\n\n` +
-            `Para crear una contraseña nueva abre este enlace (válido durante ${DURACION_RECUPERACION_SEGUNDOS / 60} minutos):\n` +
-            `${enlace}\n\n` +
-            'Si no lo has pedido tú, ignora este correo.\n\nEl equipo de AERIS');
+        const mensaje = crearCorreoRecuperacion(filas[0].nombre, enlace, DURACION_RECUPERACION_SEGUNDOS / 60);
+        await this.enviarCorreo(correoNormalizado, mensaje.asunto, mensaje.texto,
+            { html: mensaje.html, adjuntos: mensaje.adjuntos });
     }
 
     // -----------------------------------------------------------------------
