@@ -78,6 +78,8 @@
     <string name="perfil_editar_foto_descripcion">Cambiar la foto de perfil</string>
     <string name="perfil_editar_datos">Editar mis datos</string>
     <string name="perfil_mi_sensor">Mi sensor</string>
+    <string name="perfil_sensor_vincular">Vincular  &gt;</string>
+    <string name="perfil_sensor_nombre">%1$s  &gt;</string>
     <string name="perfil_notificaciones">Notificaciones</string>
     <string name="perfil_umbral">Umbral de alerta</string>
     <string name="perfil_umbral_valor">Normal  &gt;</string>

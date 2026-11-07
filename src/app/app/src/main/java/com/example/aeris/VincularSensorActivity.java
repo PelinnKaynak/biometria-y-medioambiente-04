@@ -1,7 +1,8 @@
 // ---------------------------------------------------------------------------
 // Fichero:     VincularSensorActivity.java
 // Descripción: Pantalla «Vincular sensor» (Figma: «vincular sensor»). Se abre
-//              tras el registro. Tiene el diseño completo: botón «Buscar
+//              tras el registro y desde «Mi sensor» del perfil (si el usuario
+//              no tiene sensor). Tiene el diseño completo: botón «Buscar
 //              sensores», estado de la búsqueda, lista de sensores encontrados
 //              con su botón «Vincular» y «Omitir por ahora».
 //              La búsqueda por Bluetooth y la petición al servidor son de la
@@ -30,6 +31,10 @@ import java.util.List;
 // VincularSensorActivity class: the «Vincular sensor» screen.
 public class VincularSensorActivity extends AppCompatActivity {
 
+    // Extra del Intent: true si se abre desde el perfil (al acabar se vuelve
+    // al perfil y no se enseña «Omitir por ahora»)
+    public static final String EXTRA_DESDE_PERFIL = "desdePerfil";
+
     // Mientras no exista la búsqueda real (T005), cuánto se ve «Buscando…»
     private static final long DURACION_BUSQUEDA_MS = 3000;
 
@@ -39,13 +44,16 @@ public class VincularSensorActivity extends AppCompatActivity {
     private TextView textoEstadoBusqueda;
     private View tituloEncontrados;
     private LinearLayout listaSensores;
+    private boolean desdePerfil;
 
     private final Handler hiloPrincipal = new Handler(Looper.getMainLooper());
 
     // -----------------------------------------------------------------------
     // onCreate() -->       (lo llama Android al abrir la pantalla)
     // What it does: finds the views and connects «Buscar sensores», the back
-    //               button and «Omitir por ahora» (both open the home screen).
+    //               button and «Omitir por ahora». After the sign-up both open
+    //               the home screen; from the profile, back returns to the
+    //               profile and «Omitir por ahora» is hidden.
     // -----------------------------------------------------------------------
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,9 +67,15 @@ public class VincularSensorActivity extends AppCompatActivity {
         tituloEncontrados = findViewById(R.id.tituloEncontrados);
         listaSensores = findViewById(R.id.listaSensores);
 
+        desdePerfil = getIntent().getBooleanExtra(EXTRA_DESDE_PERFIL, false);
+
         botonBuscar.setOnClickListener(vista -> buscarSensores());
-        findViewById(R.id.botonVolver).setOnClickListener(vista -> abrirInicio());
-        findViewById(R.id.enlaceOmitir).setOnClickListener(vista -> abrirInicio());
+        findViewById(R.id.botonVolver).setOnClickListener(vista -> salir());
+        findViewById(R.id.enlaceOmitir).setOnClickListener(vista -> salir());
+        if (desdePerfil) {
+            findViewById(R.id.enlaceOmitir).setVisibility(View.GONE);
+            findViewById(R.id.textoMasTarde).setVisibility(View.GONE);
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -126,15 +140,24 @@ public class VincularSensorActivity extends AppCompatActivity {
     // -----------------------------------------------------------------------
     // sensor: SensorEncontrado --> pulsarVincular() -->
     // What it does: T005: sends the sensor to the server to link it to the
-    //               user's account and, if it works, opens the home screen.
+    //               user's account and, if it works, calls salir() (home
+    //               screen, or back to the profile).
     // -----------------------------------------------------------------------
     private void pulsarVincular(SensorEncontrado sensor) {
         // T005: petición al servidor para vincular «sensor» a la cuenta del usuario
     }
 
-    private void abrirInicio() {
+    // -----------------------------------------------------------------------
+    // salir() -->
+    // What it does: from the profile, closes this screen (the profile is
+    //               underneath and reloads its data); after the sign-up,
+    //               opens the home screen.
+    // -----------------------------------------------------------------------
+    private void salir() {
         hiloPrincipal.removeCallbacksAndMessages(null);
-        startActivity(new Intent(this, InicioActivity.class));
+        if (!desdePerfil) {
+            startActivity(new Intent(this, InicioActivity.class));
+        }
         finish();
     }
 
