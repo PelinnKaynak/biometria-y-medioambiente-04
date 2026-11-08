@@ -12,66 +12,66 @@
 </head>
 <body class="pagina-acceso">
 
-  <a class="boton-volver" href="login.html">‹ Iniciar sesión</a>
+<a class="boton-volver" href="login.html">‹ Iniciar sesión</a>
 
-  <main class="tarjeta-acceso">
+<main class="tarjeta-acceso">
 
-    <section class="panel-logo" aria-hidden="true">
-      <img src="img/logo-aeris.svg" alt="" class="logo-grande">
-    </section>
+  <section class="panel-logo" aria-hidden="true">
+    <img src="img/logo-aeris.svg" alt="" class="logo-grande">
+  </section>
 
-    <section class="panel-formulario">
-      <img src="img/logo-aeris.svg" alt="AERIS" class="logo-movil">
+  <section class="panel-formulario">
+    <img src="img/logo-aeris.svg" alt="AERIS" class="logo-movil">
 
-      <!-- Paso 1: pedir el correo -->
-      <div id="paso-formulario">
-        <h1>Recuperar contraseña</h1>
-        <p class="texto-explicacion">
-          Escribe el correo con el que te registraste y te enviaremos un enlace
-          para crear una contraseña nueva.
+    <!-- Paso 1: pedir el correo -->
+    <div id="paso-formulario">
+      <h1>Recuperar contraseña</h1>
+      <p class="texto-explicacion">
+        Escribe el correo con el que te registraste y te enviaremos un enlace
+        para crear una contraseña nueva.
+      </p>
+
+      <form id="formulario-recuperar" class="formulario-acceso" novalidate>
+        <label for="correo">Correo electrónico</label>
+        <input id="correo" name="correo" type="email" class="campo"
+               placeholder="correo electrónico" autocomplete="email" maxlength="255" required>
+
+        <p id="mensaje-error" class="mensaje-error oculto" role="alert">
+          <span aria-hidden="true">⚠</span>
+          <span id="texto-error"></span>
         </p>
 
-        <form id="formulario-recuperar" class="formulario-acceso" novalidate>
-          <label for="correo">Correo electrónico</label>
-          <input id="correo" name="correo" type="email" class="campo"
-                 placeholder="correo electrónico" autocomplete="email" maxlength="254" required>
+        <button type="submit" class="boton boton-acceder boton-ancho">Enviar enlace</button>
 
-          <p id="mensaje-error" class="mensaje-error oculto" role="alert">
-            <span aria-hidden="true">⚠</span>
-            <span id="texto-error"></span>
-          </p>
-
-          <button type="submit" class="boton boton-acceder boton-ancho">Enviar enlace</button>
-
-          <p class="nota">
-            Si el correo está registrado, recibirás el enlace en unos minutos.
-            Revisa también la carpeta de spam.
-          </p>
-        </form>
-      </div>
-
-      <!-- Paso 2: confirmar que se ha enviado -->
-      <div id="paso-enviado" class="paso-enviado oculto" aria-live="polite">
-        <div class="icono-sobre"><img src="img/sobre.svg" alt=""></div>
-        <h1>Revisa tu correo</h1>
-        <p class="texto-explicacion">
-          Si existe una cuenta con <strong id="correo-enviado"></strong>, te hemos enviado
-          un enlace para crear una contraseña nueva. El enlace caduca en 30 minutos.
+        <p class="nota">
+          Si el correo está registrado, recibirás el enlace en unos minutos.
+          Revisa también la carpeta de spam.
         </p>
-        <a href="login.html" class="boton boton-acceder boton-ancho">Volver a iniciar sesión</a>
-        <button id="boton-reenviar" type="button" class="enlace-reenviar">
-          ¿No te ha llegado? Reenviar el enlace
-        </button>
-        <p id="aviso-reenviado" class="aviso-ok oculto">Te hemos enviado otro enlace.</p>
-      </div>
-    </section>
+      </form>
+    </div>
 
-  </main>
+    <!-- Paso 2: confirmar que se ha enviado -->
+    <div id="paso-enviado" class="paso-enviado oculto" aria-live="polite">
+      <div class="icono-sobre"><img src="img/sobre.svg" alt=""></div>
+      <h1>Revisa tu correo</h1>
+      <p class="texto-explicacion">
+        Si existe una cuenta con <strong id="correo-enviado"></strong>, te hemos enviado
+        un enlace para crear una contraseña nueva. El enlace caduca en 30 minutos.
+      </p>
+      <a href="login.html" class="boton boton-acceder boton-ancho">Volver a iniciar sesión</a>
+      <button id="boton-reenviar" type="button" class="enlace-reenviar">
+        ¿No te ha llegado? Reenviar el enlace
+      </button>
+      <p id="aviso-reenviado" class="aviso-ok oculto">Te hemos enviado otro enlace.</p>
+    </div>
+  </section>
 
-  <script src="js/logica_fake.js"></script>
-  <script src="js/logica_real.js"></script>
-  <script src="js/configuracion.js"></script>
-  <script src="js/validacion.js"></script>
-  <script src="js/recuperar.js"></script>
+</main>
+
+<script src="js/logica_fake.js"></script>
+<script src="js/logica_real.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="js/validacion.js"></script>
+<script src="js/recuperar.js"></script>
 </body>
 </html>

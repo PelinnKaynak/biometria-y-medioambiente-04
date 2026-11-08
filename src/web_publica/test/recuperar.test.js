@@ -15,7 +15,7 @@ const visible = id => !document.getElementById(id).classList.contains("oculto");
 
 beforeEach(() => {
   document.documentElement.innerHTML = new DOMParser()
-    .parseFromString(html, "text/html").documentElement.innerHTML;
+      .parseFromString(html, "text/html").documentElement.innerHTML;
 });
 
 describe("enviarSolicitud()", () => {
@@ -31,13 +31,14 @@ describe("enviarSolicitud()", () => {
     expect(document.getElementById("correo-enviado").textContent).toBe("laura@correo.es");
   });
 
-  test("también confirma con un correo que no está registrado", async () => {
+  test("con un correo que no está registrado avisa y no cambia de paso", async () => {
     const logica = new LogicaFake(0);
     document.getElementById("correo").value = "nadie@correo.es";
 
     await recuperar.enviarSolicitud(eventoFalso(), logica);
 
-    expect(visible("paso-enviado")).toBe(true);
+    expect(visible("paso-enviado")).toBe(false);
+    expect(document.getElementById("texto-error").textContent).toBe("No hay ninguna cuenta con ese correo");
   });
 
   test("con un correo mal escrito muestra el error y no llama a la lógica", async () => {
@@ -63,7 +64,7 @@ describe("enviarSolicitud()", () => {
     await recuperar.enviarSolicitud(eventoFalso(), logica);
 
     expect(document.getElementById("texto-error").textContent)
-      .toBe("No se puede conectar con el servidor");
+        .toBe("No se puede conectar con el servidor");
     expect(visible("paso-enviado")).toBe(false);
   });
 });
@@ -78,4 +79,11 @@ describe("reenviarEnlace()", () => {
     expect(logica.solicitudes).toEqual(["laura@correo.es"]);
     expect(visible("aviso-reenviado")).toBe(true);
   });
+});
+
+test("la lógica fake avisa si el correo no tiene cuenta, como el servidor", async () => {
+  const { LogicaFake } = require("../js/logica_fake");
+  const r = await new LogicaFake(0).solicitarRecuperacion("nadie@correo.es");
+  expect(r.correcto).toBe(false);
+  expect(r.error).toBe("No hay ninguna cuenta con ese correo");
 });

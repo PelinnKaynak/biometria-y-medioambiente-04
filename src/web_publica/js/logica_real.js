@@ -109,13 +109,20 @@ class LogicaReal {
   //       r: ResultadoOperacion <--
   //
   // POST /solicitarRecuperacion { correo }
-  //   200 siempre, exista o no el correo
+  //   200 enlace enviado · 400 correo no válido
+  //   404 el correo no tiene cuenta (no se envía nada)
   // --------------------------------------------------------
   async solicitarRecuperacion(correo) {
     const respuesta = await this.enviarPost("/solicitarRecuperacion", { correo });
 
     if (respuesta === null) {
       return { correcto: false, error: "No se puede conectar con el servidor" };
+    }
+    if (respuesta.status === 404) {
+      return { correcto: false, error: "No hay ninguna cuenta con ese correo" };
+    }
+    if (respuesta.status === 400) {
+      return { correcto: false, error: "Escribe un correo válido, por ejemplo nombre@dominio.es" };
     }
     if (!respuesta.ok) {
       return { correcto: false, error: "Ha habido un error. Inténtalo de nuevo" };

@@ -15,7 +15,8 @@ const PAGINA_SEGUN_ROL = {
   ADMINISTRADOR: "../web_admin/panel_nodos.html",
   TECNICO: "../web_admin/panel_nodos.html",
   PORTADOR: "mi_cuenta.html",
-  PREMIUM: "mi_cuenta.html"
+  PREMIUM: "mi_cuenta.html",
+  CIUDADANO: "mi_cuenta.html"
 };
 
 // --------------------------------------------------------
@@ -43,10 +44,12 @@ function validarFormulario(correo, contrasena) {
 // --------------------------------------------------------
 // rol: Rol --> paginaInicioSegunRol() --> url: Text
 //
-// Rol = { PORTADOR, PREMIUM, TECNICO, ADMINISTRADOR }
+// Rol = { PORTADOR, PREMIUM, TECNICO, ADMINISTRADOR, CIUDADANO }
+// El servidor manda el rol en minúsculas ("administrador"),
+// así que se compara sin tener en cuenta mayúsculas.
 // --------------------------------------------------------
 function paginaInicioSegunRol(rol) {
-  const pagina = PAGINA_SEGUN_ROL[rol];
+  const pagina = PAGINA_SEGUN_ROL[String(rol).toUpperCase()];
   if (!pagina) {
     throw new Error("Rol desconocido: " + rol);
   }
@@ -140,9 +143,9 @@ function iniciarPantalla() {
   const irA = url => window.location.assign(url);
 
   document.getElementById("formulario-login")
-    .addEventListener("submit", evento => enviarFormulario(evento, logica, irA));
+      .addEventListener("submit", evento => enviarFormulario(evento, logica, irA));
   document.getElementById("boton-ojo")
-    .addEventListener("click", alternarVisibilidadContrasena);
+      .addEventListener("click", alternarVisibilidadContrasena);
 }
 
 if (typeof module !== "undefined") {

@@ -13,7 +13,7 @@ const html = fs.readFileSync(path.join(__dirname, "../login.html"), "utf8");
 
 function cargarPagina() {
   document.documentElement.innerHTML = new DOMParser()
-    .parseFromString(html, "text/html").documentElement.innerHTML;
+      .parseFromString(html, "text/html").documentElement.innerHTML;
 }
 
 function rellenar(correo, contrasena) {
@@ -64,6 +64,11 @@ describe("paginaInicioSegunRol()", () => {
     ["PREMIUM", "mi_cuenta.html"]
   ])("%s va a %s", (rol, pagina) => {
     expect(login.paginaInicioSegunRol(rol)).toBe(pagina);
+  });
+
+  test("acepta el rol en minúsculas, como lo manda el servidor", () => {
+    expect(login.paginaInicioSegunRol("administrador")).toBe("../web_admin/panel_nodos.html");
+    expect(login.paginaInicioSegunRol("portador")).toBe("mi_cuenta.html");
   });
 
   test("lanza un error con un rol desconocido", () => {

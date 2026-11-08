@@ -12,7 +12,7 @@
 // servidor. Si algún día van separadas, pon aquí su dirección.
 // ------------------------------------------------------------
 
-const USAR_LOGICA_FAKE = true;
+const USAR_LOGICA_FAKE = false;
 const URL_SERVIDOR = "";
 
 // --------------------------------------------------------

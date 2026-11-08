@@ -96,14 +96,17 @@ class LogicaFake {
   // ResultadoOperacion = ( correcto: B, error: Text )
   //
   // Simula el envío del enlace para crear una contraseña
-  // nueva. Responde que ha ido bien aunque el correo no
-  // exista, igual que hará el servidor real, para no revelar
-  // qué correos están registrados. Las solicitudes se guardan
-  // en this.solicitudes para poder comprobarlas en las pruebas.
+  // nueva. Igual que el servidor real (T016), avisa si el
+  // correo no tiene cuenta. Las solicitudes que sí se envían
+  // se guardan en this.solicitudes para las pruebas.
   // --------------------------------------------------------
   async solicitarRecuperacion(correo) {
     await esperar(this.retardo_ms);
-    this.solicitudes.push(correo.trim().toLowerCase());
+    const limpio = correo.trim().toLowerCase();
+    if (!this.usuarios.some(u => u.credenciales.correo === limpio)) {
+      return { correcto: false, error: "No hay ninguna cuenta con ese correo" };
+    }
+    this.solicitudes.push(limpio);
     return { correcto: true, error: "" };
   }
 

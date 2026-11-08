@@ -101,3 +101,9 @@ describe("registrarUsuario()", () => {
         expect(r.campos).toEqual(["nombre", "contrasena"]);
     });
 });
+
+test("solicitarRecuperacion() avisa si el correo no tiene cuenta (404)", async () => {
+    fetch.mockReturnValue(respuestaFalsa(404, { error: "No existe" }));
+    const r = await new LogicaReal("").solicitarRecuperacion("nadie@correo.es");
+    expect(r).toEqual({ correcto: false, error: "No hay ninguna cuenta con ese correo" });
+});
