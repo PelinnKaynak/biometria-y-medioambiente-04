@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono de correo (Figma: «icono correo») -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp" android:height="20dp"
+    android:viewportWidth="20" android:viewportHeight="20">
+    <path android:pathData="M15.8333,4.1667H4.1667C3.2462,4.1667 2.5,4.9129 2.5,5.8333V14.1667C2.5,15.0872 3.2462,15.8334 4.1667,15.8334H15.8333C16.7538,15.8334 17.5,15.0872 17.5,14.1667V5.8333C17.5,4.9129 16.7538,4.1667 15.8333,4.1667Z"
+        android:strokeColor="@color/texto_secundario" android:strokeWidth="1.8"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M2.5,5.8333L10,10.8333L17.5,5.8333"
+        android:strokeColor="@color/texto_secundario" android:strokeWidth="1.8"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+</vector>

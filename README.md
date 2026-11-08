@@ -22,7 +22,7 @@ Además, un modelo de aprendizaje automático predice el nivel de ozono de las p
 
 | Componente | Carpeta | Tecnología |
 |---|---|---|
-| Nodo sensor | `src/nodo` | C++ para Arduino (SparkFun nRF52840) |
+| Nodo sensor | `src/arduino` | C++ para Arduino (SparkFun nRF52840) |
 | App del portador | `src/app` | Java (Android) |
 | Servidor REST | `src/servidor_rest` | Node.js con Express |
 | Lógica de negocio | `src/logica` | Node.js |

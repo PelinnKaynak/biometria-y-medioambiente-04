@@ -1,0 +1,39 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Base.Theme.AERIS" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/violeta</item>
+        <item name="android:colorBackground">@color/fondo</item>
+        <item name="android:windowBackground">@color/fondo</item>
+        <item name="android:statusBarColor">@color/fondo</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="Theme.AERIS" parent="Base.Theme.AERIS" />
+
+    <!-- Etiqueta encima de cada campo -->
+    <style name="AERIS.Etiqueta" parent="">
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_marginBottom">4dp</item>
+    </style>
+
+    <!-- Campo de texto con fondo blanco y borde gris -->
+    <style name="AERIS.Campo" parent="">
+        <item name="android:layout_height">42dp</item>
+        <item name="android:background">@drawable/fondo_campo</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:textColorHint">@color/texto_secundario</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:singleLine">true</item>
+    </style>
+
+    <!-- Mensaje de error debajo de un campo (oculto por defecto) -->
+    <style name="AERIS.Error" parent="">
+        <item name="android:textColor">@color/error</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:visibility">gone</item>
+    </style>
+</resources>

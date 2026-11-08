@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sobre de la pantalla «Revisa tu correo» (Figma: «correo enviado») -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="60dp" android:height="44dp"
+    android:viewportWidth="60" android:viewportHeight="44">
+    <path android:pathData="M5,1.5H55C56.933,1.5 58.5,3.067 58.5,5V39C58.5,40.933 56.933,42.5 55,42.5H5C3.067,42.5 1.5,40.933 1.5,39V5C1.5,3.067 3.067,1.5 5,1.5Z"
+        android:strokeColor="@color/violeta" android:strokeWidth="3" android:strokeLineJoin="round" />
+    <path android:pathData="M2.5,4L30,24L57.5,4"
+        android:strokeColor="@color/violeta" android:strokeWidth="3"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+</vector>

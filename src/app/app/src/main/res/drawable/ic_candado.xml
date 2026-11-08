@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono de candado (Figma: «icono candado») -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp" android:height="20dp"
+    android:viewportWidth="20" android:viewportHeight="20">
+    <path android:pathData="M15,9.1667H5C4.0796,9.1667 3.3334,9.9129 3.3334,10.8334V15.8334C3.3334,16.7538 4.0796,17.5 5,17.5H15C15.9205,17.5 16.6667,16.7538 16.6667,15.8334V10.8334C16.6667,9.9129 15.9205,9.1667 15,9.1667Z"
+        android:strokeColor="@color/texto_secundario" android:strokeWidth="1.8"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+    <path android:pathData="M6.6666,9.1667V5.8333C6.6666,4.9493 7.0178,4.1014 7.6429,3.4763C8.2681,2.8512 9.1159,2.5 10,2.5C10.884,2.5 11.7319,2.8512 12.357,3.4763C12.9821,4.1014 13.3333,4.9493 13.3333,5.8333V9.1667"
+        android:strokeColor="@color/texto_secundario" android:strokeWidth="1.8"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+</vector>

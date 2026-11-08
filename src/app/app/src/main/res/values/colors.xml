@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Paleta de AERIS (Figma: Diseño con color) -->
+<resources>
+    <color name="fondo">#F5F6FA</color>
+    <color name="blanco">#FFFFFF</color>
+    <color name="texto_principal">#432E60</color>
+    <color name="texto_secundario">#8992B8</color>
+    <color name="borde_campo">#E3E5EF</color>
+    <color name="violeta">#7958A7</color>
+    <color name="violeta_claro">#8A68BA</color>
+    <color name="error">#D9534F</color>
+    <color name="verde_suave">#C5D8D3</color>
+</resources>
