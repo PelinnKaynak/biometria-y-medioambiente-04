@@ -54,7 +54,9 @@ public class RecuperarContrasenaActivity extends AppCompatActivity {
         progreso = findViewById(R.id.progreso);
 
         findViewById(R.id.botonVolver).setOnClickListener(vista -> finish());
+        findViewById(R.id.enlaceIniciarSesion).setOnClickListener(vista -> finish());   // vuelve al login
         botonEnviar.setOnClickListener(vista -> pulsarEnviar());
+        TeclaEnter.pulsaBoton(campoCorreo, botonEnviar);   // Enter en el correo = «Enviar enlace»
     }
 
     // -----------------------------------------------------------------------
@@ -111,7 +113,8 @@ public class RecuperarContrasenaActivity extends AppCompatActivity {
     // What it does: red border and message under the email (or clears it if null).
     // -----------------------------------------------------------------------
     private void mostrarErrorCorreo(String mensaje) {
-        campoCorreo.setBackgroundResource(mensaje == null ? R.drawable.fondo_campo : R.drawable.fondo_campo_error);
+        findViewById(R.id.marcoCorreo).setBackgroundResource(
+                mensaje == null ? R.drawable.fondo_campo : R.drawable.fondo_campo_error);
         errorCorreo.setText(mensaje);
         errorCorreo.setVisibility(mensaje == null ? View.GONE : View.VISIBLE);
     }

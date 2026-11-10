@@ -10,4 +10,6 @@
     <color name="violeta_claro">#8A68BA</color>
     <color name="error">#D9534F</color>
     <color name="verde_suave">#C5D8D3</color>
+    <color name="verde_ok">#2E7D5B</color>
+    <color name="verde_ok_fondo">#EAF5EF</color>
 </resources>

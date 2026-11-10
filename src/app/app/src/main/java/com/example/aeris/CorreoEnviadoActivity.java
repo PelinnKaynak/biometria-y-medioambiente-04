@@ -10,8 +10,8 @@
 package com.example.aeris;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -51,19 +51,30 @@ public class CorreoEnviadoActivity extends AppCompatActivity {
         logica.solicitarRecuperacion(correo, new LogicaFakeSesion.RespuestaRecuperacion() {
             @Override
             public void enlaceEnviado() {
-                Toast.makeText(CorreoEnviadoActivity.this, R.string.enviado_reenviado, Toast.LENGTH_SHORT).show();
+                mostrarMensaje(getString(R.string.enviado_reenviado), R.color.violeta);
             }
 
             @Override
             public void correoNoRegistrado() {
-                Toast.makeText(CorreoEnviadoActivity.this,
-                        LogicaFakeSesion.MENSAJE_CORREO_NO_REGISTRADO, Toast.LENGTH_LONG).show();
+                mostrarMensaje(LogicaFakeSesion.MENSAJE_CORREO_NO_REGISTRADO, R.color.error);
             }
 
             @Override
             public void error(String mensaje) {
-                Toast.makeText(CorreoEnviadoActivity.this, mensaje, Toast.LENGTH_LONG).show();
+                mostrarMensaje(mensaje, R.color.error);
             }
         });
+    }
+
+    // -----------------------------------------------------------------------
+    // mensaje: Text, color: Z --> mostrarMensaje() -->
+    // What it does: writes the result of «Reenviar» under the link, in the
+    //               screen itself (violet if it went well, red if not).
+    // -----------------------------------------------------------------------
+    private void mostrarMensaje(String mensaje, int color) {
+        TextView texto = findViewById(R.id.mensajeReenvio);
+        texto.setText(mensaje);
+        texto.setTextColor(getColor(color));
+        texto.setVisibility(View.VISIBLE);
     }
 }

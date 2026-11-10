@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pista del interruptor: violeta si está activado, gris si no (Figma: Interruptor) -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="@color/violeta" android:state_checked="true" />
+    <item android:color="@color/borde_campo" />
+</selector>

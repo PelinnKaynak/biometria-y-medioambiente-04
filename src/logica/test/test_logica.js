@@ -9,8 +9,10 @@
 'use strict';
 
 const assert = require('assert');
+const fs = require('fs');
 const { Logica } = require('../Logica');
 const Seguridad = require('../Seguridad');
+const { crearCorreoBienvenida } = require('../CorreoBienvenida');
 const { CONFIG_BD_PRUEBAS, crearBDPruebas, vaciarTablas } = require('./bdPruebas');
 
 const URL_RESTABLECER = 'http://localhost:8080/restablecer.html';
@@ -19,17 +21,21 @@ const CLAVE = 'clave-de-pruebas';
 describe('Logica (usuarios y autenticación)', function () {
 
     let logica;
-    let correos;    // correos "enviados" en cada test
+    let correos;        // correos de recuperación "enviados" en cada test
+    let bienvenidas;    // correos de bienvenida
 
     before(async function () {
         await crearBDPruebas();     // también prueba que el script SQL funciona en una BD vacía
         logica = await Logica.crear(CONFIG_BD_PRUEBAS,
-            async (destinatario, asunto, texto) => { correos.push({ destinatario, asunto, texto }); },
+            async (destinatario, asunto, texto, extra) => {
+                (asunto.includes('bienvenida') ? bienvenidas : correos).push({ destinatario, asunto, texto, extra });
+            },
             URL_RESTABLECER, CLAVE);
     });
 
     beforeEach(async function () {
         correos = [];
+        bienvenidas = [];
         await vaciarTablas(logica.conexion);
     });
 
@@ -55,6 +61,130 @@ describe('Logica (usuarios y autenticación)', function () {
         assert.strictEqual(usuario.correo, 'pelin@aeris.es');
         assert.strictEqual(usuario.apellidos, 'Kaynak');
         assert.strictEqual(usuario.hashContrasenya, undefined);
+    });
+
+    it('obtenerUsuario() devuelve alertas = true por defecto', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        assert.strictEqual((await logica.obtenerUsuario(sesion.idUsuario)).alertas, true);
+    });
+
+    it('cambiarAlertas() guarda el valor nuevo y se puede volver a activar', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.cambiarAlertas(sesion.idUsuario, false);
+        assert.strictEqual((await logica.obtenerUsuario(sesion.idUsuario)).alertas, false);
+        await logica.cambiarAlertas(sesion.idUsuario, true);
+        assert.strictEqual((await logica.obtenerUsuario(sesion.idUsuario)).alertas, true);
+    });
+
+    it('cambiarAlertas() con un valor que no es true ni false lanza DATOS_NO_VALIDOS', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await assert.rejects(logica.cambiarAlertas(sesion.idUsuario, 'no'), { codigo: 'DATOS_NO_VALIDOS' });
+        assert.strictEqual((await logica.obtenerUsuario(sesion.idUsuario)).alertas, true);
+    });
+
+    it('actualizarDatos() cambia nombre, apellidos y correo (normalizado)', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        const datos = await logica.actualizarDatos(sesion.idUsuario, ' María ', 'García-López', ' Maria@AERIS.es ');
+        assert.deepStrictEqual(datos, { nombre: 'María', apellidos: 'García-López', correo: 'maria@aeris.es' });
+        const usuario = await logica.obtenerUsuario(sesion.idUsuario);
+        assert.strictEqual(usuario.correo, 'maria@aeris.es');
+        assert.strictEqual(usuario.nombre, 'María');
+        await logica.iniciarSesion('maria@aeris.es', 'aire2026');   // el correo nuevo sirve para entrar
+    });
+
+    it('actualizarDatos() con datos no válidos o con el correo de otra cuenta lanza un error', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.registrarUsuario('Ana', 'Ruiz', 'ana@aeris.es', 'aire2026');
+        await assert.rejects(logica.actualizarDatos(sesion.idUsuario, 'P3lin', '', 'mal'),
+            (e) => e.codigo === 'DATOS_NO_VALIDOS' && e.campos.join() === 'nombre,apellidos,correo');
+        await assert.rejects(logica.actualizarDatos(sesion.idUsuario, 'Pelin', 'Kaynak', 'ana@aeris.es'),
+            { codigo: 'CORREO_YA_REGISTRADO' });
+    });
+
+    it('cambiarContrasenya() con la actual correcta: la nueva funciona y da un token nuevo', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        const nueva = await logica.cambiarContrasenya(sesion.idUsuario, 'aire2026', 'ozono2027');
+        assert.ok(await logica.comprobarSesion(nueva.token));
+        assert.strictEqual(await logica.comprobarSesion(sesion.token), null);   // la sesión vieja se cierra
+        await logica.iniciarSesion('pelin@aeris.es', 'ozono2027');
+    });
+
+    it('restablecerContrasenya() con la misma contraseña que la actual lanza DATOS_NO_VALIDOS', async function () {
+        await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.solicitarRecuperacion('pelin@aeris.es');
+        const token = correos[0].texto.match(/token=(\S+)/)[1];
+        await assert.rejects(logica.restablecerContrasenya(token, 'aire2026'),
+            (e) => e.codigo === 'DATOS_NO_VALIDOS' && e.message.includes('distinta de la actual'));
+        await logica.restablecerContrasenya(token, 'ozono2027');      // el enlace sigue valiendo
+    });
+
+    it('cambiarContrasenya() con la misma contraseña que la actual lanza DATOS_NO_VALIDOS', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await assert.rejects(logica.cambiarContrasenya(sesion.idUsuario, 'aire2026', 'aire2026'),
+            { codigo: 'DATOS_NO_VALIDOS' });
+    });
+
+    it('cambiarContrasenya() con la actual incorrecta o una nueva débil lanza un error', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await assert.rejects(logica.cambiarContrasenya(sesion.idUsuario, 'otra1234', 'ozono2027'),
+            { codigo: 'CONTRASENA_INCORRECTA' });
+        await assert.rejects(logica.cambiarContrasenya(sesion.idUsuario, 'aire2026', 'corta'),
+            { codigo: 'DATOS_NO_VALIDOS' });
+        await logica.iniciarSesion('pelin@aeris.es', 'aire2026');   // no ha cambiado
+    });
+
+    it('cambiarFoto() guarda un JPEG en base64, lo quita con null y rechaza lo que no es imagen', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        assert.strictEqual((await logica.obtenerUsuario(sesion.idUsuario)).foto, null);
+        await logica.cambiarFoto(sesion.idUsuario, '/9j/4AAQSkZJRgABAQ==');
+        assert.strictEqual((await logica.obtenerUsuario(sesion.idUsuario)).foto, '/9j/4AAQSkZJRgABAQ==');
+        await logica.cambiarFoto(sesion.idUsuario, null);
+        assert.strictEqual((await logica.obtenerUsuario(sesion.idUsuario)).foto, null);
+        for (const mala of ['', 'hola', '<script>', '/9j/' + 'A'.repeat(200000), 123]) {
+            await assert.rejects(logica.cambiarFoto(sesion.idUsuario, mala), { codigo: 'DATOS_NO_VALIDOS' });
+        }
+    });
+
+    it('registrarUsuario() envía el correo de bienvenida con los dos logos', async function () {
+        await logica.registrarUsuario('Pelin', 'Kaynak', ' Pelin@AERIS.es ', 'aire2026');
+        await new Promise((r) => setImmediate(r));      // se envía sin esperar
+        assert.strictEqual(bienvenidas.length, 1);
+        const c = bienvenidas[0];
+        assert.strictEqual(c.destinatario, 'pelin@aeris.es');
+        assert.strictEqual(c.asunto, 'Te damos la bienvenida a AERIS');
+        assert.ok(c.texto.includes('Hola, Pelin'));
+        assert.ok(c.extra.html.includes('cid:logo-aeris') && c.extra.html.includes('cid:logo-sensetech'));
+        assert.deepStrictEqual(c.extra.adjuntos.map((a) => a.cid), ['logo-aeris', 'logo-sensetech']);
+        for (const a of c.extra.adjuntos) assert.ok(fs.existsSync(a.path), a.path);
+    });
+
+    it('si el correo de bienvenida falla, el registro sigue funcionando', async function () {
+        const otra = new Logica(logica.conexion, async () => { throw new Error('Gmail caído'); }, URL_RESTABLECER, CLAVE);
+        const errorOriginal = console.error;
+        console.error = () => {};
+        try {
+            const sesion = await otra.registrarUsuario('Ana', 'Ruiz', 'ana@aeris.es', 'aire2026');
+            assert.ok(sesion.token);
+            await new Promise((r) => setImmediate(r));
+        } finally {
+            console.error = errorOriginal;
+        }
+    });
+
+    it('el correo de recuperación lleva el enlace en el texto y en el botón del HTML, con los logos', async function () {
+        await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.solicitarRecuperacion('pelin@aeris.es');
+        const c = correos[0];
+        const enlace = c.texto.match(/(http\S+token=\S+)/)[1];
+        assert.ok(c.extra.html.includes(`href="${enlace}"`));
+        assert.ok(c.extra.html.includes('Crear contraseña nueva'));
+        assert.deepStrictEqual(c.extra.adjuntos.map((a) => a.cid), ['logo-aeris', 'logo-sensetech']);
+    });
+
+    it('el nombre no puede meter HTML en el correo de bienvenida', function () {
+        const { html } = crearCorreoBienvenida('<b>Pelin</b>');
+        assert.ok(!html.includes('<b>Pelin</b>'));
+        assert.ok(html.includes('&lt;b&gt;Pelin&lt;/b&gt;'));
     });
 
     it('registrarUsuario() guarda la contraseña cifrada, nunca en claro', async function () {

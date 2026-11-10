@@ -39,7 +39,9 @@ describe('API REST de usuarios y autenticación', function () {
     before(async function () {
         await crearBDPruebas();
         logica = await Logica.crear(CONFIG_BD_PRUEBAS,
-            async (destinatario, asunto, texto) => { correos.push({ destinatario, texto }); },
+            async (destinatario, asunto, texto, extra) => {
+                if (!asunto.includes('bienvenida')) correos.push({ destinatario, texto, extra });   // la bienvenida no se apunta aquí
+            },
             'http://localhost:8080/restablecer.html', 'clave-de-pruebas');
 
         // Rutas solo para probar los roles (no existen en el servidor real)
@@ -151,6 +153,61 @@ describe('API REST de usuarios y autenticación', function () {
         const r = await peticion('GET', '/pruebaSoloAdmin', undefined, cuerpo.token);
         assert.strictEqual(r.codigo, 200);
         assert.strictEqual(r.cuerpo.usuario.rol, 'administrador');
+    });
+
+    // --- alertas del perfil (T010) -------------------------------------------
+
+    it('POST /cambiarAlertas con sesión: 204 y GET /usuarioActual devuelve el valor nuevo', async function () {
+        const { cuerpo } = await peticion('POST', '/registrarUsuario', PELIN);
+        assert.strictEqual((await peticion('GET', '/usuarioActual', undefined, cuerpo.token)).cuerpo.alertas, true);
+        const r = await peticion('POST', '/cambiarAlertas', { alertas: false }, cuerpo.token);
+        assert.strictEqual(r.codigo, 204);
+        assert.strictEqual((await peticion('GET', '/usuarioActual', undefined, cuerpo.token)).cuerpo.alertas, false);
+    });
+
+    it('POST /cambiarAlertas sin sesión: 401 · con un valor no válido: 400', async function () {
+        assert.strictEqual((await peticion('POST', '/cambiarAlertas', { alertas: false })).codigo, 401);
+        const { cuerpo } = await peticion('POST', '/registrarUsuario', PELIN);
+        assert.strictEqual((await peticion('POST', '/cambiarAlertas', { alertas: 'si' }, cuerpo.token)).codigo, 400);
+    });
+
+    // --- editar mis datos y foto (T010) --------------------------------------
+
+    it('POST /actualizarDatos: 200 con los datos nuevos · 400 · 409 · 401', async function () {
+        const { cuerpo } = await peticion('POST', '/registrarUsuario', PELIN);
+        await peticion('POST', '/registrarUsuario', { ...PELIN, correo: 'ana@aeris.es' });
+        const r = await peticion('POST', '/actualizarDatos',
+            { nombre: 'Pelin', apellidos: 'Kaynak Demir', correo: 'pelin.k@aeris.es' }, cuerpo.token);
+        assert.strictEqual(r.codigo, 200);
+        assert.strictEqual(r.cuerpo.correo, 'pelin.k@aeris.es');
+        const mal = await peticion('POST', '/actualizarDatos', { nombre: '', apellidos: 'K', correo: 'x' }, cuerpo.token);
+        assert.strictEqual(mal.codigo, 400);
+        assert.deepStrictEqual(mal.cuerpo.campos, ['nombre', 'correo']);
+        assert.strictEqual((await peticion('POST', '/actualizarDatos',
+            { nombre: 'Pelin', apellidos: 'Kaynak', correo: 'ana@aeris.es' }, cuerpo.token)).codigo, 409);
+        assert.strictEqual((await peticion('POST', '/actualizarDatos', { nombre: 'Pelin' })).codigo, 401);
+    });
+
+    it('POST /cambiarContrasenya: 200 con token nuevo · 403 actual incorrecta · 400 débil', async function () {
+        const { cuerpo } = await peticion('POST', '/registrarUsuario', PELIN);
+        assert.strictEqual((await peticion('POST', '/cambiarContrasenya',
+            { contrasenaActual: 'mal12345', contrasenaNueva: 'ozono2027' }, cuerpo.token)).codigo, 403);
+        assert.strictEqual((await peticion('POST', '/cambiarContrasenya',
+            { contrasenaActual: PELIN.contrasena, contrasenaNueva: 'corta' }, cuerpo.token)).codigo, 400);
+        const r = await peticion('POST', '/cambiarContrasenya',
+            { contrasenaActual: PELIN.contrasena, contrasenaNueva: 'ozono2027' }, cuerpo.token);
+        assert.strictEqual(r.codigo, 200);
+        assert.strictEqual((await peticion('GET', '/usuarioActual', undefined, r.cuerpo.token)).codigo, 200);
+        assert.strictEqual((await peticion('GET', '/usuarioActual', undefined, cuerpo.token)).codigo, 401);
+    });
+
+    it('POST /cambiarFoto: 204 y GET /usuarioActual la devuelve · 400 si no es imagen', async function () {
+        const { cuerpo } = await peticion('POST', '/registrarUsuario', PELIN);
+        const foto = '/9j/' + 'A'.repeat(40000);    // tamaño de una foto real de 256x256
+        assert.strictEqual((await peticion('POST', '/cambiarFoto', { foto }, cuerpo.token)).codigo, 204);
+        assert.strictEqual((await peticion('GET', '/usuarioActual', undefined, cuerpo.token)).cuerpo.foto, foto);
+        assert.strictEqual((await peticion('POST', '/cambiarFoto', { foto: 'no es una foto' }, cuerpo.token)).codigo, 400);
+        assert.strictEqual((await peticion('POST', '/cambiarFoto', {}, cuerpo.token)).codigo, 400);
     });
 
     // --- recuperación de contraseña -----------------------------------------

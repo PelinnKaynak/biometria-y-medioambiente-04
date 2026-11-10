@@ -2,7 +2,8 @@
 // Fichero:     Logica.js
 // Descripción: Lógica de negocio de usuarios y autenticación: registro,
 //              inicio de sesión, comprobación de la sesión y del rol, y
-//              recuperación de la contraseña. Es la única parte que habla con
+//              recuperación de la contraseña, y el aviso de alertas del
+//              perfil, la edición de los datos y la foto (T010). Es la única parte que habla con
 //              la base de datos (MySQL, tabla Usuarios). Las sesiones y los
 //              enlaces de recuperación son tokens firmados: no usan tablas.
 //              Diseño en doc/logica_design.md. Tarea T016 · H001, H002.
@@ -15,6 +16,8 @@
 const mysql = require('mysql2/promise');
 const Seguridad = require('./Seguridad');
 const Validador = require('./ValidadorUsuario');
+const { crearCorreoBienvenida } = require('./CorreoBienvenida');
+const { crearCorreoRecuperacion } = require('./CorreoRecuperacion');
 
 const ROL_PORTADOR = 'portador';        // rol de quien se registra desde la app
 const DURACION_SESION_SEGUNDOS = 30 * 24 * 60 * 60;      // 30 días
@@ -34,6 +37,21 @@ class ErrorLogica extends Error {
         this.codigo = codigo;
         this.campos = campos;
     }
+}
+
+const TAMANYO_MAXIMO_FOTO = 200000;     // caracteres en base64 (unos 150 KB)
+const MENSAJE_CONTRASENA_IGUAL = 'La contraseña nueva tiene que ser distinta de la actual';
+
+// ---------------------------------------------------------------------------
+// foto: Texto --> esFotoValida() --> V/F
+// What it does: true if it is base64 text of a JPEG ("/9j/") or a PNG
+//               ("iVBOR") that is not too big.
+// ---------------------------------------------------------------------------
+function esFotoValida(foto) {
+    return typeof foto === 'string'
+        && foto.length > 0 && foto.length <= TAMANYO_MAXIMO_FOTO
+        && /^[A-Za-z0-9+/]+={0,2}$/.test(foto)
+        && (foto.startsWith('/9j/') || foto.startsWith('iVBOR'));
 }
 
 // ---------------------------------------------------------------------------
@@ -57,7 +75,7 @@ class Logica {
 
     // -----------------------------------------------------------------------
     // configBD: { host, port, user, password, database },
-    // enviarCorreo: ( destinatario: Texto, asunto: Texto, texto: Texto ) --> Promesa,
+    // enviarCorreo: ( destinatario: Texto, asunto: Texto, texto: Texto, extra ) --> Promesa,
     // urlRestablecer: Texto, claveTokens: Texto
     //     --> crear() --> Logica
     // What it does: opens the connection pool, checks that the BD answers and
@@ -85,8 +103,9 @@ class Logica {
     // nombre: Texto, apellidos: Texto, correo: Texto, contrasena: Texto
     //     --> registrarUsuario() --> SesionIniciada
     // What it does: checks the data, saves the user with the password hash
-    //               (rol portador) and opens a session for him.
-    //               Throws DATOS_NO_VALIDOS or CORREO_YA_REGISTRADO.
+    //               (rol portador), opens a session for him and sends him the
+    //               welcome email in the background (if it fails, the sign-up
+    //               still works). Throws DATOS_NO_VALIDOS or CORREO_YA_REGISTRADO.
     // -----------------------------------------------------------------------
     async registrarUsuario(nombre, apellidos, correo, contrasena) {
         const erroneos = Validador.validarRegistro(nombre, apellidos, correo, contrasena);
@@ -108,7 +127,23 @@ class Logica {
             throw error;
         }
 
-        return this.crearSesion(idUsuario);
+        const sesion = await this.crearSesion(idUsuario);
+        this.enviarBienvenida(Validador.normalizarCorreo(correo), nombre.trim());   // sin esperar
+        return sesion;
+    }
+
+    // -----------------------------------------------------------------------
+    // correo: Texto, nombre: Texto --> enviarBienvenida() --> Promesa
+    // What it does: sends the welcome email (logos of SenseTech and AERIS and
+    //               what the app can do). An error is only written in the
+    //               server console: it never stops the sign-up.
+    // -----------------------------------------------------------------------
+    enviarBienvenida(correo, nombre) {
+        const mensaje = crearCorreoBienvenida(nombre);
+        return Promise.resolve()
+            .then(() => this.enviarCorreo(correo, mensaje.asunto, mensaje.texto,
+                { html: mensaje.html, adjuntos: mensaje.adjuntos }))
+            .catch((error) => console.error(`No se ha podido enviar la bienvenida a ${correo}:`, error.message));
     }
 
     // -----------------------------------------------------------------------
@@ -151,7 +186,7 @@ class Logica {
     // -----------------------------------------------------------------------
     async obtenerUsuario(idUsuario) {
         const [filas] = await this.conexion.execute(
-            `SELECT idUsuario, nombre, apellidos, email, role, fechaAlta, premiumHasta
+            `SELECT idUsuario, nombre, apellidos, email, role, fechaAlta, alertas, premiumHasta, foto
                FROM Usuarios WHERE idUsuario = ?`,
             [idUsuario]);
         if (filas.length !== 1) {
@@ -160,8 +195,96 @@ class Logica {
         const f = filas[0];
         return {
             idUsuario: f.idUsuario, nombre: f.nombre, apellidos: f.apellidos,
-            correo: f.email, rol: f.role, fechaAlta: f.fechaAlta, premiumHasta: f.premiumHasta
+            correo: f.email, rol: f.role, fechaAlta: f.fechaAlta,
+            alertas: Boolean(f.alertas), premiumHasta: f.premiumHasta, foto: f.foto
         };
+    }
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N, nombre: Texto, apellidos: Texto, correo: Texto
+    //     --> actualizarDatos() --> DatosBasicos
+    // What it does: changes the name, surname and email of the user (same
+    //               rules as the sign-up) and returns { nombre, apellidos,
+    //               correo }. Throws DATOS_NO_VALIDOS (with the wrong fields)
+    //               or CORREO_YA_REGISTRADO if another account has that email.
+    // -----------------------------------------------------------------------
+    async actualizarDatos(idUsuario, nombre, apellidos, correo) {
+        const erroneos = [];
+        if (!Validador.esNombreValido(nombre, 50)) erroneos.push('nombre');
+        if (!Validador.esNombreValido(apellidos, 100)) erroneos.push('apellidos');
+        if (!Validador.esCorreoValido(correo)) erroneos.push('correo');
+        if (erroneos.length > 0) {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', 'Datos no válidos', erroneos);
+        }
+        const datos = {
+            nombre: nombre.trim(), apellidos: apellidos.trim(), correo: Validador.normalizarCorreo(correo)
+        };
+        try {
+            await this.conexion.execute(
+                'UPDATE Usuarios SET nombre = ?, apellidos = ?, email = ? WHERE idUsuario = ?',
+                [datos.nombre, datos.apellidos, datos.correo, idUsuario]);
+        } catch (error) {
+            if (error.code === 'ER_DUP_ENTRY') {
+                throw new ErrorLogica('CORREO_YA_REGISTRADO', 'El correo ya tiene una cuenta');
+            }
+            throw error;
+        }
+        return datos;
+    }
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N, contrasenaActual: Texto, contrasenaNueva: Texto
+    //     --> cambiarContrasenya() --> SesionIniciada
+    // What it does: changes the password if the current one is right. The old
+    //               session tokens stop working (other phones are logged out),
+    //               so it returns a new session for this phone.
+    //               Throws DATOS_NO_VALIDOS (weak new password) or
+    //               CONTRASENA_INCORRECTA (the current one is wrong).
+    // -----------------------------------------------------------------------
+    async cambiarContrasenya(idUsuario, contrasenaActual, contrasenaNueva) {
+        if (!Validador.esContrasenaSegura(contrasenaNueva)) {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', 'Contraseña no válida', ['contrasenaNueva']);
+        }
+        const [filas] = await this.conexion.execute(
+            'SELECT passwordHash FROM Usuarios WHERE idUsuario = ?', [idUsuario]);
+        const correcta = filas.length === 1 && typeof contrasenaActual === 'string'
+            && await Seguridad.comprobarContrasenya(contrasenaActual, filas[0].passwordHash);
+        if (!correcta) {
+            throw new ErrorLogica('CONTRASENA_INCORRECTA', 'La contraseña actual no es correcta');
+        }
+        if (contrasenaNueva === contrasenaActual) {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', MENSAJE_CONTRASENA_IGUAL, ['contrasenaNueva']);
+        }
+        const hash = await Seguridad.calcularHash(contrasenaNueva);
+        await this.conexion.execute('UPDATE Usuarios SET passwordHash = ? WHERE idUsuario = ?', [hash, idUsuario]);
+        return this.crearSesion(idUsuario);
+    }
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N, foto: Texto | null --> cambiarFoto() -->
+    // What it does: saves the profile photo (a JPEG or PNG in base64, at most
+    //               TAMANYO_MAXIMO_FOTO characters), or deletes it with null.
+    //               Throws DATOS_NO_VALIDOS if it is not a valid image.
+    // -----------------------------------------------------------------------
+    async cambiarFoto(idUsuario, foto) {
+        if (foto !== null && !esFotoValida(foto)) {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', 'La foto no es válida', ['foto']);
+        }
+        await this.conexion.execute('UPDATE Usuarios SET foto = ? WHERE idUsuario = ?', [foto, idUsuario]);
+    }
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N, alertas: V/F --> cambiarAlertas() -->
+    // What it does: saves if the user wants to receive notifications
+    //               (column alertas). Throws DATOS_NO_VALIDOS if alertas is
+    //               not true or false. Used by the Perfil screen (T010).
+    // -----------------------------------------------------------------------
+    async cambiarAlertas(idUsuario, alertas) {
+        if (typeof alertas !== 'boolean') {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', 'alertas tiene que ser true o false', ['alertas']);
+        }
+        await this.conexion.execute('UPDATE Usuarios SET alertas = ? WHERE idUsuario = ?',
+            [alertas, idUsuario]);
     }
 
     // -----------------------------------------------------------------------
@@ -184,19 +307,15 @@ class Logica {
 
         const token = this.crearToken(filas[0], TIPO_RECUPERACION, DURACION_RECUPERACION_SEGUNDOS);
         const enlace = `${this.urlRestablecer}?token=${token}`;
-        await this.enviarCorreo(
-            correoNormalizado,
-            'AERIS · Recuperar la contraseña',
-            `Hola, ${filas[0].nombre}:\n\n` +
-            `Para crear una contraseña nueva abre este enlace (válido durante ${DURACION_RECUPERACION_SEGUNDOS / 60} minutos):\n` +
-            `${enlace}\n\n` +
-            'Si no lo has pedido tú, ignora este correo.\n\nEl equipo de AERIS');
+        const mensaje = crearCorreoRecuperacion(filas[0].nombre, enlace, DURACION_RECUPERACION_SEGUNDOS / 60);
+        await this.enviarCorreo(correoNormalizado, mensaje.asunto, mensaje.texto,
+            { html: mensaje.html, adjuntos: mensaje.adjuntos });
     }
 
     // -----------------------------------------------------------------------
     // token: Texto, contrasenaNueva: Texto --> restablecerContrasenya() -->
     // What it does: changes the password if the link token is valid and not
-    //               expired. As the password changes, the same link cannot be
+    //               expired and the new one is not the same as the current one. As the password changes, the same link cannot be
     //               used again and all the open sessions stop working.
     //               Throws DATOS_NO_VALIDOS or TOKEN_NO_VALIDO.
     // -----------------------------------------------------------------------
@@ -207,6 +326,9 @@ class Logica {
         const usuario = await this.leerTokenDeUsuario(token, TIPO_RECUPERACION);
         if (!usuario) {
             throw new ErrorLogica('TOKEN_NO_VALIDO', 'El enlace no es válido o ha caducado');
+        }
+        if (await Seguridad.comprobarContrasenya(contrasenaNueva, usuario.passwordHash)) {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', MENSAJE_CONTRASENA_IGUAL, ['contrasena']);
         }
         const hash = await Seguridad.calcularHash(contrasenaNueva);
         await this.conexion.execute('UPDATE Usuarios SET passwordHash = ? WHERE idUsuario = ?',

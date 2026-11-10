@@ -23,11 +23,13 @@ Personas registradas en la plataforma (app y web). Igual que en el diagrama de F
 | `estado` | VARCHAR(20) | NOT NULL, DEFAULT 'activo' | Estado de la cuenta |
 | `umbralAlerta` | DOUBLE | NULL | Umbral de alerta elegido (perfil); NULL = el de por defecto |
 | `premiumHasta` | DATETIME | NULL | Hasta cuándo es premium; NULL = no es premium |
+| `foto` | MEDIUMTEXT | NULL | Foto de perfil: JPEG de 256×256 en base64 (unos 30 KB); NULL = sin foto. Añadida en T010 |
 
 ## Aclaraciones
 
 - `email` es UNIQUE: si se intenta registrar un correo que ya existe, la BD lo rechaza y el servidor responde **409** a la app.
 - La app envía el JSON con las claves `nombre`, `apellidos`, `correo` y `contrasena`. La lógica (`logica_design.md`) las guarda en `nombre`, `apellidos`, `email` y calcula `passwordHash`.
+- La foto se guarda en la misma tabla (una columna, no una tabla nueva) para que se vea en cualquier teléfono donde el usuario inicie sesión.
 - Premium no es un rol: un usuario es premium mientras `premiumHasta` sea una fecha futura.
 
 ## Cómo crear las tablas
@@ -36,6 +38,8 @@ Personas registradas en la plataforma (app y web). Igual que en el diagrama de F
 2. Abrir `http://localhost/phpmyadmin`.
 3. Pestaña **Importar** → seleccionar `src/bd/usuarios.sql` → **Importar**.
 4. Debe aparecer la base de datos `aeris` con la tabla `Usuarios`.
+
+**Si la BD ya estaba creada antes de T010:** importar también `src/bd/actualizar_T010.sql`, que añade la columna `foto` sin borrar los usuarios.
 
 ## Prueba del script
 

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carpeta que FileProvider comparte con la app de cámara: cache/fotos (foto de perfil, T010) -->
+<paths>
+    <cache-path name="fotos" path="fotos/" />
+</paths>

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla «Perfil» (Figma: perfil) · T010 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/fondo"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".PerfilActivity">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/perfil_titulo"
+                android:textColor="@color/texto_principal"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <!-- Avatar con el botón de editar la foto abajo a la derecha -->
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="98dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp">
+
+                <!-- Foto de perfil en un círculo; sin foto, el avatar de Figma -->
+                <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/imagenAvatar"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:clickable="true"
+                    android:contentDescription="@string/perfil_avatar_descripcion"
+                    android:focusable="true"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/avatar_usuario"
+                    app:shapeAppearanceOverlay="@style/AERIS.FormaCirculo" />
+
+                <!-- Mientras se sube la foto gira encima del avatar -->
+                <ProgressBar
+                    android:id="@+id/progresoFoto"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="32dp"
+                    android:layout_marginTop="32dp"
+                    android:indeterminateTint="@color/violeta"
+                    android:visibility="gone" />
+
+                <ImageView
+                    android:id="@+id/botonEditarFoto"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:layout_gravity="bottom|end"
+                    android:clickable="true"
+                    android:contentDescription="@string/perfil_editar_foto_descripcion"
+                    android:focusable="true"
+                    android:src="@drawable/ic_editar_foto" />
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/textoNombre"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="6dp"
+                android:fontFamily="sans-serif-medium"
+                android:textColor="@color/texto_principal"
+                android:textSize="18sp"
+                tools:text="Pelin Kaynak" />
+
+            <TextView
+                android:id="@+id/textoCorreo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/texto_principal"
+                android:textSize="14sp"
+                tools:text="correo@ejemplo.com" />
+
+            <!-- Errores (sin conexión, foto no válida…) en la propia pantalla -->
+            <TextView
+                android:id="@+id/errorPerfil"
+                style="@style/AERIS.Error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center" />
+
+            <!-- Opciones -->
+            <LinearLayout
+                android:id="@+id/opcionEditarDatos"
+                style="@style/AERIS.Fila"
+                android:layout_marginTop="16dp">
+
+                <TextView
+                    style="@style/AERIS.FilaTexto"
+                    android:text="@string/perfil_editar_datos" />
+
+                <TextView style="@style/AERIS.FilaFlecha" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/opcionMiSensor"
+                style="@style/AERIS.Fila">
+
+                <TextView
+                    style="@style/AERIS.FilaTexto"
+                    android:text="@string/perfil_mi_sensor" />
+
+                <TextView style="@style/AERIS.FilaFlecha" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/opcionNotificaciones"
+                style="@style/AERIS.Fila"
+                android:paddingEnd="8dp">
+
+                <TextView
+                    style="@style/AERIS.FilaTexto"
+                    android:text="@string/perfil_notificaciones" />
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/interruptorNotificaciones"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:contentDescription="@string/perfil_notificaciones"
+                    app:thumbTint="@color/blanco"
+                    app:trackDecorationTint="@android:color/transparent"
+                    app:trackTint="@color/interruptor_pista" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/opcionUmbral"
+                style="@style/AERIS.Fila">
+
+                <TextView
+                    style="@style/AERIS.FilaTexto"
+                    android:text="@string/perfil_umbral" />
+
+                <TextView
+                    style="@style/AERIS.FilaFlecha"
+                    android:text="@string/perfil_umbral_valor"
+                    android:textColor="@color/texto_secundario"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/opcionPuntos"
+                style="@style/AERIS.Fila">
+
+                <TextView
+                    style="@style/AERIS.FilaTexto"
+                    android:text="@string/perfil_puntos" />
+
+                <TextView style="@style/AERIS.FilaFlecha" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/opcionMisLugares"
+                style="@style/AERIS.Fila">
+
+                <TextView
+                    style="@style/AERIS.FilaTexto"
+                    android:text="@string/perfil_mis_lugares" />
+
+                <TextView style="@style/AERIS.FilaFlecha" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/opcionPremium"
+                style="@style/AERIS.Fila">
+
+                <TextView
+                    style="@style/AERIS.FilaTexto"
+                    android:text="@string/perfil_premium" />
+
+                <TextView
+                    style="@style/AERIS.FilaFlecha"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="@string/perfil_premium_valor"
+                    android:textColor="@color/violeta"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/botonCerrarSesion"
+                android:layout_width="180dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/fondo_boton_principal"
+                android:clickable="true"
+                android:elevation="4dp"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/perfil_cerrar_sesion"
+                android:textColor="@color/blanco"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </ScrollView>
+
+    <include layout="@layout/barra_navegacion" />
+</LinearLayout>

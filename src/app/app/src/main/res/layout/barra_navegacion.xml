@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Barra de navegación inferior (Figma: componente «barra navegacion»).
+     Se añade con <include> en las pantallas principales y la conecta
+     BarraNavegacion.conectar() (T010). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/barraNavegacion"
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
+    android:background="@drawable/fondo_barra_navegacion"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:id="@+id/pestanyaInicio"
+        style="@style/AERIS.Pestanya">
+
+        <ImageView
+            android:id="@+id/iconoInicio"
+            style="@style/AERIS.PestanyaIcono"
+            android:src="@drawable/ic_inicio" />
+
+        <TextView
+            android:id="@+id/textoInicio"
+            style="@style/AERIS.PestanyaTexto"
+            android:text="@string/barra_inicio" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/pestanyaMapa"
+        style="@style/AERIS.Pestanya">
+
+        <ImageView
+            android:id="@+id/iconoMapa"
+            style="@style/AERIS.PestanyaIcono"
+            android:src="@drawable/ic_mapa" />
+
+        <TextView
+            android:id="@+id/textoMapa"
+            style="@style/AERIS.PestanyaTexto"
+            android:text="@string/barra_mapa" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/pestanyaMisDatos"
+        style="@style/AERIS.Pestanya">
+
+        <ImageView
+            android:id="@+id/iconoMisDatos"
+            style="@style/AERIS.PestanyaIcono"
+            android:src="@drawable/ic_mis_datos" />
+
+        <TextView
+            android:id="@+id/textoMisDatos"
+            style="@style/AERIS.PestanyaTexto"
+            android:text="@string/barra_mis_datos" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/pestanyaInfo"
+        style="@style/AERIS.Pestanya">
+
+        <ImageView
+            android:id="@+id/iconoInfo"
+            style="@style/AERIS.PestanyaIcono"
+            android:src="@drawable/ic_info" />
+
+        <TextView
+            android:id="@+id/textoInfo"
+            style="@style/AERIS.PestanyaTexto"
+            android:text="@string/barra_info" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/pestanyaPerfil"
+        style="@style/AERIS.Pestanya">
+
+        <ImageView
+            android:id="@+id/iconoPerfil"
+            style="@style/AERIS.PestanyaIcono"
+            android:src="@drawable/ic_perfil" />
+
+        <TextView
+            android:id="@+id/textoPerfil"
+            style="@style/AERIS.PestanyaTexto"
+            android:text="@string/barra_perfil" />
+    </LinearLayout>
+</LinearLayout>

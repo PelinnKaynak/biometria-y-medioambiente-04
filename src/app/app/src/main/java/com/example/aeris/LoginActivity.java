@@ -76,6 +76,7 @@ public class LoginActivity extends AppCompatActivity {
         // Si el registro ya está abierto debajo, se vuelve a él en lugar de abrir otro
         findViewById(R.id.enlaceRegistrate).setOnClickListener(vista -> abrirSinRepetir(RegistroActivity.class));
         botonAcceder.setOnClickListener(vista -> pulsarAcceder());
+        TeclaEnter.pulsaBoton(campoContrasena, botonAcceder);   // Enter en la contraseña = «Acceder»
     }
 
     // -----------------------------------------------------------------------

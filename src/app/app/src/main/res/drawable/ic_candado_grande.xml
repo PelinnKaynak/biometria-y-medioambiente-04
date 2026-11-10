@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Candado grande de «Recuperar contraseña» (mismo dibujo que ic_candado, en violeta y con cerradura) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="56dp"
+    android:height="56dp"
+    android:viewportWidth="56"
+    android:viewportHeight="56">
+    <path
+        android:pathData="M18,24V17C18,11.48 22.48,7 28,7C33.52,7 38,11.48 38,17V24"
+        android:strokeColor="@color/violeta"
+        android:strokeWidth="4"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M15,24H41C43.21,24 45,25.79 45,28V45C45,47.21 43.21,49 41,49H15C12.79,49 11,47.21 11,45V28C11,25.79 12.79,24 15,24Z"
+        android:fillColor="@color/violeta" />
+    <path
+        android:pathData="M28,31.5C29.93,31.5 31.5,33.07 31.5,35C31.5,36.3 30.79,37.43 29.75,38.04V41.5C29.75,42.47 28.97,43.25 28,43.25C27.03,43.25 26.25,42.47 26.25,41.5V38.04C25.21,37.43 24.5,36.3 24.5,35C24.5,33.07 26.07,31.5 28,31.5Z"
+        android:fillColor="@color/blanco" />
+</vector>
