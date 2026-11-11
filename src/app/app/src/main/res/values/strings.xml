@@ -136,4 +136,82 @@
     <!-- Mapa sin cuenta (provisional) -->
     <string name="mapa_titulo">Mapa del aire</string>
     <string name="mapa_texto">Aquí podrás ver el mapa de la calidad del aire de tu ciudad sin crear una cuenta. El mapa llega en su propia tarea.</string>
+
+    <!-- Información (T009) -->
+    <string name="info_titulo">Información</string>
+    <string name="info_subtitulo">Todo lo que necesitas saber sobre el aire que respiras y tu sensor.</string>
+    <string name="info_consejo_titulo">CONSEJO DE HOY</string>
+    <string-array name="info_consejos">
+        <item>El ozono sube con el sol y el calor. Si vas a hacer deporte al aire libre, mejor a primera hora de la mañana.</item>
+        <item>En verano el ozono suele ser más alto por la tarde. Mira el mapa antes de salir a correr o en bici.</item>
+        <item>Si el aire está «Malo», reduce el ejercicio intenso al aire libre, sobre todo si tienes asma.</item>
+        <item>Lleva el sensor por fuera de la mochila: dentro de un bolsillo mide peor.</item>
+        <item>Mantén el Bluetooth y la ubicación activados para que tus mediciones lleguen al mapa.</item>
+    </string-array>
+    <string name="info_seccion_aire">EL AIRE QUE RESPIRAS</string>
+    <string name="info_seccion_sensor">TU SENSOR AERIS</string>
+    <string name="info_seccion_normativa">NORMATIVA</string>
+    <string name="info_unidad">µg/m³</string>
+
+    <string name="info_ozono_titulo">Ozono (O₃)</string>
+    <string name="info_ozono_subtitulo">Qué es y cómo afecta a tu salud</string>
+    <string name="info_ozono_texto">El ozono que respiras no lo emite nadie directamente: se forma cuando la luz del sol reacciona con los gases del tráfico y de la industria. Por eso sube en primavera y verano y en las horas de más sol.\n\nPuede irritar los ojos y la garganta, provocar tos y reducir la capacidad de los pulmones, sobre todo al hacer ejercicio. Los niños, las personas mayores y quienes tienen asma son los más sensibles.</string>
+    <string name="info_niveles_titulo">Los niveles de AERIS</string>
+    <string name="info_niveles_subtitulo">Qué significan los colores del mapa</string>
+    <string name="info_nivel_bueno">Bueno</string>
+    <string name="info_nivel_bueno_rango">Hasta 100 µg/m³</string>
+    <string name="info_nivel_bueno_texto">Puedes hacer vida normal al aire libre.</string>
+    <string name="info_nivel_moderado">Moderado</string>
+    <string name="info_nivel_moderado_rango">101 – 180 µg/m³</string>
+    <string name="info_nivel_moderado_texto">Si eres sensible, evita el ejercicio intenso.</string>
+    <string name="info_nivel_malo">Malo</string>
+    <string name="info_nivel_malo_rango">181 – 240 µg/m³</string>
+    <string name="info_nivel_malo_texto">Mejor reducir el ejercicio al aire libre.</string>
+    <string name="info_nivel_muy_malo">Muy malo</string>
+    <string name="info_nivel_muy_malo_rango">Más de 240 µg/m³</string>
+    <string name="info_nivel_muy_malo_texto">Reduce el tiempo al aire libre.</string>
+    <string name="info_sol_titulo">Sol y temperatura</string>
+    <string name="info_sol_subtitulo">Por qué hay más ozono en verano</string>
+    <string name="info_sol_texto">Con más sol y más calor, las reacciones que forman el ozono son más rápidas. Los días despejados y sin viento son los de más ozono, y el pico suele llegar por la tarde.\n\nTu sensor también mide la temperatura para corregir su lectura.</string>
+
+    <string name="info_sensor_titulo">Cómo mide tu sensor</string>
+    <string name="info_sensor_subtitulo">Un sensor electroquímico de ozono</string>
+    <string name="info_sensor_texto">Tu nodo lleva un sensor electroquímico de ozono de SPEC Sensors (ULPSM-O3 968-046). El ozono reacciona dentro del sensor y produce una corriente muy pequeña, proporcional a la cantidad de gas.\n\nCada sensor tiene su propia sensibilidad (nA/ppm), que viene en el código de su etiqueta. Por eso la app te pide escanearlo al vincularlo.</string>
+    <string name="info_bluetooth_titulo">Bluetooth y envío de datos</string>
+    <string name="info_bluetooth_subtitulo">Cómo llegan tus mediciones al mapa</string>
+    <string name="info_bluetooth_texto">El sensor no necesita emparejarse: envía sus mediciones por Bluetooth de bajo consumo (BLE), como un pequeño faro. Tu móvil las recibe, les añade la hora y tu ubicación y las sube al servidor de AERIS.\n\nMantén activados el Bluetooth y la ubicación y lleva el móvil cerca del sensor.</string>
+    <string name="info_llevar_titulo">Cómo llevarlo</string>
+    <string name="info_llevar_clip">Con el clip</string>
+    <string name="info_llevar_clip_texto">En el cinturón, la correa de la mochila o un bolsillo</string>
+    <string name="info_llevar_anilla">Con la anilla</string>
+    <string name="info_llevar_anilla_texto">Cuélgalo de la mochila o de una cinta</string>
+    <string name="info_llevar_rejilla">Rejilla al aire</string>
+    <string name="info_llevar_rejilla_texto">No lo tapes: el aire entra por delante y por los lados</string>
+    <string name="info_conoce_titulo">Conoce tu sensor</string>
+    <string name="info_conoce_descripcion">Sensor AERIS: carcasa en forma de gota con rejilla en espiral y anilla para colgarlo</string>
+    <string name="info_llamada_anilla">Anilla para colgarlo</string>
+    <string name="info_llamada_rejilla">Rejilla: entra el aire</string>
+    <string name="info_llamada_ventilacion">Ranuras de ventilación</string>
+    <string name="info_piezas_titulo">Por dentro</string>
+    <string name="info_piezas_subtitulo">Baja para ver cómo se separan las piezas</string>
+    <string name="info_pieza_tapa">Tapa frontal</string>
+    <string name="info_pieza_filtro">Filtro de polvo</string>
+    <string name="info_pieza_modulo">Sensor de O₃</string>
+    <string name="info_pieza_carcasa">Carcasa con clip</string>
+    <string name="info_datos_titulo">Tus datos</string>
+    <string name="info_datos_subtitulo">Qué se comparte y qué no</string>
+    <string name="info_datos_texto">Cada medición se envía con la concentración de ozono, la hora y el lugar. En el mapa público solo se ve la calidad del aire por zonas, nunca tu nombre ni tu recorrido.</string>
+
+    <string name="info_limites_titulo">Límites legales</string>
+    <string name="info_limites_subtitulo">Qué dicen la UE, España y la OMS</string>
+    <string name="info_limite_informacion">Umbral de información</string>
+    <string name="info_limite_informacion_valor">180 µg/m³ en una hora</string>
+    <string name="info_limite_alerta">Umbral de alerta</string>
+    <string name="info_limite_alerta_valor">240 µg/m³ en una hora</string>
+    <string name="info_limite_objetivo">Valor objetivo (salud)</string>
+    <string name="info_limite_objetivo_valor">120 µg/m³ en 8 horas, máx. 25 días al año</string>
+    <string name="info_limite_oms">Guía de la OMS (2021)</string>
+    <string name="info_limite_oms_valor">100 µg/m³ en 8 horas</string>
+    <string name="info_limites_nota">Directiva 2008/50/CE y Real Decreto 102/2011. AERIS usa el valor de la OMS como límite de «Bueno».</string>
+    <string name="info_fuentes">Fuentes: Directiva 2008/50/CE, Real Decreto 102/2011, OMS (2021) y SPEC Sensors.</string>
 </resources>

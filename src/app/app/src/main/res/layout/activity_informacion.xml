@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pantalla «Información» (Figma: informacion · rediseño). T009 (H021).
+     Las tarjetas de cada sección las añade InformacionActivity (item_tema_informacion.xml). -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/fondo"
+    android:fitsSystemWindows="true"
+    android:orientation="vertical"
+    tools:context=".InformacionActivity">
+
+    <ScrollView
+        android:id="@+id/scrollInformacion"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:id="@+id/contenidoInformacion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingTop="40dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="24dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/info_titulo"
+                android:textColor="@color/texto_principal"
+                android:textSize="28sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:lineSpacingMultiplier="1.2"
+                android:text="@string/info_subtitulo"
+                android:textColor="@color/texto_cuerpo"
+                android:textSize="14sp" />
+
+            <!-- Consejo de hoy: cambia solo cada 7 s o al tocarlo -->
+            <LinearLayout
+                android:id="@+id/tarjetaConsejo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/fondo_consejo"
+                android:clickable="true"
+                android:elevation="6dp"
+                android:focusable="true"
+                android:orientation="vertical"
+                android:paddingStart="18dp"
+                android:paddingTop="18dp"
+                android:paddingEnd="18dp"
+                android:paddingBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_info_sol"
+                        android:tint="@color/blanco" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:letterSpacing="0.08"
+                        android:text="@string/info_consejo_titulo"
+                        android:textColor="@color/consejo_etiqueta"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <TextSwitcher
+                    android:id="@+id/textoConsejo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:minHeight="66dp" />
+
+                <LinearLayout
+                    android:id="@+id/puntosConsejo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/AERIS.InfoSeccion"
+                android:text="@string/info_seccion_aire"
+                android:textColor="@color/info_verde_icono" />
+
+            <LinearLayout
+                android:id="@+id/temasAire"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <TextView
+                style="@style/AERIS.InfoSeccion"
+                android:text="@string/info_seccion_sensor"
+                android:textColor="@color/violeta" />
+
+            <include layout="@layout/seccion_conoce_sensor" />
+
+            <LinearLayout
+                android:id="@+id/temasSensor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <TextView
+                style="@style/AERIS.InfoSeccion"
+                android:text="@string/info_seccion_normativa"
+                android:textColor="@color/info_azul_icono" />
+
+            <LinearLayout
+                android:id="@+id/temasNormativa"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:lineSpacingMultiplier="1.2"
+                android:text="@string/info_fuentes"
+                android:textColor="@color/texto_terciario"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </ScrollView>
+
+    <include layout="@layout/barra_navegacion" />
+</LinearLayout>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Una fila de «Los niveles de AERIS»: punto de color, nombre, rango a la derecha
+     y consejo debajo, con una línea fina encima. T009 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/linea_superior_fila"
+    android:orientation="horizontal"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <View
+        android:id="@+id/puntoNivel"
+        android:layout_width="9dp"
+        android:layout_height="9dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/fondo_punto_nivel" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/nombreNivel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:textColor="@color/texto_principal"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="Bueno" />
+
+            <TextView
+                android:id="@+id/rangoNivel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/texto_secundario"
+                android:textSize="12sp"
+                tools:text="Hasta 100 µg/m³" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textoNivel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:lineSpacingMultiplier="1.15"
+            android:textColor="@color/texto_cuerpo"
+            android:textSize="13sp"
+            tools:text="Puedes hacer vida normal al aire libre." />
+    </LinearLayout>
+</LinearLayout>

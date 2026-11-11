@@ -97,6 +97,64 @@
         <item name="android:textSize">11sp</item>
     </style>
 
+    <!-- Título de sección de «Información» (EL AIRE QUE RESPIRAS…), T009 -->
+    <style name="AERIS.InfoSeccion" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">26dp</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textColor">@color/texto_secundario</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <!-- Nombre de cada pieza del sensor (Información, «Por dentro»), T009 -->
+    <style name="AERIS.InfoPieza" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/texto_cuerpo</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
+    <!-- Tarjetas de «Cómo llevarlo» (Información), T009 -->
+    <style name="AERIS.InfoLlevar" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/fondo_tarjeta_info</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:padding">10dp</item>
+    </style>
+
+    <style name="AERIS.InfoLlevarImagen" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">84dp</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="android:scaleType">fitCenter</item>
+    </style>
+
+    <style name="AERIS.InfoLlevarTitulo" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">8dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="AERIS.InfoLlevarTexto" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">2dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">@color/texto_secundario</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
     <!-- Forma de círculo para la foto de perfil (ShapeableImageView) -->
     <style name="AERIS.FormaCirculo" parent="">
         <item name="cornerFamily">rounded</item>

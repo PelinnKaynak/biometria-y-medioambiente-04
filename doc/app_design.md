@@ -275,7 +275,7 @@ InicioActivity (provisional hasta T006): onCreate()      (con la barra de navega
 
 ## 3. Perfil, editar mis datos y barra de navegación (T010)
 
-Pantalla de Figma «perfil» y componente «barra navegacion». La barra está en las pantallas principales (por ahora Inicio y Perfil); Mapa, Mis datos e Info llegan en otras tareas y de momento no hacen nada al pulsarlas.
+Pantalla de Figma «perfil» y componente «barra navegacion». La barra está en las pantallas principales (por ahora Inicio, Información y Perfil); Mapa y Mis datos llegan en otras tareas y de momento no hacen nada al pulsarlas.
 
 ```text
 InicioActivity <--barra--> PerfilActivity
@@ -446,6 +446,68 @@ EditarDatosActivity (NUEVA): onCreate(), cargarDatos(), pulsarGuardar(), pulsarC
 InicioActivity (MODIFICADA): ya no tiene «Cerrar sesión»; tiene la barra de navegación
 ```
 
+## 3b. Información (T009 · H021)
+
+Pantallas de Figma «informacion · rediseño» (todas las tarjetas cerradas) e «informacion · leer más abierto». Se abre con la pestaña «Info» de la barra de navegación (`BarraNavegacion.pantallaDe(INFO)`).
+
+```text
+barra («Info») --> InformacionActivity
+InformacionActivity --> ConsejosDelDia.deHoy() / siguiente()      (tarjeta «Consejo de hoy»)
+InformacionActivity --(tocar una tarjeta)--> alternar()            (abre o cierra la tarjeta)
+InformacionActivity --(bajar por la pantalla)--> actualizarConScroll() --> llamadas del sensor y colocarPiezas()
+```
+
+### Tipos
+
+```text
+NivelOzono ∈ { BUENO (≤ 100), MODERADO (≤ 180), MALO (≤ 240), MUY_MALO }   // µg/m³
+```
+
+### Clase NivelOzono (NUEVA, enum)
+
+```text
+                                    --------- NivelOzono ---------------------------
+                                    |
+  microgramos: R                --> desdeValor() --x
+  NivelOzono                    <-- |     ≤ 100 Bueno, ≤ 180 Moderado, ≤ 240 Malo,
+                                    |     más Muy malo (negativo = Bueno)
+                                    ------------------------------------------------
+```
+
+### Clase ConsejosDelDia (NUEVA)
+
+```text
+                                    --------- ConsejosDelDia -----------------------
+                                    |
+  diaDelAnyo: N, total: N       --> deHoy() --x
+  N                             <-- |     consejo con el que empieza hoy
+                                    |
+  actual: N, total: N           --> siguiente() --x
+  N                             <-- |     el siguiente; tras el último, el primero
+                                    ------------------------------------------------
+```
+
+### Pantalla
+
+```text
+InformacionActivity (NUEVA): onCreate(), onResume(), onPause(), prepararConsejo(), mostrarConsejo(),
+                             anyadirTemas(), rellenarCuerpo(), escalaNiveles(), alternar(), prepararSensor(),
+                             crearLlamada(), colocarLlamadas(), actualizarConScroll(), colocarPiezas(),
+                             animarEntrada()
+```
+
+- **Contenido** (textos en `strings.xml`, prefijo `info_`):
+  - «El aire que respiras»: Ozono (O₃), Los niveles de AERIS y Sol y temperatura. «Los niveles» enseña una barra de colores de 0 a 300 µg/m³ con las marcas 100, 180 y 240 (`escalaNiveles()`, límites de `NivelOzono`) y una fila por nivel: punto de color, nombre, rango y consejo. Los colores y límites son los mismos que el mapa de la web.
+  - «Tu sensor AERIS», lo que necesita saber el portador (`seccion_conoce_sensor.xml`; imágenes renderizadas del modelo 3D de la carcasa (`aeris_assembly.glb`, con fondo transparente) en `res/drawable-nodpi/sensor_*.webp`):
+    - **Conoce tu sensor:** la imagen del sensor sube y baja despacio (2,4 s) y su sombra se encoge cuando sube. Cuando la tarjeta aparece en pantalla salen, una detrás de otra, tres llamadas: punto violeta, línea y etiqueta («Anilla para colgarlo», «Rejilla: entra el aire», «Ranuras de ventilación»). Su posición está en `LLAMADAS` como fracción de la imagen.
+    - **Por dentro:** tapa frontal, filtro de polvo, sensor de O₃ y carcasa con clip. Empiezan juntas en el centro (sensor cerrado) y se separan mientras la tarjeta sube por la pantalla (`colocarPiezas()` con un progreso de 0 a 1); a la vez aparecen sus nombres.
+    - **Cómo llevarlo:** tres tarjetas con imagen: con el clip, con la anilla y con la rejilla al aire.
+    - Tarjetas: Cómo mide tu sensor (SPEC Sensors ULPSM-O3 968-046, la sensibilidad en la etiqueta), Bluetooth y envío de datos (BLE tipo beacon; el móvil añade hora y ubicación) y Tus datos.
+  - «Normativa»: Límites legales: umbral de información 180, umbral de alerta 240, valor objetivo 120 µg/m³ (8 h) y guía de la OMS 100 µg/m³.
+- **Tarjetas** (`item_tema_informacion.xml`): iconos de línea fina sobre un círculo del color de su sección (el aire en verde, el sensor en violeta y la normativa en azul; el título de la sección va del mismo color). Cerradas al abrir la pantalla. Al tocar la tarjeta se abre o se cierra: la altura cambia con una animación (`TransitionManager` + `AutoTransition`, 250 ms), la flecha gira 180° y se vuelve violeta y el borde pasa a violeta suave. No hay enlace «Leer más»: la flecha basta. Al pulsar, la tarjeta se hunde un poco (escala 0,98).
+- **Consejo de hoy:** cinco consejos (`info_consejos`). Cada día empieza por uno distinto (`ConsejosDelDia.deHoy()` con el día del año); cambia solo cada 7 s (solo mientras la pantalla se ve: `onResume()` / `onPause()`) o al tocarlo, con un fundido (`TextSwitcher`). Los puntos de abajo marcan cuál se ve.
+- **Entrada:** al abrir la pantalla, el consejo y las tarjetas de «El aire que respiras» aparecen uno detrás de otro (fundido y desplazamiento hacia arriba, 60 ms entre cada una).
+
 ---
 
 ## 4. Aclaraciones del diseño
@@ -464,7 +526,7 @@ InicioActivity (MODIFICADA): ya no tiene «Cerrar sesión»; tiene la barra de n
 - **Cerrar sesión:** `Sesion.cerrar()` borra el token del teléfono; el servidor no guarda sesiones.
 - **Login:** `POST /iniciarSesion` con `{"correo", "contrasena"}`. `200` → sesión iniciada; `401` → «Correo o contraseña incorrectos» (mismo mensaje si el correo no existe), se borra la contraseña escrita y no se da acceso.
 - **Recuperar contraseña:** `POST /solicitarRecuperacion` con `{"correo"}`. `200` → el servidor ha enviado un enlace que caduca a los 30 minutos y se abre «Revisa tu correo»; `404` → el correo no tiene cuenta: no se envía nada y la app muestra «No hay ninguna cuenta con este correo.» debajo del campo. «¿No te ha llegado? Reenviar» pide otro enlace.
-- **Tras el registro** se abre `VincularSensorActivity`. No hay «Omitir por ahora» ni «Podrás vincular tu sensor más tarde…»: la pantalla solo ofrece buscar y vincular el sensor. La flecha de volver abre el inicio.
+- **Tras el registro** se abre `VincularSensorActivity`. No hay «Omitir por ahora» ni «Podrás vincular tu sensor más tarde…»: la pantalla solo ofrece escanear (o escribir) el código y vincular el sensor. La flecha de volver abre el inicio.
 - **Desde el perfil** (extra `desdePerfil`): volver (o vincular el sensor) cierra la pantalla y se vuelve al perfil, que recarga sus datos en `onResume()`. Todo pasa por `salir()`.
 - **Vincular sensor (T005):** el sensor se vincula escaneando con la cámara el código (DataMatrix) de la etiqueta del sensor de ozono, p. ej. `092021010920 110406 03 2109 -44.75`. «Escanear código» abre el escáner de Google (`play-services-code-scanner`, no hace falta el permiso `CAMERA`). `CodigoSensor.desdeTexto()` separa el texto en número de serie (12 cifras), modelo (6), gas (2, `03` = ozono), fecha AAMM y sensibilidad (nA/ppm); si no tiene esa forma devuelve `null` y se enseña «Este código no es el de un sensor AERIS…» debajo del botón. Si la cámara no funciona, «¿No funciona la cámara? Escribe el código» enseña dos campos, «Número de serie» (12 cifras) y «Sensibilidad (nA/ppm)» (con coma o punto), que se comprueban con `CodigoSensor.desdeCampos()`; los errores salen debajo de cada campo y «Volver a escanear» vuelve al botón. Con un código válido se enseña la tarjeta «Sensor leído» (número de serie, tipo de sensor y fecha) con «Vincular» y «Escanear otro código». La petición al servidor (`POST /vincularSensor` con el número de serie y la sensibilidad) es de T005/T017 y va en `pulsarVincular()` (marcada con «T005»).
 - **Inicio provisional:** `InicioActivity` solo saluda y tiene la barra de navegación; la pantalla de inicio real es T006.
@@ -489,4 +551,4 @@ InicioActivity (MODIFICADA): ya no tiene «Cerrar sesión»; tiene la barra de n
 
 - **Lenguaje:** Java 11, Android 10 (API 29) o superior.
 - **Cabecera de fichero** con nombre, descripción, autores, fecha y copyright; **cabecera de cada método** con su diseño lógico en la notación de la asignatura y una línea `What it does:`.
-- **Tests automáticos (JUnit 4):** `ValidadorRegistroTest` (campos vacíos, nombre y apellidos, correo, contraseña segura, confirmación), `LogicaFakeRegistroTest` (JSON enviado y respuesta para 201 con token, 409, 500 y sin conexión), `ValidadorLoginTest` (campos vacíos y correo) `LogicaFakeSesionTest` (JSON enviado, 200 con token, 401, 500, sin conexión y recuperación) `LogicaFakePerfilTest` (lectura de `DatosUsuario` con la foto, JSON de la foto, respuestas de `GET /usuarioActual`, `POST /cambiarAlertas` y `POST /cambiarFoto`, y qué pantalla cierra la barra) `SensorEncontradoTest` (textos de señal y distancia) y `LogicaFakeEditarDatosTest` (validación de los datos y de la contraseña, JSON enviado y respuestas 200, 400, 401, 403, 409 y sin conexión). Se ejecutan con `./gradlew test` desde `src/app`.
+- **Tests automáticos (JUnit 4):** `ValidadorRegistroTest` (campos vacíos, nombre y apellidos, correo, contraseña segura, confirmación), `LogicaFakeRegistroTest` (JSON enviado y respuesta para 201 con token, 409, 500 y sin conexión), `ValidadorLoginTest` (campos vacíos y correo) `LogicaFakeSesionTest` (JSON enviado, 200 con token, 401, 500, sin conexión y recuperación) `LogicaFakePerfilTest` (lectura de `DatosUsuario` con la foto, JSON de la foto, respuestas de `GET /usuarioActual`, `POST /cambiarAlertas` y `POST /cambiarFoto`, y qué pantalla cierra la barra) `SensorEncontradoTest` (textos de señal y distancia), `CodigoSensorTest` (código de la etiqueta y datos escritos a mano), `InformacionTest` (niveles de ozono, consejo del día y pestaña «Info») y `LogicaFakeEditarDatosTest` (validación de los datos y de la contraseña, JSON enviado y respuestas 200, 400, 401, 403, 409 y sin conexión). Se ejecutan con `./gradlew test` desde `src/app`.
