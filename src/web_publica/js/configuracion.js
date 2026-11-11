@@ -21,3 +21,22 @@ const URL_SERVIDOR = "";
 function crearLogica() {
   return USAR_LOGICA_FAKE ? new LogicaFake() : new LogicaReal(URL_SERVIDOR);
 }
+
+// --------------------------------------------------------
+// crearLogicaCuenta() --> LogicaCuentaFake | LogicaCuentaReal
+//
+// Lógica de la página Mi cuenta (T018). Usa el mismo
+// interruptor que el resto de la web.
+// --------------------------------------------------------
+function crearLogicaCuenta() {
+  return USAR_LOGICA_FAKE ? new LogicaCuentaFake() : new LogicaCuentaReal(URL_SERVIDOR);
+}
+
+// --------------------------------------------------------
+// crearLogicaMapa() --> LogicaMapaFake | LogicaMapaReal
+//
+// Lógica del mapa de la página principal (T012).
+// --------------------------------------------------------
+function crearLogicaMapa() {
+  return USAR_LOGICA_FAKE ? new LogicaMapaFake() : new LogicaMapaReal(URL_SERVIDOR);
+}

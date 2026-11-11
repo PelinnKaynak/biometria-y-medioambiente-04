@@ -1,0 +1,548 @@
+/* ------------------------------------------------------------
+   mi_cuenta.css · página Mi cuenta del portador (T018)
+   Medidas sacadas del diseño de Figma (Mi cuenta y Mi cuenta · móvil)
+   ------------------------------------------------------------ */
+
+.pagina-cuenta {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ---------- Cabecera ---------- */
+
+.cabecera-cuenta {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 52px;
+    height: 108px;
+    padding: 0 42px;
+    background: #EFE9F6;
+}
+
+.logo-cabecera img { display: block; width: 158px; }
+
+.menu-cuenta { display: flex; gap: 52px; }
+
+.menu-cuenta a {
+    color: var(--texto);
+    font-size: 16px;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.menu-cuenta a:hover { color: var(--morado); }
+
+.menu-cuenta .salir-movil { display: none; }
+
+.usuario-cabecera {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: var(--morado);
+    color: var(--blanco);
+    font-weight: 600;
+}
+
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.nombre-cabecera { font-size: 16px; font-weight: 500; }
+
+.salir {
+    margin-left: 58px;
+    font-size: 15px;
+    text-decoration: none;
+}
+
+.boton-menu {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.boton-menu span {
+    display: block;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--texto);
+}
+
+/* ---------- Contenido ---------- */
+
+.contenido-cuenta {
+    flex: 1;
+    width: 100%;
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 30px 42px 38px;
+}
+
+.contenido-cuenta h1 {
+    margin: 0 0 14px;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.estado-nodo {
+    margin: 0 0 26px;
+    color: var(--texto-suave);
+    font-size: 16px;
+}
+
+.cargando { color: var(--texto-suave); }
+
+.aviso-carga {
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #FDECEE;
+    color: var(--malo);
+    font-weight: 500;
+}
+
+.tarjeta {
+    padding: 22px 24px;
+    border: 1px solid var(--borde);
+    border-radius: 14px;
+    background: var(--blanco);
+}
+
+.tarjeta h2 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.subtitulo {
+    margin: 6px 0 0;
+    color: var(--texto-suave);
+    font-size: 15px;
+}
+
+.nota {
+    margin: 8px 0 0;
+    color: var(--texto-suave);
+    font-size: 12px;
+}
+
+.sin-datos { margin-bottom: 24px; }
+.sin-datos p { margin: 8px 0 0; color: var(--texto-suave); line-height: 1.5; }
+
+.texto-corto { display: none; }
+
+/* ---------- Indicadores ---------- */
+
+.indicadores {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 19px;
+    margin-bottom: 24px;
+}
+
+.indicador { padding: 18px 20px; }
+
+.indicador h2 { font-size: 14px; font-weight: 500; }
+
+.cifra {
+    margin: 8px 0 6px;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.detalle {
+    margin: 0;
+    color: var(--texto-suave);
+    font-size: 14px;
+}
+
+.nivel {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--texto);
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.nivel::before {
+    content: "";
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.detalle .nivel { color: var(--texto-suave); }
+.nivel-bueno::before { background: var(--bueno); }
+.nivel-moderado::before { background: var(--moderado); }
+.nivel-malo::before { background: var(--malo); }
+
+/* ---------- Rejilla principal ---------- */
+
+.rejilla-cuenta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 427px;
+    grid-template-areas:
+    "grafica lugares"
+    "grafica recompensas"
+    "mediciones perfil";
+    gap: 22px 30px;
+    align-items: start;
+}
+
+.rejilla-cuenta.solo-perfil {
+    grid-template-columns: minmax(0, 560px);
+    grid-template-areas: "perfil";
+}
+
+.grafica { grid-area: grafica; align-self: stretch; }
+.lugares { grid-area: lugares; }
+.recompensas { grid-area: recompensas; }
+.mediciones { grid-area: mediciones; padding: 0; overflow: hidden; align-self: stretch; }
+.perfil { grid-area: perfil; }
+
+/* ---------- Gráfica ---------- */
+
+.cabecera-tarjeta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.selector-periodo {
+    display: flex;
+    padding: 3px;
+    border-radius: 10px;
+    background: #F1F0F7;
+}
+
+.selector-periodo button {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--texto);
+    font: 500 14px "Inter", sans-serif;
+    cursor: pointer;
+}
+
+.selector-periodo button.activo {
+    background: var(--blanco);
+    color: var(--morado);
+    box-shadow: 0 1px 3px rgba(67, 46, 96, 0.08);
+}
+
+.zona-grafica {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    grid-template-rows: 204px 28px;
+    margin-top: 30px;
+}
+
+.eje-y { position: relative; }
+
+.eje-y span {
+    position: absolute;
+    right: 10px;
+    transform: translateY(-50%);
+    color: var(--texto-suave);
+    font-size: 12px;
+}
+
+.lienzo { position: relative; }
+
+.lienzo svg { display: block; width: 100%; height: 100%; overflow: visible; }
+
+.rejilla { stroke: #E6E4EF; stroke-width: 1; }
+.linea-oms { stroke: var(--moderado); stroke-width: 1.2; stroke-dasharray: 6 4; }
+.linea-umbral { stroke: var(--malo); stroke-width: 1.2; stroke-dasharray: 6 4; }
+.linea-datos { fill: none; stroke: var(--morado); stroke-width: 2; stroke-linejoin: round; }
+
+.punto-maximo {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--blanco);
+    border-radius: 50%;
+    background: var(--morado);
+    transform: translate(-50%, -50%);
+}
+
+.punto-malo { background: var(--malo); }
+.punto-moderado { background: var(--moderado); }
+
+.globo {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    white-space: nowrap;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: var(--texto);
+    color: var(--blanco);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    transform: translate(-50%, calc(-100% - 14px));
+    pointer-events: none;
+}
+
+.eje-x { position: relative; grid-column: 2; }
+
+.eje-x span {
+    position: absolute;
+    top: 10px;
+    transform: translateX(-50%);
+    color: var(--texto-suave);
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.eje-x span:first-child { transform: none; }
+.eje-x span:last-child { transform: translateX(-100%); }
+
+.grafica-vacia { margin: 40px 0; color: var(--texto-suave); text-align: center; }
+
+.leyenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--texto-suave);
+    font-size: 12px;
+}
+
+.leyenda li { display: flex; align-items: center; gap: 8px; }
+
+.marca { display: inline-block; }
+.marca-linea { width: 8px; height: 8px; border-radius: 50%; background: var(--morado); }
+.marca-oms, .marca-umbral { width: 16px; border-top: 1.5px dashed; }
+.marca-oms { border-color: var(--moderado); }
+.marca-umbral { border-color: var(--malo); }
+
+/* ---------- Mis lugares ---------- */
+
+.lista-lugares { margin: 14px 0 0; padding: 0; list-style: none; }
+
+.lista-lugares li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--borde);
+}
+
+.lista-lugares li:last-child { border-bottom: none; }
+
+.nombre-lugar strong { font-weight: 500; }
+.nombre-lugar .zona { color: var(--texto-suave); font-size: 14px; }
+.lista-lugares .nivel { font-size: 13px; }
+.lista-lugares .vacio { color: var(--texto-suave); font-size: 14px; }
+
+/* ---------- Recompensas ---------- */
+
+.barra {
+    height: 8px;
+    margin-top: 14px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: var(--morado-claro);
+}
+
+.barra span { display: block; height: 100%; background: var(--morado); }
+
+/* ---------- Últimas mediciones ---------- */
+
+.mediciones table { width: 100%; border-collapse: collapse; }
+
+.mediciones th {
+    padding: 15px 24px;
+    background: #F7F6FB;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.mediciones td {
+    padding: 15px 24px;
+    border-top: 1px solid var(--borde);
+    font-size: 15px;
+}
+
+/* ---------- Perfil ---------- */
+
+.perfil dl {
+    display: grid;
+    grid-template-columns: 146px 1fr;
+    gap: 14px 0;
+    margin: 22px 0 18px;
+    font-size: 15px;
+}
+
+.perfil dt { color: var(--texto-suave); }
+.perfil dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+
+.boton-borde {
+    padding: 10px 28px;
+    border: 1.5px solid var(--morado);
+    border-radius: 10px;
+    background: var(--blanco);
+    color: var(--morado);
+    font: 600 15px "Inter", sans-serif;
+    cursor: pointer;
+}
+
+.boton-borde:hover { background: var(--morado-claro); }
+
+/* ---------- Pie ---------- */
+
+.pie-cuenta {
+    padding: 20px 42px;
+    background: #ECEAF2;
+    color: var(--texto-suave);
+    font-size: 13px;
+}
+
+/* ---------- Diálogo de editar perfil ---------- */
+
+.dialogo {
+    width: min(440px, calc(100vw - 32px));
+    padding: 28px;
+    border: none;
+    border-radius: 16px;
+    color: var(--texto);
+    box-shadow: 0 20px 50px rgba(67, 46, 96, 0.25);
+}
+
+.dialogo::backdrop { background: rgba(40, 28, 60, 0.45); }
+
+.dialogo form { display: flex; flex-direction: column; }
+
+.dialogo h2 { margin: 0 0 20px; font-size: 22px; }
+
+.dialogo label { margin-bottom: 6px; font-size: 14px; font-weight: 500; }
+
+.dialogo .campo { margin-bottom: 16px; }
+
+.error-perfil {
+    margin: 0 0 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: #FDECEE;
+    color: var(--malo);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.botones-dialogo {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.botones-dialogo .boton { padding: 10px 28px; font-size: 15px; box-shadow: none; }
+
+.oculto { display: none !important; }
+
+/* ---------- Pantallas medianas ---------- */
+
+@media (max-width: 1180px) {
+    .rejilla-cuenta {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+      "grafica grafica"
+      "lugares recompensas"
+      "mediciones mediciones"
+      "perfil perfil";
+    }
+    .indicadores { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ---------- Móvil (diseño de 390 px) ---------- */
+
+@media (max-width: 800px) {
+    .cabecera-cuenta { height: 64px; padding: 0 16px; gap: 0; }
+    .logo-cabecera img { width: 94px; }
+
+    .nombre-cabecera, .usuario-cabecera > .salir { display: none; }
+    .boton-menu { display: flex; }
+
+    .menu-cuenta {
+        position: absolute;
+        top: 64px;
+        right: 0;
+        left: 0;
+        z-index: 10;
+        flex-direction: column;
+        gap: 0;
+        padding: 8px 16px 16px;
+        background: #EFE9F6;
+        box-shadow: 0 10px 20px rgba(67, 46, 96, 0.12);
+        visibility: hidden;
+        transform: translateY(-8px);
+        opacity: 0;
+        transition: opacity 0.15s, transform 0.15s, visibility 0.15s;
+    }
+
+    .menu-cuenta.abierto { visibility: visible; transform: none; opacity: 1; }
+    .menu-cuenta a { padding: 14px 0; border-bottom: 1px solid #DED6EA; }
+    .menu-cuenta .salir-movil { display: block; border-bottom: none; color: var(--morado); }
+
+    .contenido-cuenta { padding: 24px 16px 28px; }
+    .contenido-cuenta h1 { margin-bottom: 8px; font-size: 26px; }
+    .estado-nodo { margin-bottom: 18px; font-size: 15px; }
+
+    .texto-largo { display: none; }
+    .texto-corto { display: inline; }
+
+    .indicadores { gap: 16px; margin-bottom: 16px; }
+    .indicador { padding: 14px; }
+    .indicador h2 { font-size: 13px; }
+    .cifra { font-size: 22px; margin: 6px 0 4px; }
+    .detalle { font-size: 13px; }
+
+    .rejilla-cuenta {
+        grid-template-columns: 1fr;
+        grid-template-areas: "grafica" "lugares" "recompensas" "perfil";
+        gap: 16px;
+    }
+    .mediciones { display: none; }
+
+    .tarjeta { padding: 16px; }
+    .cabecera-tarjeta { flex-direction: column; align-items: stretch; }
+    .subtitulo { display: none; }
+    .recompensas .subtitulo { display: block; font-size: 13px; }
+    .selector-periodo button { flex: 1; padding: 8px 0; }
+    .zona-grafica { margin-top: 16px; grid-template-rows: 130px 26px; }
+    .leyenda li:first-child, .leyenda li:nth-child(2) { display: none; }
+    .globo { display: none; }
+
+    .lista-lugares .zona { display: none; }
+    .perfil dl { grid-template-columns: 130px 1fr; margin: 14px 0; font-size: 14px; }
+    .boton-borde { width: 100%; }
+
+    .pie-cuenta { padding: 16px; }
+}

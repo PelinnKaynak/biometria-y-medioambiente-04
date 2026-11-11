@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Consejos para reducir la contaminación · AERIS</title>
+    <meta name="description" content="Gestos diarios para que se forme menos ozono y qué hacer cuando está alto.">
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/inicio.css">
+    <link rel="stylesheet" href="css/informacion.css">
+</head>
+<body class="pagina-info">
+
+<header class="cabecera-inicio cabecera-lila">
+    <a href="index.html" class="logo-inicio"><img src="img/logo-aeris.svg" alt="AERIS"></a>
+    <nav id="menu-inicio" class="menu-inicio" aria-label="Menú principal">
+        <a href="index.html">Inicio</a>
+        <a href="mapa.html">Mapa</a>
+        <a href="contaminantes.html" class="activo">Contaminantes</a>
+        <a href="index.html#planes">Planes</a>
+    </nav>
+    <a id="boton-acceder" href="login.html" class="boton boton-acceder-inicio">Acceder</a>
+    <button id="boton-menu-inicio" type="button" class="boton-menu-inicio"
+            aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-inicio">
+        <span></span><span></span><span></span>
+    </button>
+</header>
+
+<main class="contenido-info">
+    <a href="contaminantes.html" class="miga">‹ Contaminantes</a>
+    <h1>Consejos para reducir la contaminación</h1>
+    <p class="entradilla">El ozono no sale de ningún tubo de escape: se forma cuando la luz del sol reacciona con los gases del tráfico y de algunos productos que usamos en casa. Si emitimos menos de esos gases, se forma menos ozono.</p>
+
+    <div class="consejos">
+        <section class="tarjeta-info consejo">
+            <span class="icono icono-ubicacion" aria-hidden="true"></span>
+            <h2>Al moverte</h2>
+            <ul>
+                <li>Camina, ve en bici o usa el transporte público para los trayectos cortos.</li>
+                <li>Si usas el coche, compártelo y evita las horas punta.</li>
+                <li>Reposta al final del día y no en las horas de más calor.</li>
+            </ul>
+        </section>
+        <section class="tarjeta-info consejo">
+            <span class="icono icono-hoja" aria-hidden="true"></span>
+            <h2>En casa</h2>
+            <ul>
+                <li>Usa pinturas y productos de limpieza con pocos disolventes.</li>
+                <li>Deja los trabajos con barnices o pinturas para los días nublados.</li>
+                <li>No quemes restos de poda: llévalos al ecoparque.</li>
+            </ul>
+        </section>
+        <section class="tarjeta-info consejo">
+            <span class="icono icono-aviso" aria-hidden="true"></span>
+            <h2>Cuando el ozono está alto</h2>
+            <ul>
+                <li>Haz deporte a primera hora de la mañana o al final de la tarde.</li>
+                <li>Ventila la casa temprano y mantén las ventanas cerradas en las horas centrales.</li>
+                <li>Si eres una persona sensible, evita el esfuerzo intenso al aire libre.</li>
+            </ul>
+        </section>
+    </div>
+
+    <div class="franja-consejos">
+        <p>En la app de AERIS puedes ver la previsión de ozono y la mejor hora para salir.</p>
+        <a href="index.html#la-app" class="boton boton-franja">Descargar la app</a>
+    </div>
+</main>
+
+<footer class="pie-inicio">
+    <span>© 2026 SenseTech · AERIS</span>
+</footer>
+
+<script src="js/logica_mapa_fake.js"></script>
+<script src="js/logica_mapa_real.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="js/inicio.js"></script>
+<script src="js/informacion.js"></script>
+</body>
+</html>

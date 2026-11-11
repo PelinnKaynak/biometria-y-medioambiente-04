@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mapa de la calidad del aire · AERIS</title>
+    <meta name="description" content="Mapa de la calidad del aire hecho con los sensores de los ciudadanos y las estaciones oficiales.">
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/inicio.css">
+</head>
+<body class="pagina-inicio">
+
+<header class="cabecera-inicio">
+    <a href="index.html" class="logo-inicio"><img src="img/logo-aeris.svg" alt="AERIS"></a>
+
+    <nav id="menu-inicio" class="menu-inicio" aria-label="Menú principal">
+        <a href="index.html">Inicio</a>
+        <a href="mapa.html" class="activo" aria-current="page">Mapa</a>
+        <a href="contaminantes.html">Contaminantes</a>
+        <a href="index.html#planes">Planes</a>
+    </nav>
+
+    <a id="boton-acceder" href="login.html" class="boton boton-acceder-inicio">Acceder</a>
+    <button id="boton-menu-inicio" type="button" class="boton-menu-inicio"
+            aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-inicio">
+        <span></span><span></span><span></span>
+    </button>
+</header>
+
+<main>
+    <section class="zona-mapa" aria-label="Mapa de la calidad del aire">
+        <div id="mapa" class="mapa"></div>
+
+        <div class="controles-mapa">
+            <form id="buscador" class="buscador" role="search">
+                <label for="campo-buscar" class="solo-lector">Buscar un municipio</label>
+                <input id="campo-buscar" type="search" list="lista-municipios" autocomplete="off"
+                       placeholder="Buscar por municipio">
+                <datalist id="lista-municipios"></datalist>
+                <button id="boton-capas-movil" type="button" class="boton-capas-movil"
+                        aria-label="Capas" aria-expanded="false" aria-controls="capas"></button>
+            </form>
+            <p id="aviso-buscar" class="aviso-buscar oculto" role="status"></p>
+
+            <div class="contaminantes" role="group" aria-label="Contaminante">
+                <button type="button" data-contaminante="O3" class="activo" aria-pressed="true">Ozono (O<sub>3</sub>)</button>
+                <button type="button" data-contaminante="NO2">NO<sub>2</sub></button>
+                <button type="button" data-contaminante="PM10"><span class="texto-largo">Partículas </span>PM</button>
+                <button type="button" data-contaminante="CO">CO</button>
+            </div>
+        </div>
+
+        <fieldset id="capas" class="capas">
+            <legend>Capas</legend>
+            <label><input type="checkbox" data-tipo="ciudadano" checked> Sensores ciudadanos</label>
+            <label><input type="checkbox" data-tipo="oficial" checked> Estaciones oficiales</label>
+        </fieldset>
+
+        <article id="tu-zona" class="tu-zona" aria-live="polite">
+            <h2 id="titulo-zona">Tu zona ahora</h2>
+            <p id="nivel-zona" class="nivel-zona">Cargando…</p>
+            <p id="valor-zona" class="valor-zona"></p>
+            <p id="hora-zona" class="hora-zona"></p>
+            <a href="contaminantes.html" class="enlace-niveles">¿Qué significa esto?</a>
+        </article>
+
+        <ul class="leyenda-mapa" aria-label="Leyenda">
+            <li><span class="punto punto-bueno"></span>Bueno</li>
+            <li><span class="punto punto-moderado"></span>Moderado</li>
+            <li><span class="punto punto-malo"></span>Malo</li>
+            <li><span class="punto punto-muy-malo"></span>Muy malo</li>
+        </ul>
+
+        <p id="aviso-mapa" class="aviso-mapa oculto" role="status"></p>
+    </section>
+
+    <section class="franja-app">
+        <p><span class="icono-sensor" aria-hidden="true"></span>¿Tienes un sensor AERIS? Descarga la app para empezar a medir.</p>
+        <a href="index.html#la-app" class="boton boton-app">Descargar la app</a>
+    </section>
+
+</main>
+
+<footer class="pie-inicio">
+    <span>© 2026 SenseTech · AERIS</span>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/logica_mapa_fake.js"></script>
+<script src="js/logica_mapa_real.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="js/inicio.js"></script>
+</body>
+</html>

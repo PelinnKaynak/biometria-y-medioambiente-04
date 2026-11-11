@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Normativa sobre el ozono · AERIS</title>
+    <meta name="description" content="Límites legales del ozono en la Unión Europea y en España, y valores guía de la OMS.">
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/inicio.css">
+    <link rel="stylesheet" href="css/informacion.css">
+</head>
+<body class="pagina-info">
+
+<header class="cabecera-inicio cabecera-lila">
+    <a href="index.html" class="logo-inicio"><img src="img/logo-aeris.svg" alt="AERIS"></a>
+    <nav id="menu-inicio" class="menu-inicio" aria-label="Menú principal">
+        <a href="index.html">Inicio</a>
+        <a href="mapa.html">Mapa</a>
+        <a href="contaminantes.html" class="activo">Contaminantes</a>
+        <a href="index.html#planes">Planes</a>
+    </nav>
+    <a id="boton-acceder" href="login.html" class="boton boton-acceder-inicio">Acceder</a>
+    <button id="boton-menu-inicio" type="button" class="boton-menu-inicio"
+            aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-inicio">
+        <span></span><span></span><span></span>
+    </button>
+</header>
+
+<main class="contenido-info">
+    <a href="contaminantes.html" class="miga">‹ Contaminantes</a>
+    <h1>Normativa sobre el ozono</h1>
+    <p class="entradilla">Los límites del ozono los fija la Unión Europea y en España se aplican con el Real Decreto 102/2011. La Organización Mundial de la Salud publica además unos valores guía más exigentes, que son los que usa AERIS para el nivel «Bueno».</p>
+
+    <div class="rejilla-normativa">
+        <section class="tarjeta-info sin-relleno" aria-label="Valores límite">
+            <table class="tabla-info tabla-normativa">
+                <thead>
+                <tr><th>Valor</th><th>Qué significa</th><th>Norma</th></tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td><span class="punto punto-bueno"></span><span class="valor">100 µg/m³<small>media de 8 horas</small></span></td>
+                    <td>Valor guía para proteger la salud. Hasta aquí el nivel es «Bueno» en AERIS.</td>
+                    <td class="norma">Guías de calidad del aire de la OMS (2021)</td>
+                </tr>
+                <tr>
+                    <td><span class="punto punto-moderado"></span><span class="valor">120 µg/m³<small>media de 8 horas</small></span></td>
+                    <td>Valor objetivo: no debe superarse más de 25 días al año, de media en tres años.</td>
+                    <td class="norma">Directiva 2008/50/CE y RD 102/2011</td>
+                </tr>
+                <tr>
+                    <td><span class="punto punto-malo"></span><span class="valor">180 µg/m³<small>media de 1 hora</small></span></td>
+                    <td>Umbral de información: las administraciones deben avisar a la población.</td>
+                    <td class="norma">Directiva 2008/50/CE y RD 102/2011</td>
+                </tr>
+                <tr>
+                    <td><span class="punto punto-muy-malo"></span><span class="valor">240 µg/m³<small>media de 1 hora</small></span></td>
+                    <td>Umbral de alerta: se activan medidas para proteger a la población.</td>
+                    <td class="norma">Directiva 2008/50/CE y RD 102/2011</td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <aside class="tarjeta-info como-usa">
+            <h2>Cómo lo usa AERIS</h2>
+            <ul>
+                <li>Los niveles del mapa (Bueno, Moderado, Malo y Muy malo) siguen estos umbrales.</li>
+                <li>Las alertas de la app avisan por defecto a partir de 180 µg/m³.</li>
+                <li>Cada usuario puede elegir avisos desde 100 µg/m³ o solo a partir de 240 µg/m³.</li>
+            </ul>
+        </aside>
+    </div>
+
+    <h2 class="titulo-bloque">Textos oficiales</h2>
+    <div class="textos-oficiales">
+        <a class="tarjeta-texto" href="https://eur-lex.europa.eu/eli/dir/2008/50/oj" target="_blank" rel="noopener">
+            <strong>Directiva 2008/50/CE</strong>
+            <span>Calidad del aire ambiente en Europa</span>
+            <span class="externo">Ver texto oficial</span>
+        </a>
+        <a class="tarjeta-texto" href="https://www.boe.es/eli/es/rd/2011/01/28/102/con" target="_blank" rel="noopener">
+            <strong>Real Decreto 102/2011</strong>
+            <span>Aplicación en España</span>
+            <span class="externo">Ver texto oficial</span>
+        </a>
+        <a class="tarjeta-texto" href="https://www.boe.es/eli/es/l/2007/11/15/34/con" target="_blank" rel="noopener">
+            <strong>Ley 34/2007</strong>
+            <span>Calidad del aire y protección de la atmósfera</span>
+            <span class="externo">Ver texto oficial</span>
+        </a>
+        <a class="tarjeta-texto" href="https://www.who.int/publications/i/item/9789240034228" target="_blank" rel="noopener">
+            <strong>Guías de la OMS (2021)</strong>
+            <span>Valores guía para la salud</span>
+            <span class="externo">Ver texto oficial</span>
+        </a>
+    </div>
+
+    <p class="nota-pie">La Directiva (UE) 2024/2881 sustituirá a la 2008/50/CE. Los Estados miembros deben incorporarla a su legislación antes del 11 de diciembre de 2026.</p>
+</main>
+
+<footer class="pie-inicio">
+    <span>© 2026 SenseTech · AERIS</span>
+</footer>
+
+<script src="js/logica_mapa_fake.js"></script>
+<script src="js/logica_mapa_real.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="js/inicio.js"></script>
+<script src="js/informacion.js"></script>
+</body>
+</html>

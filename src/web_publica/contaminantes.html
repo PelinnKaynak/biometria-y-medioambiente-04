@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Contaminantes · AERIS</title>
+    <meta name="description" content="Qué contaminantes hay en el aire, qué significa cada nivel y qué hacer.">
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/inicio.css">
+    <link rel="stylesheet" href="css/informacion.css">
+</head>
+<body class="pagina-info">
+
+<header class="cabecera-inicio cabecera-lila">
+    <a href="index.html" class="logo-inicio"><img src="img/logo-aeris.svg" alt="AERIS"></a>
+    <nav id="menu-inicio" class="menu-inicio" aria-label="Menú principal">
+        <a href="index.html">Inicio</a>
+        <a href="mapa.html">Mapa</a>
+        <a href="contaminantes.html" class="activo" aria-current="page">Contaminantes</a>
+        <a href="index.html#planes">Planes</a>
+    </nav>
+    <a id="boton-acceder" href="login.html" class="boton boton-acceder-inicio">Acceder</a>
+    <button id="boton-menu-inicio" type="button" class="boton-menu-inicio"
+            aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-inicio">
+        <span></span><span></span><span></span>
+    </button>
+</header>
+
+<main class="contenido-info">
+
+    <div class="intro-contaminantes">
+        <div>
+            <h1>¿Qué respiramos?</h1>
+            <p class="entradilla">El ozono no se emite directamente: se forma cuando la luz del sol reacciona con los gases de los coches y las industrias. Por eso sube en los días calurosos y soleados.</p>
+        </div>
+
+        <figure class="formacion-ozono">
+            <figcaption>Cómo se forma el ozono</figcaption>
+            <div class="esquema">
+                <div class="elemento">
+                    <span class="circulo circulo-sol" aria-hidden="true"></span>
+                    <span>Sol</span>
+                </div>
+                <span class="operador" aria-hidden="true">+</span>
+                <div class="elemento">
+                    <span class="circulo circulo-gases" aria-hidden="true"></span>
+                    <span>Gases de coches<br>e industrias (NO<sub>x</sub>)</span>
+                </div>
+                <span class="operador" aria-hidden="true">→</span>
+                <div class="elemento elemento-ozono">
+                    <span class="circulo circulo-ozono" aria-hidden="true">O<sub>3</sub></span>
+                    <span>Ozono</span>
+                </div>
+            </div>
+        </figure>
+    </div>
+
+    <div class="tarjetas-contaminantes" role="group" aria-label="Elige un contaminante">
+        <button type="button" class="tarjeta-contaminante" data-contaminante="O3">
+            <span class="formula formula-sensor">O<sub>3</sub></span>
+            <strong>Ozono (O<sub>3</sub>)</strong>
+            <span class="origen origen-sensor">Lo mide nuestro sensor</span>
+        </button>
+        <button type="button" class="tarjeta-contaminante" data-contaminante="NO2">
+            <span class="formula">NO<sub>2</sub></span>
+            <strong>Dióxido de nitrógeno</strong>
+            <span class="origen">Datos de estaciones oficiales</span>
+        </button>
+        <button type="button" class="tarjeta-contaminante" data-contaminante="PM10">
+            <span class="formula">PM</span>
+            <strong>Partículas PM</strong>
+            <span class="origen">Datos de estaciones oficiales</span>
+        </button>
+        <button type="button" class="tarjeta-contaminante" data-contaminante="CO">
+            <span class="formula">CO</span>
+            <strong>Monóxido de carbono</strong>
+            <span class="origen">Datos de estaciones oficiales</span>
+        </button>
+    </div>
+
+    <section class="tarjeta-info niveles" aria-labelledby="titulo-niveles">
+        <h2 id="titulo-niveles">Ozono: niveles y qué hacer</h2>
+        <p id="explicacion-contaminante" class="explicacion"></p>
+        <table class="tabla-info">
+            <thead>
+            <tr><th>Nivel</th><th id="unidad-niveles">µg/m³</th><th>Recomendación</th></tr>
+            </thead>
+            <tbody id="cuerpo-niveles"></tbody>
+        </table>
+    </section>
+
+    <div class="enlaces-info">
+        <a href="normativa.html" class="tarjeta-enlace">
+            <span class="icono icono-normativa" aria-hidden="true"></span>
+            <strong>Normativa</strong>
+            <span class="descripcion">Límites legales de ozono en la UE y en España.</span>
+            <span class="mas">Ver directivas y leyes ›</span>
+        </a>
+        <a href="consejos.html" class="tarjeta-enlace">
+            <span class="icono icono-hoja" aria-hidden="true"></span>
+            <strong>Consejos para reducir la contaminación</strong>
+            <span class="descripcion">Pequeños gestos diarios para un aire más limpio.</span>
+            <span class="mas">Leer más ›</span>
+        </a>
+    </div>
+</main>
+
+<footer class="pie-inicio">
+    <span>© 2026 SenseTech · AERIS</span>
+</footer>
+
+<script src="js/logica_mapa_fake.js"></script>
+<script src="js/logica_mapa_real.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="js/inicio.js"></script>
+<script src="js/informacion.js"></script>
+</body>
+</html>

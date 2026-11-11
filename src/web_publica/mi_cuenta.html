@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mi cuenta · AERIS</title>
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/mi_cuenta.css">
+</head>
+<body class="pagina-cuenta">
+
+<header class="cabecera-cuenta">
+    <a href="index.html" class="logo-cabecera"><img src="img/logo-aeris.svg" alt="AERIS"></a>
+
+    <nav id="menu-cuenta" class="menu-cuenta" aria-label="Menú principal">
+        <a href="mapa.html">Mapa</a>
+        <a href="contaminantes.html">Contaminantes</a>
+        <a href="login.html" class="salir-movil" data-salir>Salir</a>
+    </nav>
+
+    <div class="usuario-cabecera">
+        <span id="avatar" class="avatar" aria-hidden="true"></span>
+        <span id="nombre-cabecera" class="nombre-cabecera"></span>
+        <a href="login.html" class="salir" data-salir>Salir</a>
+        <button id="boton-menu" type="button" class="boton-menu"
+                aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-cuenta">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</header>
+
+<main class="contenido-cuenta">
+
+    <p id="cargando" class="cargando">Cargando tu cuenta…</p>
+
+    <p id="error-carga" class="aviso-carga oculto" role="alert"></p>
+
+    <div id="cuenta" class="oculto">
+        <h1 id="saludo">Hola</h1>
+        <p id="estado-nodo" class="estado-nodo"></p>
+
+        <!-- Sin sensor o sin datos todavía -->
+        <section id="sin-datos" class="tarjeta sin-datos oculto">
+            <h2>Todavía no hay mediciones</h2>
+            <p>Vincula tu sensor desde la app de AERIS. Cuando envíe sus primeras mediciones, aquí verás tu exposición al ozono, tus lugares y tus puntos.</p>
+        </section>
+
+        <section id="indicadores" class="indicadores oculto" aria-label="Resumen">
+            <article class="tarjeta indicador">
+                <h2>Mediciones este mes</h2>
+                <p id="dato-mediciones" class="cifra"></p>
+                <p id="detalle-mediciones" class="detalle"></p>
+            </article>
+            <article class="tarjeta indicador">
+                <h2>Puntos</h2>
+                <p id="dato-puntos" class="cifra"></p>
+                <p id="detalle-puntos" class="detalle"></p>
+            </article>
+            <article class="tarjeta indicador">
+                <h2><span class="texto-largo">Exposición media al ozono</span><span class="texto-corto">Ozono medio</span></h2>
+                <p id="dato-exposicion" class="cifra"></p>
+                <p id="detalle-exposicion" class="detalle"></p>
+            </article>
+            <article class="tarjeta indicador">
+                <h2><span class="texto-largo">Horas con ozono alto</span><span class="texto-corto">Ozono alto</span></h2>
+                <p id="dato-horas" class="cifra"></p>
+                <p id="detalle-horas" class="detalle"></p>
+            </article>
+        </section>
+
+        <div class="rejilla-cuenta">
+
+            <section id="tarjeta-grafica" class="tarjeta grafica oculto">
+                <div class="cabecera-tarjeta">
+                    <div>
+                        <h2>Tu exposición al ozono</h2>
+                        <p class="subtitulo">Media diaria de las mediciones de tu sensor</p>
+                    </div>
+                    <div class="selector-periodo" role="group" aria-label="Periodo">
+                        <button type="button" data-periodo="semana">Semana</button>
+                        <button type="button" data-periodo="mes" class="activo" aria-pressed="true">Mes</button>
+                        <button type="button" data-periodo="3meses">3 meses</button>
+                    </div>
+                </div>
+
+                <div class="zona-grafica">
+                    <div id="eje-y" class="eje-y" aria-hidden="true"></div>
+                    <div id="lienzo" class="lienzo">
+                        <svg id="svg-grafica" viewBox="0 0 1000 300" preserveAspectRatio="none" role="img"
+                             aria-label="Gráfica de tu exposición al ozono"></svg>
+                        <span id="punto-maximo" class="punto-maximo oculto"></span>
+                        <div id="globo" class="globo oculto"></div>
+                    </div>
+                    <div id="eje-x" class="eje-x" aria-hidden="true"></div>
+                </div>
+                <p id="grafica-vacia" class="grafica-vacia oculto">No hay mediciones en este periodo.</p>
+
+                <ul class="leyenda">
+                    <li><span class="marca marca-linea"></span>Tu media diaria</li>
+                    <li><span class="marca marca-oms"></span>100 µg/m³ (valor guía de la OMS)</li>
+                    <li><span class="marca marca-umbral"></span><span id="leyenda-umbral">180 µg/m³ (tu umbral de aviso)</span></li>
+                </ul>
+            </section>
+
+            <section id="tarjeta-lugares" class="tarjeta lugares oculto">
+                <h2>Mis lugares</h2>
+                <p class="subtitulo">Calidad del aire ahora</p>
+                <ul id="lista-lugares" class="lista-lugares"></ul>
+                <p class="nota">Los lugares se añaden y se editan desde la app.</p>
+            </section>
+
+            <section id="tarjeta-recompensas" class="tarjeta recompensas oculto">
+                <h2>Recompensas</h2>
+                <p id="texto-recompensas" class="subtitulo"></p>
+                <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="100" id="barra-recompensas">
+                    <span id="relleno-recompensas"></span>
+                </div>
+            </section>
+
+            <section id="tarjeta-mediciones" class="tarjeta mediciones oculto">
+                <table>
+                    <thead>
+                    <tr><th>Fecha y hora</th><th>Lugar</th><th>Ozono</th><th>Nivel</th></tr>
+                    </thead>
+                    <tbody id="tabla-mediciones"></tbody>
+                </table>
+            </section>
+
+            <section class="tarjeta perfil">
+                <h2>Tu perfil</h2>
+                <dl>
+                    <dt>Nombre</dt><dd id="perfil-nombre"></dd>
+                    <dt>Correo</dt><dd id="perfil-correo"></dd>
+                    <dt>Aviso de ozono</dt><dd id="perfil-aviso"></dd>
+                    <dt>Plan</dt><dd id="perfil-plan"></dd>
+                </dl>
+                <button id="boton-editar" type="button" class="boton-borde">Editar perfil</button>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer class="pie-cuenta">
+    <span>© 2026 SenseTech · AERIS</span>
+</footer>
+
+<dialog id="dialogo-perfil" class="dialogo">
+    <form id="formulario-perfil" method="dialog" novalidate>
+        <h2>Editar perfil</h2>
+
+        <label for="editar-nombre">Nombre</label>
+        <input id="editar-nombre" class="campo" maxlength="50" autocomplete="given-name">
+
+        <label for="editar-apellidos">Apellidos</label>
+        <input id="editar-apellidos" class="campo" maxlength="100" autocomplete="family-name">
+
+        <label for="editar-correo">Correo electrónico</label>
+        <input id="editar-correo" class="campo" type="email" maxlength="255" autocomplete="email">
+
+        <p id="error-perfil" class="error-perfil oculto" role="alert"></p>
+        <p class="nota">La contraseña, la foto y los avisos se cambian desde la app.</p>
+
+        <div class="botones-dialogo">
+            <button id="cancelar-perfil" type="button" class="boton-borde">Cancelar</button>
+            <button type="submit" class="boton">Guardar</button>
+        </div>
+    </form>
+</dialog>
+
+<script src="js/logica_cuenta_fake.js"></script>
+<script src="js/logica_cuenta_real.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="js/validacion.js"></script>
+<script src="js/mi_cuenta.js"></script>
+</body>
+</html>

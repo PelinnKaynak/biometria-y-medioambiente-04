@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AERIS · Respira con datos</title>
+    <meta name="description" content="AERIS mide el ozono con sensores que llevan personas como tú y lo convierte en un mapa abierto a todos.">
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/inicio.css">
+    <link rel="stylesheet" href="css/portada.css">
+</head>
+<body class="pagina-portada">
+
+<header class="cabecera-inicio">
+    <a href="index.html" class="logo-inicio"><img src="img/logo-aeris.svg" alt="AERIS"></a>
+    <nav id="menu-inicio" class="menu-inicio" aria-label="Menú principal">
+        <a href="index.html" class="activo" aria-current="page">Inicio</a>
+        <a href="mapa.html">Mapa</a>
+        <a href="contaminantes.html">Contaminantes</a>
+        <a href="#planes">Planes</a>
+    </nav>
+    <a id="boton-acceder" href="login.html" class="boton boton-acceder-inicio">Acceder</a>
+    <button id="boton-menu-inicio" type="button" class="boton-menu-inicio"
+            aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-inicio">
+        <span></span><span></span><span></span>
+    </button>
+</header>
+
+<main>
+    <!-- ======================= Portada ======================= -->
+    <section class="portada">
+        <div class="portada-texto">
+            <p class="etiqueta"><span class="punto punto-bueno"></span>Red ciudadana de sensores de ozono</p>
+            <h1>Respira<br><span class="degradado">con datos.</span></h1>
+            <p class="portada-entradilla">AERIS mide el ozono con pequeños sensores que llevan personas como tú y lo convierte en un mapa abierto a todos. Mira cómo está el aire de tu calle antes de salir.</p>
+            <div class="portada-botones">
+                <a href="mapa.html" class="boton boton-portada">Ver el mapa <span aria-hidden="true">→</span></a>
+                <a href="#proyecto" class="enlace-portada">Cómo funciona</a>
+            </div>
+            <ul class="ventajas">
+                <li>Mapa público y gratuito</li>
+                <li>Sensores ciudadanos y estaciones oficiales</li>
+            </ul>
+
+            <div class="probar-avisos">
+                <p id="titulo-avisos">Prueba los avisos de la app</p>
+                <div class="botones-avisos" role="group" aria-labelledby="titulo-avisos">
+                    <button type="button" class="boton-aviso" data-aviso="0"><span class="icono-mini icono-campana" aria-hidden="true"></span>Sube el ozono</button>
+                    <button type="button" class="boton-aviso" data-aviso="1"><span class="icono-mini icono-bluetooth" aria-hidden="true"></span>Conecto el sensor</button>
+                    <button type="button" class="boton-aviso" data-aviso="2"><span class="icono-mini icono-ok" aria-hidden="true"></span>Mejora en casa</button>
+                    <button type="button" class="boton-aviso" data-aviso="3"><span class="icono-mini icono-ruta" aria-hidden="true"></span>Quiero salir a correr</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="portada-visual">
+            <span class="luz luz-lila" aria-hidden="true"></span>
+            <span class="luz luz-verde" aria-hidden="true"></span>
+            <span class="anillo" aria-hidden="true"></span>
+            <div id="telefono-portada" class="telefono telefono-grande">
+                <img src="img/app-inicio.jpg" alt="Pantalla de inicio de la app de AERIS">
+                <div id="notificaciones" class="notificaciones" aria-live="polite">
+                    <div class="notificacion" data-tipo="aviso">
+                        <span class="icono-notificacion icono-campana" aria-hidden="true"></span>
+                        <span><strong>AERIS · ahora</strong>El ozono sube a las 14:00. Mejor sal antes.</span>
+                    </div>
+                    <div class="notificacion" data-tipo="sensor">
+                        <span class="icono-notificacion icono-bluetooth" aria-hidden="true"></span>
+                        <span><strong>Sensor AERIS</strong>Conectado. Batería al 78 %.</span>
+                    </div>
+                    <div class="notificacion" data-tipo="bueno">
+                        <span class="icono-notificacion icono-ok" aria-hidden="true"></span>
+                        <span><strong>Casa · Benimaclet</strong>El aire ha mejorado: 62 µg/m³, bueno.</span>
+                    </div>
+                    <div class="notificacion" data-tipo="ruta">
+                        <span class="icono-notificacion icono-ruta" aria-hidden="true"></span>
+                        <span><strong>Buen momento para salir</strong>De 8:00 a 10:00 el ozono estará bajo.</span>
+                    </div>
+                </div>
+            </div>
+            <div class="tarjeta-flotante tarjeta-sensor" aria-hidden="true">
+                <span class="icono-flotante icono-bluetooth"></span>
+                <span><small>Sensor AERIS</small>Conectado · 78 %</span>
+            </div>
+            <div class="tarjeta-flotante tarjeta-ozono" aria-hidden="true">
+                <span class="icono-flotante icono-ok"></span>
+                <span><small>Ozono ahora · Gandia</small>84 µg/m³ · Bueno</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= Qué es ======================= -->
+    <section id="que-es" class="seccion seccion-que-es">
+        <div class="contenedor dos-columnas aparece">
+            <div>
+                <p class="antetitulo">Qué es AERIS</p>
+                <h2>El aire que respiras, medido por quienes viven en él</h2>
+            </div>
+            <div class="texto-seccion">
+                <p>El ozono que respiramos a pie de calle no sale de ningún tubo de escape. Se forma cuando el sol reacciona con los gases del tráfico y de la industria, así que sube en los días de calor y en zonas soleadas como la costa mediterránea. Irrita los ojos y las vías respiratorias.</p>
+                <p>Las estaciones oficiales que lo miden son pocas y están en puntos fijos. Entre una y otra hay barrios enteros sin datos. AERIS llena esos huecos con sensores que lleva la gente encima mientras va al trabajo, a clase o sale a correr.</p>
+            </div>
+        </div>
+
+        <div class="contenedor comparador aparece">
+            <div class="comparador-texto">
+                <h3>¿Dónde hay datos de ozono?</h3>
+                <p>Cada cuadro es un barrio de una ciudad de ejemplo. Cambia el interruptor para ver qué parte de la ciudad queda cubierta.</p>
+                <div class="interruptor-red" role="group" aria-label="Qué mediciones se ven">
+                    <button type="button" data-red="oficial" class="activo" aria-pressed="true">Solo estaciones oficiales</button>
+                    <button type="button" data-red="aeris" aria-pressed="false">Con AERIS</button>
+                </div>
+                <p class="contador-barrios"><strong id="barrios-cubiertos">2</strong> de <span id="barrios-total">12</span> barrios con datos cerca</p>
+                <div class="barra-cobertura" aria-hidden="true"><span id="relleno-cobertura"></span></div>
+                <ul class="leyenda-comparador">
+                    <li><span class="marca-estacion"></span>Estación oficial</li>
+                    <li><span class="marca-portador"></span>Portador con sensor</li>
+                </ul>
+            </div>
+            <div class="comparador-plano">
+                <svg id="plano-red" viewBox="0 0 600 380" role="img" aria-label="Plano de una ciudad de ejemplo con los barrios que tienen datos de ozono"></svg>
+            </div>
+        </div>
+
+        <div class="contenedor datos-clave aparece">
+            <div class="dato-clave"><strong>100 µg/m³</strong><span>valor guía de la OMS para el ozono (media de 8 horas)</span></div>
+            <div class="dato-clave"><strong>180 µg/m³</strong><span>umbral a partir del cual hay que informar a la población</span></div>
+            <div class="dato-clave"><strong>48 h</strong><span>de previsión de ozono hechas con inteligencia artificial</span></div>
+        </div>
+    </section>
+
+    <!-- ======================= El proyecto ======================= -->
+    <section id="proyecto" class="seccion">
+        <div class="contenedor">
+            <div class="aparece">
+                <p class="antetitulo">El proyecto</p>
+                <h2>De tu bolsillo al mapa</h2>
+                <p class="entradilla-seccion">Cada medición pasa por cinco piezas. Pulsa cada una para ver qué hace.</p>
+            </div>
+
+            <div class="arquitectura aparece" role="tablist" aria-label="Partes del sistema">
+                <button type="button" role="tab" class="capa activa" data-capa="sensor" aria-selected="true" aria-controls="detalle-capa">
+                    <span class="icono-capa icono-capa-sensor" aria-hidden="true"></span>Sensor
+                </button>
+                <span class="flecha" aria-hidden="true"></span>
+                <button type="button" role="tab" class="capa" data-capa="app" aria-selected="false" aria-controls="detalle-capa">
+                    <span class="icono-capa icono-capa-app" aria-hidden="true"></span>App
+                </button>
+                <span class="flecha" aria-hidden="true"></span>
+                <button type="button" role="tab" class="capa" data-capa="servidor" aria-selected="false" aria-controls="detalle-capa">
+                    <span class="icono-capa icono-capa-servidor" aria-hidden="true"></span>Servidor
+                </button>
+                <span class="flecha" aria-hidden="true"></span>
+                <button type="button" role="tab" class="capa" data-capa="bd" aria-selected="false" aria-controls="detalle-capa">
+                    <span class="icono-capa icono-capa-bd" aria-hidden="true"></span>Base de datos
+                </button>
+                <span class="flecha" aria-hidden="true"></span>
+                <button type="button" role="tab" class="capa" data-capa="web" aria-selected="false" aria-controls="detalle-capa">
+                    <span class="icono-capa icono-capa-web" aria-hidden="true"></span>Web
+                </button>
+            </div>
+
+            <div id="detalle-capa" class="detalle-capa aparece" role="tabpanel" aria-live="polite">
+                <h3 id="titulo-capa">El sensor mide el ozono</h3>
+                <p id="texto-capa">Un nodo pequeño con un sensor de ozono toma una medición cada poco tiempo y la envía al móvil por Bluetooth Low Energy.</p>
+                <p id="tecnologia-capa" class="tecnologia">C++ para Arduino · SparkFun nRF52840</p>
+            </div>
+
+            <ol class="pasos aparece">
+                <li>
+                    <span class="numero-paso">1</span>
+                    <h3>Llevas el sensor</h3>
+                    <p>Lo enganchas a la mochila o a la ropa y te olvidas. Mide mientras haces tu vida normal.</p>
+                </li>
+                <li>
+                    <span class="numero-paso">2</span>
+                    <h3>La app envía las mediciones</h3>
+                    <p>Tu móvil recibe cada medición, le añade la hora y la posición y la manda al servidor.</p>
+                </li>
+                <li>
+                    <span class="numero-paso">3</span>
+                    <h3>Todos lo ven en el mapa</h3>
+                    <p>Las mediciones aparecen en el mapa público. Tú además ves tu exposición diaria y recibes avisos.</p>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- ======================= El sensor ======================= -->
+    <section id="sensor" class="seccion seccion-sensor">
+        <div class="contenedor">
+            <div class="cabecera-sensor aparece">
+                <div>
+                    <p class="antetitulo">El sensor</p>
+                    <h2>Pequeño, ligero y siempre midiendo</h2>
+                    <p class="entradilla-seccion">Así será el nodo que llevan los portadores. Tiene forma de gota, cabe en la mano y se cuelga de la mochila. Pulsa los puntos para ver cada parte.</p>
+                </div>
+                <ul class="chips-sensor">
+                    <li>62 × 48 × 22 mm</li>
+                    <li>Se imprime en 3D</li>
+                    <li>Tapa desmontable</li>
+                    <li>Anilla y clip</li>
+                </ul>
+            </div>
+
+            <div class="pestanas-sensor aparece" role="tablist" aria-label="Vistas del sensor">
+                <button type="button" role="tab" class="activa" data-vista="exterior" aria-selected="true" aria-controls="visor-sensor">Cómo es</button>
+                <button type="button" role="tab" data-vista="medidas" aria-selected="false" aria-controls="visor-sensor">Medidas</button>
+                <button type="button" role="tab" data-vista="interior" aria-selected="false" aria-controls="visor-sensor">Por dentro</button>
+            </div>
+
+            <div id="visor-sensor" class="visor-sensor aparece" role="tabpanel">
+                <div class="lienzo-sensor">
+                    <div id="imagen-sensor" class="imagen-sensor vista-exterior">
+                        <img id="foto-sensor" src="img/sensor-principal.jpg" alt="Sensor AERIS con forma de gota, rejilla frontal en espiral y anilla metálica">
+                        <div id="puntos-sensor" class="puntos-sensor"></div>
+                    </div>
+                    <p id="pie-sensor" class="pie-sensor"></p>
+                </div>
+
+                <div class="ficha-sensor">
+                    <ol id="lista-piezas" class="lista-piezas"></ol>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= La app ======================= -->
+    <section id="la-app" class="seccion seccion-app">
+        <div class="contenedor">
+            <div class="aparece">
+                <p class="antetitulo">La app AERIS</p>
+                <h2>Con tu sensor, mucho más que un mapa</h2>
+                <p class="entradilla-seccion">Vincula tu sensor a la app y lleva contigo la calidad del aire que respiras: lo que mides tú, lo que te espera y por dónde ir.</p>
+            </div>
+
+            <div class="app-interactiva aparece">
+                <div class="lista-funciones" role="tablist" aria-label="Funciones de la app">
+                    <button type="button" role="tab" class="boton-funcion activa" data-funcion="0" aria-selected="true" aria-controls="pantalla-app">
+                        <strong>Tu aire, ahora mismo</strong>
+                        <span>Mira la calidad del aire que te rodea, tus últimas mediciones y el estado de tu sensor. Si el ozono sube, la app te avisa.</span>
+                        <i class="progreso" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" role="tab" class="boton-funcion" data-funcion="1" aria-selected="false" aria-controls="pantalla-app">
+                        <strong>Tu exposición, día a día</strong>
+                        <span>Cuánto ozono has respirado hoy, los kilómetros que has medido y tu historial para comparar con otros días.</span>
+                        <i class="progreso" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" role="tab" class="boton-funcion" data-funcion="2" aria-selected="false" aria-controls="pantalla-app">
+                        <strong>La mejor hora para salir</strong>
+                        <span>Consulta la previsión de ozono por horas en tu zona y planifica cuándo hacer deporte al aire libre.</span>
+                        <i class="progreso" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" role="tab" class="boton-funcion" data-funcion="3" aria-selected="false" aria-controls="pantalla-app">
+                        <strong>Rutas más limpias <span class="premium">Premium</span></strong>
+                        <span>Elige el camino con menos contaminación para ir a pie, en bici o corriendo.</span>
+                        <i class="progreso" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <div class="pantalla-app">
+                    <div class="telefono telefono-app">
+                        <img id="pantalla-app" src="img/app-inicio.jpg" alt="Pantalla de inicio de la app con la calidad del aire actual">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= Niveles ======================= -->
+    <section id="niveles" class="seccion seccion-niveles">
+        <div class="contenedor">
+            <div class="aparece">
+                <p class="antetitulo">Qué significan los colores</p>
+                <h2>Niveles de ozono</h2>
+            </div>
+
+            <div class="probador aparece">
+                <label for="valor-ozono">Prueba un valor de ozono</label>
+                <div class="fila-probador">
+                    <input id="valor-ozono" type="range" min="0" max="300" step="1" value="84">
+                    <output id="salida-ozono" for="valor-ozono">84 µg/m³</output>
+                </div>
+                <p id="resultado-ozono" class="resultado-ozono nivel-bueno"><span class="punto punto-bueno"></span><strong>Bueno</strong> · Disfruta del aire libre con normalidad.</p>
+            </div>
+
+            <div class="tabla-niveles aparece">
+                <div class="fila-nivel" data-nivel="bueno"><span class="punto punto-bueno"></span><strong>Bueno</strong><span>Hasta 100 µg/m³</span><span>Por debajo del valor guía de la OMS. Puedes hacer vida normal al aire libre.</span></div>
+                <div class="fila-nivel" data-nivel="moderado"><span class="punto punto-moderado"></span><strong>Moderado</strong><span>De 101 a 180 µg/m³</span><span>Las personas sensibles pueden notar molestias si hacen ejercicio intenso.</span></div>
+                <div class="fila-nivel" data-nivel="malo"><span class="punto punto-malo"></span><strong>Malo</strong><span>De 181 a 240 µg/m³</span><span>Supera el umbral de información. Mejor evitar el ejercicio intenso en las horas centrales del día.</span></div>
+                <div class="fila-nivel" data-nivel="muy-malo"><span class="punto punto-muy-malo"></span><strong>Muy malo</strong><span>Más de 240 µg/m³</span><span>Supera el umbral de alerta. Conviene reducir el tiempo al aire libre.</span></div>
+            </div>
+            <p class="nota-seccion">Los otros contaminantes tienen sus propios límites. Los tienes en <a href="contaminantes.html">Contaminantes</a>.</p>
+        </div>
+    </section>
+
+    <!-- ======================= Planes ======================= -->
+    <section id="planes" class="seccion seccion-planes">
+        <div class="contenedor">
+            <div class="cabecera-planes aparece">
+                <div>
+                    <p class="antetitulo">Planes</p>
+                    <h2>Empieza gratis, mejora cuando quieras</h2>
+                </div>
+                <div class="selector-periodo-planes" role="group" aria-label="Forma de pago">
+                    <button type="button" data-periodo="mes" class="activo" aria-pressed="true">Mensual</button>
+                    <button type="button" data-periodo="anyo" aria-pressed="false">Anual <span class="ahorro" id="ahorro-anual"></span></button>
+                </div>
+            </div>
+
+            <div class="planes aparece">
+                <article class="plan">
+                    <h3>Gratuito</h3>
+                    <p class="precio"><strong>0 €</strong><span>para siempre</span></p>
+                    <p class="para-quien">Para consultar el aire y medir con tu sensor.</p>
+                    <ul>
+                        <li>Mapa público de calidad del aire</li>
+                        <li>App con tu sensor y tus mediciones</li>
+                        <li>Avisos cuando el ozono sube</li>
+                        <li>Tu exposición del día</li>
+                        <li>Previsión de ozono para hoy</li>
+                    </ul>
+                    <a href="registro.html" class="boton-plan boton-borde">Crear cuenta</a>
+                </article>
+
+                <article class="plan plan-destacado">
+                    <span class="cinta">El más completo</span>
+                    <h3>Premium</h3>
+                    <p class="precio"><strong id="precio-premium">2,99 €</strong><span id="periodo-premium">al mes</span></p>
+                    <p class="para-quien">Para quien hace deporte o se mueve mucho por la ciudad.</p>
+                    <ul>
+                        <li>Todo lo del plan gratuito</li>
+                        <li>Rutas más limpias a pie, en bici o corriendo</li>
+                        <li>Previsión de ozono a 48 horas, hora a hora</li>
+                        <li>Avisos en tus lugares habituales</li>
+                        <li>Historial completo y exportar tus datos</li>
+                    </ul>
+                    <a href="registro.html" class="boton-plan boton">Hazte Premium</a>
+                </article>
+
+                <article class="plan">
+                    <h3>Empresas y ayuntamientos</h3>
+                    <p class="precio precio-texto"><strong>A medida</strong><span>según el número de nodos</span></p>
+                    <p class="para-quien">Para quien quiere su propia red de sensores en un municipio o una empresa.</p>
+                    <ul>
+                        <li>Panel de administración de la red de nodos</li>
+                        <li>Aviso de nodos que dejan de enviar datos</li>
+                        <li>Cuentas para técnicos</li>
+                        <li>Exportar los datos de la red</li>
+                        <li>Ayuda para instalar y calibrar los sensores</li>
+                    </ul>
+                    <a href="#quienes-somos" class="boton-plan boton-borde">Hablemos</a>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- ======================= Quiénes somos ======================= -->
+    <section id="quienes-somos" class="seccion seccion-equipo">
+        <div class="contenedor">
+            <div class="equipo-cabecera aparece">
+                <img src="img/logo-sensetech.png" alt="SenseTech" class="logo-sensetech" width="114" height="120">
+                <div>
+                    <p class="antetitulo">Quiénes somos</p>
+                    <h2>Somos SenseTech</h2>
+                    <p class="entradilla-seccion">AERIS es un proyecto del equipo 04 del Grado en Tecnologías Interactivas de la Escola Politècnica Superior de Gandia (UPV), para la asignatura de Biometría y Medio Ambiente. Trabajamos con Scrum, en sprints de unas tres semanas, y hacemos todo el sistema: el sensor, la app, el servidor y la web.</p>
+                </div>
+            </div>
+
+            <ul class="equipo aparece">
+                <li><span class="avatar-equipo" style="--color: #7958A7">J</span>Júlia Beltrán Girbés</li>
+                <li><span class="avatar-equipo" style="--color: #4E9C83">P</span>Pelin Kaynak</li>
+                <li><span class="avatar-equipo" style="--color: #D9A11E">P</span>Pedro Fernández Marquina</li>
+                <li><span class="avatar-equipo" style="--color: #D9636B">I</span>Imanol Figuero Parras</li>
+                <li><span class="avatar-equipo" style="--color: #5E3F8C">C</span>César Herrero San Juan</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ======================= Preguntas ======================= -->
+    <section id="preguntas" class="seccion seccion-preguntas">
+        <div class="contenedor">
+            <div class="aparece">
+                <p class="antetitulo">Preguntas frecuentes</p>
+                <h2>Lo que más nos preguntan</h2>
+            </div>
+            <div class="preguntas aparece">
+                <details>
+                    <summary>¿Necesito una cuenta para ver el mapa?</summary>
+                    <p>No. El mapa y la información sobre los contaminantes son públicos. La cuenta solo hace falta si llevas un sensor.</p>
+                </details>
+                <details>
+                    <summary>¿De dónde salen los datos?</summary>
+                    <p>De dos sitios: los sensores de ozono que llevan los portadores de AERIS y las estaciones oficiales de calidad del aire. En el mapa puedes ver cada capa por separado.</p>
+                </details>
+                <details>
+                    <summary>¿Cómo se hace la previsión de ozono?</summary>
+                    <p>Con un modelo de aprendizaje automático entrenado con el histórico de las estaciones oficiales y los datos meteorológicos de AEMET. Predice el ozono de las próximas 48 horas.</p>
+                </details>
+                <details>
+                    <summary>¿Qué hago si en mi zona sale «Malo»?</summary>
+                    <p>Evita el ejercicio intenso al aire libre en las horas de más sol, que es cuando el ozono está más alto. Si tienes asma u otra enfermedad respiratoria, ten más cuidado.</p>
+                </details>
+                <details>
+                    <summary>¿Cómo me hago portador?</summary>
+                    <p>Necesitas un sensor AERIS y la app en el móvil. Te registras, vinculas el sensor desde la app y a partir de ahí tus mediciones aparecen en el mapa y en tu cuenta.</p>
+                </details>
+                <details>
+                    <summary>¿Cuándo podré descargar la app?</summary>
+                    <p>La app de Android todavía está en desarrollo. Cuando se publique, el enlace de descarga aparecerá en esta página.</p>
+                </details>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="pie-portada">
+    <div class="pie-contenido">
+        <div class="pie-marca">
+            <img src="img/logo-aeris.svg" alt="AERIS" class="pie-logo">
+            <p>El mapa del ozono hecho con los sensores de quienes viven en la ciudad.</p>
+        </div>
+        <nav class="pie-columnas" aria-label="Enlaces del pie">
+            <div>
+                <h2>AERIS</h2>
+                <ul>
+                    <li><a href="mapa.html">Mapa</a></li>
+                    <li><a href="#proyecto">Cómo funciona</a></li>
+                    <li><a href="#sensor">El sensor</a></li>
+                    <li><a href="#la-app">La app</a></li>
+                    <li><a href="#planes">Planes</a></li>
+                </ul>
+            </div>
+            <div>
+                <h2>Información</h2>
+                <ul>
+                    <li><a href="contaminantes.html">Contaminantes</a></li>
+                    <li><a href="normativa.html">Normativa</a></li>
+                    <li><a href="consejos.html">Consejos</a></li>
+                    <li><a href="#preguntas">Preguntas frecuentes</a></li>
+                </ul>
+            </div>
+            <div>
+                <h2>Tu cuenta</h2>
+                <ul>
+                    <li><a href="login.html">Iniciar sesión</a></li>
+                    <li><a href="registro.html">Crear cuenta</a></li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+    <div class="pie-final">
+        <span>© 2026 SenseTech · AERIS</span>
+    </div>
+</footer>
+
+<script src="js/logica_mapa_fake.js"></script>
+<script src="js/logica_mapa_real.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="js/inicio.js"></script>
+<script src="js/informacion.js"></script>
+<script src="js/portada.js"></script>
+</body>
+</html>
