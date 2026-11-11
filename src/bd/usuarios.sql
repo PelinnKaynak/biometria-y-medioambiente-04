@@ -55,3 +55,69 @@ CREATE TABLE IF NOT EXISTS Contaminantes (
     UNIQUE KEY uk_contaminantes_nombre (nombre)
 ) ENGINE = InnoDB;
 
+
+-- ---------------------------------------------------------------
+-- Tabla: Sensores
+-- Cada sensor pertenece obligatoriamente a un usuario.
+-- ---------------------------------------------------------------
+
+
+-- ---------------------------------------------------------------
+-- Tabla: Sensores
+-- Almacena los sensores asociados a los usuarios.
+-- ---------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS Sensores (
+    idSensor INT NOT NULL AUTO_INCREMENT,
+    idUsuario INT NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    estado VARCHAR(20) NOT NULL DEFAULT 'inactivo',
+    bateria INT NULL,
+    ultimaConexion DATETIME NULL,
+    necesitaCalibracion BOOLEAN NOT NULL DEFAULT FALSE,
+    luzActiva BOOLEAN NOT NULL DEFAULT FALSE,
+
+    PRIMARY KEY (idSensor),
+
+    CONSTRAINT fk_sensores_usuarios
+        FOREIGN KEY (idUsuario)
+        REFERENCES Usuarios(idUsuario)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT ck_sensores_bateria
+        CHECK (bateria BETWEEN 0 AND 100)
+) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------
+-- Tabla: Mediciones
+-- Guarda las mediciones de los sensores ambientales.
+-- ---------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS Mediciones (
+    idMedicion INT NOT NULL AUTO_INCREMENT,
+    idSensor INT NOT NULL,
+    idUsuario INT NOT NULL,
+    idContaminante INT NOT NULL,
+    valorMedicion DOUBLE NOT NULL,
+    ubicacion POINT NOT NULL,
+    fechaHora TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (idMedicion),
+
+    CONSTRAINT fk_mediciones_sensores
+        FOREIGN KEY (idSensor)
+        REFERENCES Sensores(idSensor)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_mediciones_usuarios
+        FOREIGN KEY (idUsuario)
+        REFERENCES Usuarios(idUsuario)
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_mediciones_contaminantes
+        FOREIGN KEY (idContaminante)
+        REFERENCES Contaminantes(idContaminante)
+        ON DELETE RESTRICT
+) ENGINE = InnoDB;
+
+
