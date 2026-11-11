@@ -37,3 +37,21 @@ CREATE TABLE IF NOT EXISTS Usuarios (
   CONSTRAINT ck_usuarios_role
     CHECK (role IN ('administrador', 'tecnico', 'portador', 'ciudadano'))
 ) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------
+-- Tabla: Contaminantes
+-- Almacena los contaminantes que puede medir AERIS.
+-- ---------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS Contaminantes (
+    idContaminante INT NOT NULL AUTO_INCREMENT,
+    nombre VARCHAR(100) NOT NULL,
+    unidad VARCHAR(20) NOT NULL,
+    umbralModerado DOUBLE NULL,
+    umbralMalo DOUBLE NULL,
+    umbralMuyMalo DOUBLE NULL,
+
+    PRIMARY KEY (idContaminante),
+    UNIQUE KEY uk_contaminantes_nombre (nombre)
+) ENGINE = InnoDB;
+
