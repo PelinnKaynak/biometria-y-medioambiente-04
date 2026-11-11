@@ -2,12 +2,14 @@
 // Fichero:     VincularSensorActivity.java
 // Descripción: Pantalla «Vincular sensor» (Figma: «vincular sensor»). Se abre
 //              tras el registro y desde «Mi sensor» del perfil (si el usuario
-//              no tiene sensor). Tiene el diseño completo: botón «Buscar
-//              sensores», estado de la búsqueda, lista de sensores encontrados
-//              con su botón «Vincular» y «Omitir por ahora».
-//              La búsqueda por Bluetooth y la petición al servidor son de la
-//              tarea T005 (H019): están marcadas con «T005» en buscarSensores()
-//              y pulsarVincular(). Diseño en doc/app_design.md.
+//              no tiene sensor). «Escanear código» abre la cámara (escáner de
+//              Google, sin pedir el permiso de cámara) y lee el código de la
+//              etiqueta del sensor (CodigoSensor). Si la cámara no funciona,
+//              «¿No funciona la cámara? Escribe el código» deja escribir el
+//              número de serie y la sensibilidad. Después se enseña el sensor
+//              con el botón «Vincular». La petición al servidor es de
+//              T005/T017: está marcada con «T005» en pulsarVincular().
+//              Diseño en doc/app_design.md.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       05/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -16,135 +18,189 @@ package com.example.aeris;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.LinearLayout;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.Collections;
-import java.util.List;
+import com.google.mlkit.vision.barcode.common.Barcode;
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanner;
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions;
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning;
 
 // VincularSensorActivity class: the «Vincular sensor» screen.
 public class VincularSensorActivity extends AppCompatActivity {
 
     // Extra del Intent: true si se abre desde el perfil (al acabar se vuelve
-    // al perfil y no se enseña «Omitir por ahora»)
+    // al perfil en vez de abrir el inicio)
     public static final String EXTRA_DESDE_PERFIL = "desdePerfil";
 
-    // Mientras no exista la búsqueda real (T005), cuánto se ve «Buscando…»
-    private static final long DURACION_BUSQUEDA_MS = 3000;
-
-    private TextView botonBuscar;
-    private View estadoBusqueda;
-    private View progresoBusqueda;
-    private TextView textoEstadoBusqueda;
-    private View tituloEncontrados;
-    private LinearLayout listaSensores;
+    private View botonEscanear;
+    private TextView errorEscaneo;
+    private View tarjetaEscanear;
+    private View tarjetaSensor;
+    private View tarjetaAMano;
+    private EditText campoNumeroSerie, campoSensibilidad;
+    private TextView errorNumeroSerie, errorSensibilidad;
+    private TextView textoNumeroSerie;
+    private TextView textoDetalleSensor;
+    private TextView errorVincular;
     private boolean desdePerfil;
-
-    private final Handler hiloPrincipal = new Handler(Looper.getMainLooper());
+    private CodigoSensor sensorLeido;   // null hasta que se escanea un código válido
 
     // -----------------------------------------------------------------------
     // onCreate() -->       (lo llama Android al abrir la pantalla)
-    // What it does: finds the views and connects «Buscar sensores», the back
-    //               button and «Omitir por ahora». After the sign-up both open
-    //               the home screen; from the profile, back returns to the
-    //               profile and «Omitir por ahora» is hidden.
+    // What it does: finds the views and connects «Escanear código», the
+    //               link to write the code by hand, «Continuar», «Vincular»,
+    //               «Escanear otro código» and the back button. After the
+    //               sign-up, back opens the home screen; from the profile, it
+    //               returns to the profile.
     // -----------------------------------------------------------------------
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vincular_sensor);
 
-        botonBuscar = findViewById(R.id.botonBuscar);
-        estadoBusqueda = findViewById(R.id.estadoBusqueda);
-        progresoBusqueda = findViewById(R.id.progresoBusqueda);
-        textoEstadoBusqueda = findViewById(R.id.textoEstadoBusqueda);
-        tituloEncontrados = findViewById(R.id.tituloEncontrados);
-        listaSensores = findViewById(R.id.listaSensores);
-
+        botonEscanear = findViewById(R.id.botonEscanear);
+        errorEscaneo = findViewById(R.id.errorEscaneo);
+        tarjetaEscanear = findViewById(R.id.tarjetaEscanear);
+        tarjetaSensor = findViewById(R.id.tarjetaSensor);
+        textoNumeroSerie = findViewById(R.id.textoNumeroSerie);
+        textoDetalleSensor = findViewById(R.id.textoDetalleSensor);
+        errorVincular = findViewById(R.id.errorVincular);
+        tarjetaAMano = findViewById(R.id.tarjetaAMano);
+        campoNumeroSerie = findViewById(R.id.campoNumeroSerie);
+        campoSensibilidad = findViewById(R.id.campoSensibilidad);
+        errorNumeroSerie = findViewById(R.id.errorNumeroSerie);
+        errorSensibilidad = findViewById(R.id.errorSensibilidad);
         desdePerfil = getIntent().getBooleanExtra(EXTRA_DESDE_PERFIL, false);
 
-        botonBuscar.setOnClickListener(vista -> buscarSensores());
+        botonEscanear.setOnClickListener(vista -> escanear());
+        findViewById(R.id.enlaceEscanearOtro).setOnClickListener(vista -> escanear());
+        findViewById(R.id.enlaceAMano).setOnClickListener(vista -> mostrarSolo(tarjetaAMano));
+        findViewById(R.id.enlaceVolverEscanear).setOnClickListener(vista -> mostrarSolo(tarjetaEscanear));
+        findViewById(R.id.botonContinuar).setOnClickListener(vista -> pulsarContinuar());
+        TeclaEnter.pulsaBoton(campoSensibilidad, findViewById(R.id.botonContinuar));
+        findViewById(R.id.botonVincular).setOnClickListener(vista -> pulsarVincular());
         findViewById(R.id.botonVolver).setOnClickListener(vista -> salir());
-        findViewById(R.id.enlaceOmitir).setOnClickListener(vista -> salir());
-        if (desdePerfil) {
-            findViewById(R.id.enlaceOmitir).setVisibility(View.GONE);
-            findViewById(R.id.textoMasTarde).setVisibility(View.GONE);
-        }
     }
 
     // -----------------------------------------------------------------------
-    // buscarSensores() -->
-    // What it does: shows «Buscando sensores cercanos…» and looks for sensors.
-    //               T005: here goes the Bluetooth scan, which must call
-    //               mostrarSensores() with what it finds. Until then no sensor
-    //               is invented: after a few seconds it shows that none was found.
+    // escanear() -->
+    // What it does: opens Google's code scanner (DataMatrix, the code of the
+    //               sensor label, or QR). If the user closes it, nothing
+    //               happens; if it cannot open, the error is shown below the
+    //               button.
     // -----------------------------------------------------------------------
-    private void buscarSensores() {
-        mostrarBuscando();
-        // T005: sustituir por el escaneo Bluetooth (iBeacon de los sensores AERIS)
-        hiloPrincipal.postDelayed(() -> mostrarSensores(Collections.emptyList()), DURACION_BUSQUEDA_MS);
+    private void escanear() {
+        errorEscaneo.setVisibility(View.GONE);
+        GmsBarcodeScannerOptions opciones = new GmsBarcodeScannerOptions.Builder()
+                .setBarcodeFormats(Barcode.FORMAT_DATA_MATRIX, Barcode.FORMAT_QR_CODE)
+                .build();
+        GmsBarcodeScanner escaner = GmsBarcodeScanning.getClient(this, opciones);
+        escaner.startScan()
+                .addOnSuccessListener(codigo -> codigoLeido(codigo.getRawValue()))
+                .addOnFailureListener(error -> mostrarErrorEscaneo(getString(R.string.vincular_error_camara)));
     }
 
     // -----------------------------------------------------------------------
-    // mostrarBuscando() -->
-    // What it does: spinner and «Buscando…», empties the list and disables
-    //               the button so the search is not started twice.
+    // texto: Text --> codigoLeido() -->
+    // What it does: if the text is the code of a sensor label, shows the
+    //               sensor card; if not, says so below «Escanear código».
     // -----------------------------------------------------------------------
-    private void mostrarBuscando() {
-        botonBuscar.setEnabled(false);
-        botonBuscar.setAlpha(0.6f);
-        listaSensores.removeAllViews();
-        tituloEncontrados.setVisibility(View.GONE);
-        estadoBusqueda.setVisibility(View.VISIBLE);
-        progresoBusqueda.setVisibility(View.VISIBLE);
-        textoEstadoBusqueda.setText(R.string.vincular_buscando);
-    }
-
-    // -----------------------------------------------------------------------
-    // sensores: Lista<SensorEncontrado> --> mostrarSensores() -->
-    // What it does: ends the search. With sensors, shows «Sensores
-    //               encontrados» and one row per sensor (item_sensor.xml);
-    //               without sensors, says that none was found.
-    // -----------------------------------------------------------------------
-    void mostrarSensores(List<SensorEncontrado> sensores) {
-        botonBuscar.setEnabled(true);
-        botonBuscar.setAlpha(1f);
-        progresoBusqueda.setVisibility(View.GONE);
-        listaSensores.removeAllViews();
-
-        if (sensores.isEmpty()) {
-            estadoBusqueda.setVisibility(View.VISIBLE);
-            textoEstadoBusqueda.setText(R.string.vincular_ninguno);
-            tituloEncontrados.setVisibility(View.GONE);
+    private void codigoLeido(String texto) {
+        CodigoSensor codigo = CodigoSensor.desdeTexto(texto);
+        if (codigo == null) {
+            mostrarErrorEscaneo(getString(R.string.vincular_error_codigo));
             return;
         }
-        estadoBusqueda.setVisibility(View.GONE);
-        tituloEncontrados.setVisibility(View.VISIBLE);
+        mostrarSensor(codigo);
+    }
 
-        LayoutInflater inflador = LayoutInflater.from(this);
-        for (SensorEncontrado sensor : sensores) {
-            View fila = inflador.inflate(R.layout.item_sensor, listaSensores, false);
-            ((TextView) fila.findViewById(R.id.textoNombreSensor)).setText(sensor.nombre);
-            ((TextView) fila.findViewById(R.id.textoDetalleSensor)).setText(sensor.detalle());
-            fila.findViewById(R.id.botonVincular).setOnClickListener(vista -> pulsarVincular(sensor));
-            listaSensores.addView(fila);
+    // -----------------------------------------------------------------------
+    // pulsarContinuar() -->
+    // What it does: checks the two fields written by hand (12-digit serial,
+    //               sensitivity a number); if they are right, shows the sensor
+    //               card; if not, the error below each wrong field.
+    // -----------------------------------------------------------------------
+    private void pulsarContinuar() {
+        String serie = campoNumeroSerie.getText().toString();
+        String sensibilidad = campoSensibilidad.getText().toString();
+        marcar(campoNumeroSerie, errorNumeroSerie, CodigoSensor.esNumeroSerieValido(serie)
+                ? null : getString(R.string.vincular_error_numero_serie));
+        marcar(campoSensibilidad, errorSensibilidad, CodigoSensor.leerSensibilidad(sensibilidad) != null
+                ? null : getString(R.string.vincular_error_sensibilidad));
+        CodigoSensor codigo = CodigoSensor.desdeCampos(serie, sensibilidad);
+        if (codigo != null) {
+            mostrarSensor(codigo);
         }
     }
 
     // -----------------------------------------------------------------------
-    // sensor: SensorEncontrado --> pulsarVincular() -->
-    // What it does: T005: sends the sensor to the server to link it to the
-    //               user's account and, if it works, calls salir() (home
-    //               screen, or back to the profile).
+    // codigo: CodigoSensor --> mostrarSensor() -->
+    // What it does: keeps the sensor and shows only the «Sensor leído» card.
     // -----------------------------------------------------------------------
-    private void pulsarVincular(SensorEncontrado sensor) {
-        // T005: petición al servidor para vincular «sensor» a la cuenta del usuario
+    private void mostrarSensor(CodigoSensor codigo) {
+        sensorLeido = codigo;
+        textoNumeroSerie.setText(codigo.numeroSerie);
+        textoDetalleSensor.setText(detalle(codigo));
+        errorVincular.setVisibility(View.GONE);
+        mostrarSolo(tarjetaSensor);
+    }
+
+    // -----------------------------------------------------------------------
+    // tarjeta: View --> mostrarSolo() -->
+    // What it does: shows that card (scan, by hand or sensor) and hides the others.
+    // -----------------------------------------------------------------------
+    private void mostrarSolo(View tarjeta) {
+        tarjetaEscanear.setVisibility(tarjeta == tarjetaEscanear ? View.VISIBLE : View.GONE);
+        tarjetaAMano.setVisibility(tarjeta == tarjetaAMano ? View.VISIBLE : View.GONE);
+        tarjetaSensor.setVisibility(tarjeta == tarjetaSensor ? View.VISIBLE : View.GONE);
+    }
+
+    private void marcar(EditText campo, TextView etiquetaError, String mensaje) {
+        campo.setBackgroundResource(mensaje == null ? R.drawable.fondo_campo : R.drawable.fondo_campo_error);
+        etiquetaError.setText(mensaje);
+        etiquetaError.setVisibility(mensaje == null ? View.GONE : View.VISIBLE);
+    }
+
+    // -----------------------------------------------------------------------
+    // codigo: CodigoSensor --> detalle() --x
+    // Text <--
+    // What it does: e.g. "Sensor de ozono (O₃) · fabricado en 09/2021". Written
+    //               by hand there is no gas or date: "Sensor de ozono (O₃)".
+    // -----------------------------------------------------------------------
+    private String detalle(CodigoSensor codigo) {
+        if (codigo.fecha.isEmpty()) {
+            return getString(R.string.vincular_sensor_ozono);
+        }
+        String gas = "03".equals(codigo.gas)
+                ? getString(R.string.vincular_sensor_ozono)
+                : getString(R.string.vincular_sensor_gas, codigo.gas);
+        String fecha = codigo.fecha.substring(2) + "/20" + codigo.fecha.substring(0, 2);
+        return getString(R.string.vincular_detalle, gas, fecha);
+    }
+
+    private void mostrarErrorEscaneo(String mensaje) {
+        // Vuelve al paso 1 con el mensaje debajo del botón
+        mostrarSolo(tarjetaEscanear);
+        errorEscaneo.setText(mensaje);
+        errorEscaneo.setVisibility(View.VISIBLE);
+    }
+
+    // -----------------------------------------------------------------------
+    // pulsarVincular() -->
+    // What it does: T005/T017: sends sensorLeido (serial and sensitivity) to
+    //               the server to link it to the user's account and, if it
+    //               works, calls salir(). The server part does not exist yet.
+    // -----------------------------------------------------------------------
+    private void pulsarVincular() {
+        if (sensorLeido == null) {
+            return;
+        }
+        // T005/T017: petición al servidor (POST /vincularSensor) con
+        // sensorLeido.numeroSerie y sensorLeido.sensibilidad; si va bien, salir()
     }
 
     // -----------------------------------------------------------------------
@@ -154,16 +210,9 @@ public class VincularSensorActivity extends AppCompatActivity {
     //               opens the home screen.
     // -----------------------------------------------------------------------
     private void salir() {
-        hiloPrincipal.removeCallbacksAndMessages(null);
         if (!desdePerfil) {
             startActivity(new Intent(this, InicioActivity.class));
         }
         finish();
-    }
-
-    @Override
-    protected void onDestroy() {
-        hiloPrincipal.removeCallbacksAndMessages(null);
-        super.onDestroy();
     }
 }

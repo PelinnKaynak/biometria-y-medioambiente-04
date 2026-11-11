@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Pantalla «Vincular sensor» (Figma: vincular sensor). Diseño de T005 (H019):
-     la búsqueda por Bluetooth y la petición al servidor las completa T005. -->
+<!-- Pantalla «Vincular sensor» (Figma: vincular sensor). T005 (H019): se escanea
+     con la cámara el código de la etiqueta del sensor y se vincula a la cuenta. -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -47,86 +47,270 @@
             android:textColor="@color/texto_principal"
             android:textSize="14sp" />
 
-        <TextView
-            android:id="@+id/botonBuscar"
-            android:layout_width="200dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="24dp"
-            android:background="@drawable/fondo_boton_principal"
-            android:clickable="true"
-            android:elevation="4dp"
-            android:focusable="true"
-            android:gravity="center"
-            android:text="@string/vincular_buscar"
-            android:textColor="@color/blanco"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <!-- Estado de la búsqueda: buscando… / no se ha encontrado ninguno -->
+        <!-- Paso 1: escanear el código de la etiqueta -->
         <LinearLayout
-            android:id="@+id/estadoBusqueda"
+            android:id="@+id/tarjetaEscanear"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="28dp"
-            android:gravity="center"
+            android:background="@drawable/fondo_tarjeta"
+            android:gravity="center_horizontal"
             android:orientation="vertical"
-            android:visibility="gone">
+            android:padding="24dp">
 
-            <ProgressBar
-                android:id="@+id/progresoBusqueda"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:indeterminateTint="@color/violeta" />
+            <ImageView
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_escanear_codigo" />
 
             <TextView
-                android:id="@+id/textoEstadoBusqueda"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:gravity="center"
+                android:text="@string/vincular_donde_codigo"
+                android:textColor="@color/texto_secundario"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:id="@+id/botonEscanear"
+                android:layout_width="220dp"
+                android:layout_height="44dp"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/fondo_boton_principal"
+                android:clickable="true"
+                android:elevation="4dp"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_camara" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/vincular_escanear"
+                    android:textColor="@color/blanco"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/errorEscaneo"
+                style="@style/AERIS.Error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/enlaceAMano"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:gravity="center"
-                android:textColor="@color/texto_secundario"
-                android:textSize="14sp"
-                tools:text="@string/vincular_buscando" />
+                android:padding="6dp"
+                android:text="@string/vincular_enlace_a_mano"
+                android:textColor="@color/violeta"
+                android:textSize="13sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Lista de sensores encontrados (la rellena mostrarSensores()) -->
-        <TextView
-            android:id="@+id/tituloEncontrados"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="@string/vincular_encontrados"
-            android:textColor="@color/texto_principal"
-            android:textSize="16sp"
-            android:visibility="gone" />
-
+        <!-- Si la cámara no funciona: número de serie y sensibilidad escritos a mano -->
         <LinearLayout
-            android:id="@+id/listaSensores"
+            android:id="@+id/tarjetaAMano"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:layout_marginTop="28dp"
+            android:background="@drawable/fondo_tarjeta"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:visibility="gone">
 
-        <TextView
-            android:id="@+id/enlaceOmitir"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="32dp"
-            android:padding="6dp"
-            android:text="@string/vincular_omitir"
-            android:textColor="@color/violeta"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/vincular_a_mano_texto"
+                android:textColor="@color/texto_secundario"
+                android:textSize="13sp" />
 
-        <TextView
-            android:id="@+id/textoMasTarde"
+            <TextView
+                style="@style/AERIS.Etiqueta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/vincular_numero_serie" />
+
+            <EditText
+                android:id="@+id/campoNumeroSerie"
+                style="@style/AERIS.Campo"
+                android:layout_width="match_parent"
+                android:hint="@string/vincular_numero_serie_pista"
+                android:importantForAutofill="no"
+                android:inputType="number"
+                android:maxLength="12" />
+
+            <TextView
+                android:id="@+id/errorNumeroSerie"
+                style="@style/AERIS.Error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                style="@style/AERIS.Etiqueta"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="@string/vincular_sensibilidad" />
+
+            <EditText
+                android:id="@+id/campoSensibilidad"
+                style="@style/AERIS.Campo"
+                android:layout_width="match_parent"
+                android:digits="0123456789,.-"
+                android:hint="@string/vincular_sensibilidad_pista"
+                android:importantForAutofill="no"
+                android:inputType="numberSigned|numberDecimal" />
+
+            <TextView
+                android:id="@+id/errorSensibilidad"
+                style="@style/AERIS.Error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/botonContinuar"
+                android:layout_width="180dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/fondo_boton_principal"
+                android:clickable="true"
+                android:elevation="4dp"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/vincular_continuar"
+                android:textColor="@color/blanco"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/enlaceVolverEscanear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:padding="6dp"
+                android:text="@string/vincular_volver_escanear"
+                android:textColor="@color/violeta"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Paso 2: el sensor leído y el botón «Vincular» -->
+        <LinearLayout
+            android:id="@+id/tarjetaSensor"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="@string/vincular_mas_tarde"
-            android:textColor="@color/texto_secundario"
-            android:textSize="12sp" />
+            android:layout_marginTop="28dp"
+            android:background="@drawable/fondo_tarjeta"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/fondo_aviso_ok"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="10dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="4dp">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_tic" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/vincular_leido"
+                    android:textColor="@color/verde_ok"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/vincular_numero_serie"
+                android:textColor="@color/texto_secundario"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/textoNumeroSerie"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:textColor="@color/texto_principal"
+                android:textSize="20sp"
+                tools:text="092021010920" />
+
+            <TextView
+                android:id="@+id/textoDetalleSensor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="@color/texto_secundario"
+                android:textSize="13sp"
+                tools:text="Sensor de ozono (O₃) · fabricado en 09/2021" />
+
+            <TextView
+                android:id="@+id/botonVincular"
+                android:layout_width="180dp"
+                android:layout_height="40dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="20dp"
+                android:background="@drawable/fondo_boton_principal"
+                android:clickable="true"
+                android:elevation="4dp"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/vincular_boton"
+                android:textColor="@color/blanco"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/errorVincular"
+                style="@style/AERIS.Error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/enlaceEscanearOtro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:padding="6dp"
+                android:text="@string/vincular_escanear_otro"
+                android:textColor="@color/violeta"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
 </ScrollView>

@@ -20,14 +20,27 @@
 
     <!-- Vincular sensor (pantalla provisional hasta T005) -->
     <string name="vincular_titulo">Vincular sensor</string>
-    <string name="vincular_texto">Activa el Bluetooth y la ubicación y acerca el sensor al teléfono.</string>
-    <string name="vincular_buscar">Buscar sensores</string>
-    <string name="vincular_buscando">Buscando sensores cercanos…</string>
-    <string name="vincular_ninguno">No hemos encontrado ningún sensor. Acércalo al teléfono y vuelve a buscar.</string>
-    <string name="vincular_encontrados">Sensores encontrados</string>
+    <string name="vincular_texto">Escanea con la cámara el código de la etiqueta de tu sensor para añadirlo a tu cuenta.</string>
+    <string name="vincular_donde_codigo">El código está en la etiqueta del sensor de ozono.</string>
+    <string name="vincular_escanear">Escanear código</string>
+    <string name="vincular_leido">Sensor leído</string>
+    <string name="vincular_numero_serie">Número de serie</string>
+    <string name="vincular_sensor_ozono">Sensor de ozono (O₃)</string>
+    <string name="vincular_sensor_gas">Sensor de gas (código %1$s)</string>
+    <string name="vincular_detalle">%1$s · fabricado en %2$s</string>
+    <string name="vincular_escanear_otro">Escanear otro código</string>
+    <string name="vincular_enlace_a_mano">¿No funciona la cámara? Escribe el código</string>
+    <string name="vincular_a_mano_texto">Escribe los números que aparecen en la etiqueta, debajo del código.</string>
+    <string name="vincular_numero_serie_pista">Ej.: 092021010920</string>
+    <string name="vincular_sensibilidad">Sensibilidad (nA/ppm)</string>
+    <string name="vincular_sensibilidad_pista">Ej.: -44,75</string>
+    <string name="vincular_continuar">Continuar</string>
+    <string name="vincular_volver_escanear">Volver a escanear</string>
+    <string name="vincular_error_numero_serie">El número de serie tiene 12 cifras.</string>
+    <string name="vincular_error_sensibilidad">Escribe un número, por ejemplo -44,75.</string>
+    <string name="vincular_error_codigo">Este código no es el de un sensor AERIS. Escanea el código de la etiqueta del sensor.</string>
+    <string name="vincular_error_camara">No se ha podido abrir la cámara. Inténtalo de nuevo.</string>
     <string name="vincular_boton">Vincular</string>
-    <string name="vincular_mas_tarde">Podrás vincular tu sensor más tarde desde tu perfil.</string>
-    <string name="vincular_omitir"><u>Omitir por ahora</u></string>
 
     <!-- Permiso de red local (Android 17) -->
     <string name="permiso_red_denegado">AERIS necesita permiso para conectar con dispositivos de la red local (el servidor).</string>
@@ -46,7 +59,7 @@
 
     <!-- Recuperar contraseña (T003) -->
     <string name="recuperar_titulo">¿Olvidaste tu contraseña?</string>
-    <string name="recuperar_texto">No pasa nada. Escribe el correo con el que te registraste y te enviaremos un enlace para crear una nueva.</string>
+    <string name="recuperar_texto">Escribe el correo con el que te registraste y te enviaremos un enlace para crear una contraseña nueva.</string>
     <string name="recuperar_correo">Correo electrónico</string>
     <string name="recuperar_correo_pista">correo@ejemplo.com</string>
     <string name="recuperar_enviar">Enviar enlace</string>
