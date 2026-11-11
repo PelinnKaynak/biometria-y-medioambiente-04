@@ -55,20 +55,15 @@ CREATE TABLE IF NOT EXISTS Contaminantes (
     UNIQUE KEY uk_contaminantes_nombre (nombre)
 ) ENGINE = InnoDB;
 
-
 -- ---------------------------------------------------------------
 -- Tabla: Sensores
--- Cada sensor pertenece obligatoriamente a un usuario.
--- ---------------------------------------------------------------
-
-
--- ---------------------------------------------------------------
--- Tabla: Sensores
--- Almacena los sensores asociados a los usuarios.
+-- Cada sensor pertenece a un usuario.
 -- ---------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS Sensores (
     idSensor INT NOT NULL AUTO_INCREMENT,
+    numeroSerie VARCHAR(100) NOT NULL,
+    sensibilidad DOUBLE NOT NULL,
     idUsuario INT NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     estado VARCHAR(20) NOT NULL DEFAULT 'inactivo',
@@ -79,6 +74,9 @@ CREATE TABLE IF NOT EXISTS Sensores (
 
     PRIMARY KEY (idSensor),
 
+    CONSTRAINT uk_sensores_numero_serie
+        UNIQUE (numeroSerie),
+
     CONSTRAINT fk_sensores_usuarios
         FOREIGN KEY (idUsuario)
         REFERENCES Usuarios(idUsuario)
@@ -87,6 +85,7 @@ CREATE TABLE IF NOT EXISTS Sensores (
     CONSTRAINT ck_sensores_bateria
         CHECK (bateria BETWEEN 0 AND 100)
 ) ENGINE = InnoDB;
+
 
 -- ---------------------------------------------------------------
 -- Tabla: Mediciones
