@@ -121,7 +121,7 @@
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Si la cámara no funciona: número de serie y sensibilidad escritos a mano -->
+        <!-- Si la cámara no funciona: la línea de números de la etiqueta escrita a mano -->
         <LinearLayout
             android:id="@+id/tarjetaAMano"
             android:layout_width="match_parent"
@@ -144,41 +144,22 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="@string/vincular_numero_serie" />
+                android:text="@string/vincular_codigo_etiqueta" />
 
             <EditText
-                android:id="@+id/campoNumeroSerie"
+                android:id="@+id/campoCodigo"
                 style="@style/AERIS.Campo"
                 android:layout_width="match_parent"
-                android:hint="@string/vincular_numero_serie_pista"
+                android:digits="0123456789,.- "
+                android:fontFamily="monospace"
+                android:hint="@string/vincular_codigo_pista"
                 android:importantForAutofill="no"
-                android:inputType="number"
-                android:maxLength="12" />
+                android:inputType="text|textNoSuggestions"
+                android:maxLength="40"
+                android:textSize="14sp" />
 
             <TextView
-                android:id="@+id/errorNumeroSerie"
-                style="@style/AERIS.Error"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <TextView
-                style="@style/AERIS.Etiqueta"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:text="@string/vincular_sensibilidad" />
-
-            <EditText
-                android:id="@+id/campoSensibilidad"
-                style="@style/AERIS.Campo"
-                android:layout_width="match_parent"
-                android:digits="0123456789,.-"
-                android:hint="@string/vincular_sensibilidad_pista"
-                android:importantForAutofill="no"
-                android:inputType="numberSigned|numberDecimal" />
-
-            <TextView
-                android:id="@+id/errorSensibilidad"
+                android:id="@+id/errorCodigo"
                 style="@style/AERIS.Error"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />

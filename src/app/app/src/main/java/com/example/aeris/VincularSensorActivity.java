@@ -41,8 +41,8 @@ public class VincularSensorActivity extends AppCompatActivity {
     private View tarjetaEscanear;
     private View tarjetaSensor;
     private View tarjetaAMano;
-    private EditText campoNumeroSerie, campoSensibilidad;
-    private TextView errorNumeroSerie, errorSensibilidad;
+    private EditText campoCodigo;
+    private TextView errorCodigo;
     private TextView textoNumeroSerie;
     private TextView textoDetalleSensor;
     private TextView errorVincular;
@@ -70,10 +70,8 @@ public class VincularSensorActivity extends AppCompatActivity {
         textoDetalleSensor = findViewById(R.id.textoDetalleSensor);
         errorVincular = findViewById(R.id.errorVincular);
         tarjetaAMano = findViewById(R.id.tarjetaAMano);
-        campoNumeroSerie = findViewById(R.id.campoNumeroSerie);
-        campoSensibilidad = findViewById(R.id.campoSensibilidad);
-        errorNumeroSerie = findViewById(R.id.errorNumeroSerie);
-        errorSensibilidad = findViewById(R.id.errorSensibilidad);
+        campoCodigo = findViewById(R.id.campoCodigo);
+        errorCodigo = findViewById(R.id.errorCodigo);
         desdePerfil = getIntent().getBooleanExtra(EXTRA_DESDE_PERFIL, false);
 
         botonEscanear.setOnClickListener(vista -> escanear());
@@ -81,7 +79,7 @@ public class VincularSensorActivity extends AppCompatActivity {
         findViewById(R.id.enlaceAMano).setOnClickListener(vista -> mostrarSolo(tarjetaAMano));
         findViewById(R.id.enlaceVolverEscanear).setOnClickListener(vista -> mostrarSolo(tarjetaEscanear));
         findViewById(R.id.botonContinuar).setOnClickListener(vista -> pulsarContinuar());
-        TeclaEnter.pulsaBoton(campoSensibilidad, findViewById(R.id.botonContinuar));
+        TeclaEnter.pulsaBoton(campoCodigo, findViewById(R.id.botonContinuar));
         findViewById(R.id.botonVincular).setOnClickListener(vista -> pulsarVincular());
         findViewById(R.id.botonVolver).setOnClickListener(vista -> salir());
         // Después del registro se puede seguir sin sensor y vincularlo luego
@@ -125,21 +123,18 @@ public class VincularSensorActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // pulsarContinuar() -->
-    // What it does: checks the two fields written by hand (12-digit serial,
-    //               sensitivity a number); if they are right, shows the sensor
-    //               card; if not, the error below each wrong field.
+    // What it does: reads the line written by hand like the scanned code
+    //               («092021010920 110406 03 2109 -44.75»: serial, model, gas,
+    //               date and sensitivity); if it is right, shows the sensor
+    //               card; if not, the error below the field.
     // -----------------------------------------------------------------------
     private void pulsarContinuar() {
-        String serie = campoNumeroSerie.getText().toString();
-        String sensibilidad = campoSensibilidad.getText().toString();
-        marcar(campoNumeroSerie, errorNumeroSerie, CodigoSensor.esNumeroSerieValido(serie)
-                ? null : getString(R.string.vincular_error_numero_serie));
-        marcar(campoSensibilidad, errorSensibilidad, CodigoSensor.leerSensibilidad(sensibilidad) != null
-                ? null : getString(R.string.vincular_error_sensibilidad));
-        CodigoSensor codigo = CodigoSensor.desdeCampos(serie, sensibilidad);
+        CodigoSensor codigo = CodigoSensor.desdeTexto(campoCodigo.getText().toString());
+        marcar(campoCodigo, errorCodigo, codigo != null ? null : getString(R.string.vincular_error_codigo_a_mano));
         if (codigo != null) {
             mostrarSensor(codigo);
         }
+    }
     }
 
     // -----------------------------------------------------------------------
