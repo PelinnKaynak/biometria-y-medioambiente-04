@@ -36,6 +36,7 @@ dependencies {
     implementation libs.appcompat
     implementation libs.constraintlayout
     implementation libs.material
+    implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'   // escáner de códigos (Vincular sensor)
     testImplementation libs.junit
     testImplementation 'org.json:json:20240303'   // org.json real para los tests locales
     androidTestImplementation libs.espresso.core

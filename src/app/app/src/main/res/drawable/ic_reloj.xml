@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono reloj («Mejor hora para salir» de Inicio). T006 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:pathData="M3,12a9,9 0,1 0,18 0a9,9 0,1 0,-18 0Z"
+        android:strokeColor="#7958A7" android:strokeWidth="1.8" />
+    <path android:pathData="M12,7.5V12L15,14"
+        android:strokeColor="#7958A7" android:strokeWidth="1.8"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+</vector>

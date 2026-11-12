@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Flecha circular del botón «Ahora» del arco de Inicio. T006 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="14dp" android:height="14dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:pathData="M5,12a7,7 0,1 0,2.1 -5"
+        android:strokeColor="#7958A7" android:strokeWidth="2.4"
+        android:strokeLineCap="round" />
+    <path android:pathData="M6.5,3.5V7.5H10.5"
+        android:strokeColor="#7958A7" android:strokeWidth="2.4"
+        android:strokeLineCap="round" android:strokeLineJoin="round" />
+</vector>

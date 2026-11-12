@@ -1,9 +1,9 @@
 // ---------------------------------------------------------------------------
 // Fichero:     DatosUsuario.java
 // Descripción: Datos del usuario que devuelve GET /usuarioActual (nombre,
-//              apellidos, correo, rol, si quiere recibir alertas y la foto).
-//              Los usan las pantallas de perfil y de editar mis datos.
-//              Diseño en doc/app_design.md. Tarea T010.
+//              apellidos, correo, rol, si quiere recibir alertas, la foto y
+//              el sensor vinculado). Los usan las pantallas de perfil y de
+//              editar mis datos. Diseño en doc/app_design.md. Tareas T010, T005.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       04/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -22,19 +22,21 @@ public class DatosUsuario {
     public final String rol;
     public final boolean alertas;
     public final String foto;      // JPEG en base64, o "" si no tiene foto
+    public final String sensor;    // nombre del sensor vinculado, o "" si no tiene (T005/T017)
 
     // -----------------------------------------------------------------------
     // nombre: Text, apellidos: Text, correo: Text, rol: Text, alertas: B,
-    // foto: Text --> constructor()
+    // foto: Text, sensor: Text --> constructor()
     // -----------------------------------------------------------------------
     public DatosUsuario(String nombre, String apellidos, String correo, String rol, boolean alertas,
-                        String foto) {
+                        String foto, String sensor) {
         this.nombre = nombre;
         this.apellidos = apellidos;
         this.correo = correo;
         this.rol = rol;
         this.alertas = alertas;
         this.foto = foto;
+        this.sensor = sensor;
     }
 
     // -----------------------------------------------------------------------
@@ -43,6 +45,14 @@ public class DatosUsuario {
     // -----------------------------------------------------------------------
     public boolean tieneFoto() {
         return !foto.isEmpty();
+    }
+
+    // -----------------------------------------------------------------------
+    // tieneSensor() --x
+    // B <--
+    // -----------------------------------------------------------------------
+    public boolean tieneSensor() {
+        return !sensor.isEmpty();
     }
 
     // -----------------------------------------------------------------------
@@ -58,11 +68,14 @@ public class DatosUsuario {
     // -----------------------------------------------------------------------
     // cuerpo: Text --> desdeJSON() --x
     // DatosUsuario | null <--
-    // What it does: reads {"nombre", "apellidos", "correo", "rol", "alertas", "foto"}
+    // What it does: reads {"nombre", "apellidos", "correo", "rol", "alertas", "foto",
+    //               "sensor"}
     //               from the answer of GET /usuarioActual. Returns null if the
     //               text is not valid JSON or has no correo. If "alertas" is
     //               missing it is true (the default value in the BD); if
-    //               "foto" is missing or null it is "" (no photo).
+    //               "foto" is missing or null it is "" (no photo). The same
+    //               with "sensor": the server will send it when sensors can
+    //               be linked (T017); until then the user has no sensor.
     // -----------------------------------------------------------------------
     static DatosUsuario desdeJSON(String cuerpo) {
         if (cuerpo == null || cuerpo.isEmpty()) {
@@ -80,9 +93,15 @@ public class DatosUsuario {
                     correo,
                     json.optString("rol", ""),
                     json.optBoolean("alertas", true),
-                    json.optString("foto", ""));
+                    textoONada(json, "foto"),
+                    textoONada(json, "sensor"));
         } catch (JSONException error) {
             return null;
         }
+    }
+
+    // "" si el campo no está o es null (optString devolvería "null")
+    private static String textoONada(JSONObject json, String campo) {
+        return json.isNull(campo) ? "" : json.optString(campo, "");
     }
 }

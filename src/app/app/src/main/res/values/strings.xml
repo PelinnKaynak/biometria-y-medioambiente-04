@@ -20,8 +20,28 @@
 
     <!-- Vincular sensor (pantalla provisional hasta T005) -->
     <string name="vincular_titulo">Vincular sensor</string>
-    <string name="vincular_texto">Cuenta creada. Aquí podrás buscar tu sensor por Bluetooth y vincularlo a tu cuenta (tarea T005).</string>
-    <string name="vincular_omitir"><u>Omitir por ahora</u></string>
+    <string name="vincular_texto">Escanea con la cámara el código de la etiqueta de tu sensor para añadirlo a tu cuenta.</string>
+    <string name="vincular_donde_codigo">El código está en la etiqueta del sensor de ozono.</string>
+    <string name="vincular_escanear">Escanear código</string>
+    <string name="vincular_leido">Sensor leído</string>
+    <string name="vincular_numero_serie">Número de serie</string>
+    <string name="vincular_sensor_ozono">Sensor de ozono (O₃)</string>
+    <string name="vincular_sensor_gas">Sensor de gas (código %1$s)</string>
+    <string name="vincular_detalle">%1$s · fabricado en %2$s</string>
+    <string name="vincular_escanear_otro">Escanear otro código</string>
+    <string name="vincular_enlace_a_mano">¿No funciona la cámara? Escribe el código</string>
+    <string name="vincular_a_mano_texto">Escribe los números que aparecen en la etiqueta, debajo del código.</string>
+    <string name="vincular_numero_serie_pista">Ej.: 092021010920</string>
+    <string name="vincular_sensibilidad">Sensibilidad (nA/ppm)</string>
+    <string name="vincular_sensibilidad_pista">Ej.: -44,75</string>
+    <string name="vincular_continuar">Continuar</string>
+    <string name="vincular_volver_escanear">Volver a escanear</string>
+    <string name="vincular_error_numero_serie">El número de serie tiene 12 cifras.</string>
+    <string name="vincular_error_sensibilidad">Escribe un número, por ejemplo -44,75.</string>
+    <string name="vincular_error_codigo">Este código no es el de un sensor AERIS. Escanea el código de la etiqueta del sensor.</string>
+    <string name="vincular_error_camara">No se ha podido abrir la cámara. Inténtalo de nuevo.</string>
+    <string name="vincular_boton">Vincular</string>
+    <string name="vincular_mas_tarde">Ahora no, lo vincularé más tarde</string>
 
     <!-- Permiso de red local (Android 17) -->
     <string name="permiso_red_denegado">AERIS necesita permiso para conectar con dispositivos de la red local (el servidor).</string>
@@ -40,7 +60,7 @@
 
     <!-- Recuperar contraseña (T003) -->
     <string name="recuperar_titulo">¿Olvidaste tu contraseña?</string>
-    <string name="recuperar_texto">No pasa nada. Escribe el correo con el que te registraste y te enviaremos un enlace para crear una nueva.</string>
+    <string name="recuperar_texto">Escribe el correo con el que te registraste y te enviaremos un enlace para crear una contraseña nueva.</string>
     <string name="recuperar_correo">Correo electrónico</string>
     <string name="recuperar_correo_pista">correo@ejemplo.com</string>
     <string name="recuperar_enviar">Enviar enlace</string>
@@ -55,9 +75,58 @@
     <string name="enviado_reenviar">¿No te ha llegado? <u>Reenviar</u></string>
     <string name="enviado_reenviado">Te hemos enviado otro enlace.</string>
 
-    <!-- Pantalla de inicio provisional (hasta T006) -->
-    <string name="inicio_saludo">Hola, %1$s</string>
-    <string name="inicio_texto">Has iniciado sesión. La pantalla de inicio con la calidad del aire llega en la tarea T006. Tu perfil y «Cerrar sesión» están en la pestaña Perfil de abajo.</string>
+    <!-- Pantalla de inicio (T006) -->
+    <string name="inicio_titulo">Bienvenido</string>
+    <string name="inicio_subtitulo">Así está el aire que respiras ahora.</string>
+    <string name="inicio_notificaciones">Notificaciones</string>
+    <string name="inicio_sin_notificaciones">No tienes notificaciones.</string>
+    <string name="inicio_calidad_titulo">Calidad del aire ahora</string>
+    <string name="inicio_ahora">Ahora</string>
+    <string name="inicio_calidad_titulo_hora">Calidad del aire a las %1$s</string>
+    <string name="inicio_valor">%1$d µg/m³</string>
+    <string name="inicio_sin_valor">— µg/m³</string>
+    <string name="inicio_momento">Medido %1$s · %2$s</string>
+    <string name="inicio_calidad_buena">Buena</string>
+    <string name="inicio_calidad_moderada">Moderada</string>
+    <string name="inicio_calidad_mala">Mala</string>
+    <string name="inicio_calidad_muy_mala">Muy mala</string>
+    <string name="inicio_mensaje_bueno">El aire es seguro para actividades al aire libre.</string>
+    <string name="inicio_mensaje_moderado">Si eres sensible, evita el ejercicio intenso al aire libre.</string>
+    <string name="inicio_mensaje_malo">Mejor reducir el ejercicio al aire libre.</string>
+    <string name="inicio_mensaje_muy_malo">Reduce el tiempo al aire libre y cierra las ventanas.</string>
+    <string name="inicio_sin_mediciones">Todavía no hay mediciones en tu zona.</string>
+    <string name="inicio_sin_mediciones_sensor">Tu sensor aún no ha enviado ninguna medición.</string>
+    <string name="inicio_aviso_antigua">No hay datos nuevos desde %1$s. El valor puede no ser el actual.</string>
+    <string name="inicio_reintentar">Reintentar</string>
+    <string name="inicio_ultimas_mediciones">Últimas mediciones (µg/m³)</string>
+    <string name="inicio_ultimas_zona">Últimas horas en tu zona (µg/m³)</string>
+    <string name="inicio_ver_mas"><u>Ver más</u></string>
+    <string name="inicio_mi_sensor">Mi sensor</string>
+    <string name="inicio_sensor_conectado">Conectado</string>
+    <string name="inicio_sensor_desconectado">Desconectado</string>
+    <string name="inicio_bateria">Batería: %1$d %%</string>
+    <string name="inicio_ver">Ver</string>
+    <string name="inicio_vincular_titulo">¿Tienes un sensor AERIS?</string>
+    <string name="inicio_vincular_texto">Vincúlalo para medir el aire que respiras en tus recorridos.</string>
+    <string name="inicio_vincular">Vincular</string>
+    <string name="inicio_prevision_titulo">Mejor hora para salir</string>
+    <string name="inicio_prevision_texto">Consulta la previsión del aire de hoy</string>
+    <string name="inicio_lugares_titulo">Mis lugares</string>
+    <string name="inicio_lugares_texto">Guarda casa, el trabajo y tus sitios</string>
+    <string name="inicio_lugar_nivel">%1$s: %2$s</string>
+
+    <!-- Secciones aún no hechas (pantalla provisional, T006) -->
+    <string name="proximamente_etiqueta">Próximamente</string>
+    <string name="proximamente_mapa">Mapa</string>
+    <string name="proximamente_mapa_texto">Aquí verás el mapa de la calidad del aire de tu ciudad. Esta sección se está preparando.</string>
+    <string name="proximamente_mis_datos">Mis datos</string>
+    <string name="proximamente_mis_datos_texto">Aquí verás todas tus mediciones, con gráficas por día y por semana. Esta sección se está preparando.</string>
+    <string name="proximamente_prevision">Previsión</string>
+    <string name="proximamente_prevision_texto">Aquí verás cómo estará el aire las próximas horas y la mejor hora para salir. Esta sección se está preparando.</string>
+    <string name="proximamente_lugares">Mis lugares</string>
+    <string name="proximamente_mi_sensor">Mi sensor</string>
+    <string name="proximamente_mi_sensor_texto">Aquí verás el estado de tu sensor, su batería y sus mediciones, y podrás desvincularlo. Esta sección se está preparando.</string>
+    <string name="proximamente_lugares_texto">Aquí podrás guardar casa, el trabajo y tus sitios para ver su calidad del aire. Esta sección se está preparando.</string>
 
     <!-- Barra de navegación inferior (T010) -->
     <string name="barra_inicio">Inicio</string>
@@ -72,6 +141,8 @@
     <string name="perfil_editar_foto_descripcion">Cambiar la foto de perfil</string>
     <string name="perfil_editar_datos">Editar mis datos</string>
     <string name="perfil_mi_sensor">Mi sensor</string>
+    <string name="perfil_sensor_vincular">Vincular  &gt;</string>
+    <string name="perfil_sensor_nombre">%1$s  &gt;</string>
     <string name="perfil_notificaciones">Notificaciones</string>
     <string name="perfil_umbral">Umbral de alerta</string>
     <string name="perfil_umbral_valor">Normal  &gt;</string>
@@ -133,4 +204,83 @@
     <string name="mi_sensor_desvincular_confirmar">Desvincular</string>
     <string name="mi_sensor_cancelar">Cancelar</string>
     <string name="mi_sensor_sin_sensor">No tienes ningún sensor vinculado actualmente.</string>
+
+    <!-- Información (T009) -->
+    <string name="info_titulo">Información</string>
+    <string name="info_subtitulo">Todo lo que necesitas saber sobre el aire que respiras y tu sensor.</string>
+    <string name="info_consejo_titulo">CONSEJO DE HOY</string>
+    <string-array name="info_consejos">
+        <item>El ozono sube con el sol y el calor. Si vas a hacer deporte al aire libre, mejor a primera hora de la mañana.</item>
+        <item>En verano el ozono suele ser más alto por la tarde. Mira el mapa antes de salir a correr o en bici.</item>
+        <item>Si el aire está «Malo», reduce el ejercicio intenso al aire libre, sobre todo si tienes asma.</item>
+        <item>Lleva el sensor por fuera de la mochila: dentro de un bolsillo mide peor.</item>
+        <item>Mantén el Bluetooth y la ubicación activados para que tus mediciones lleguen al mapa.</item>
+    </string-array>
+    <string name="info_seccion_aire">EL AIRE QUE RESPIRAS</string>
+    <string name="info_seccion_sensor">TU SENSOR AERIS</string>
+    <string name="info_seccion_normativa">NORMATIVA</string>
+    <string name="info_unidad">µg/m³</string>
+
+    <string name="info_ozono_titulo">Ozono (O₃)</string>
+    <string name="info_ozono_subtitulo">Qué es y cómo afecta a tu salud</string>
+    <string name="info_ozono_texto">El ozono que respiras no lo emite nadie directamente: se forma cuando la luz del sol reacciona con los gases del tráfico y de la industria. Por eso sube en primavera y verano y en las horas de más sol.\n\nPuede irritar los ojos y la garganta, provocar tos y reducir la capacidad de los pulmones, sobre todo al hacer ejercicio. Los niños, las personas mayores y quienes tienen asma son los más sensibles.</string>
+    <string name="info_niveles_titulo">Los niveles de AERIS</string>
+    <string name="info_niveles_subtitulo">Qué significan los colores del mapa</string>
+    <string name="info_nivel_bueno">Bueno</string>
+    <string name="info_nivel_bueno_rango">Hasta 100 µg/m³</string>
+    <string name="info_nivel_bueno_texto">Puedes hacer vida normal al aire libre.</string>
+    <string name="info_nivel_moderado">Moderado</string>
+    <string name="info_nivel_moderado_rango">101 – 180 µg/m³</string>
+    <string name="info_nivel_moderado_texto">Si eres sensible, evita el ejercicio intenso.</string>
+    <string name="info_nivel_malo">Malo</string>
+    <string name="info_nivel_malo_rango">181 – 240 µg/m³</string>
+    <string name="info_nivel_malo_texto">Mejor reducir el ejercicio al aire libre.</string>
+    <string name="info_nivel_muy_malo">Muy malo</string>
+    <string name="info_nivel_muy_malo_rango">Más de 240 µg/m³</string>
+    <string name="info_nivel_muy_malo_texto">Reduce el tiempo al aire libre.</string>
+    <string name="info_sol_titulo">Sol y temperatura</string>
+    <string name="info_sol_subtitulo">Por qué hay más ozono en verano</string>
+    <string name="info_sol_texto">Con más sol y más calor, las reacciones que forman el ozono son más rápidas. Los días despejados y sin viento son los de más ozono, y el pico suele llegar por la tarde.\n\nTu sensor también mide la temperatura para corregir su lectura.</string>
+
+    <string name="info_sensor_titulo">Cómo mide tu sensor</string>
+    <string name="info_sensor_subtitulo">Un sensor electroquímico de ozono</string>
+    <string name="info_sensor_texto">Tu nodo lleva un sensor electroquímico de ozono de SPEC Sensors (ULPSM-O3 968-046). El ozono reacciona dentro del sensor y produce una corriente muy pequeña, proporcional a la cantidad de gas.\n\nCada sensor tiene su propia sensibilidad (nA/ppm), que viene en el código de su etiqueta. Por eso la app te pide escanearlo al vincularlo.</string>
+    <string name="info_bluetooth_titulo">Bluetooth y envío de datos</string>
+    <string name="info_bluetooth_subtitulo">Cómo llegan tus mediciones al mapa</string>
+    <string name="info_bluetooth_texto">El sensor no necesita emparejarse: envía sus mediciones por Bluetooth de bajo consumo (BLE), como un pequeño faro. Tu móvil las recibe, les añade la hora y tu ubicación y las sube al servidor de AERIS.\n\nMantén activados el Bluetooth y la ubicación y lleva el móvil cerca del sensor.</string>
+    <string name="info_llevar_titulo">Cómo llevarlo</string>
+    <string name="info_llevar_clip">Con el clip</string>
+    <string name="info_llevar_clip_texto">En el cinturón, la correa de la mochila o un bolsillo</string>
+    <string name="info_llevar_anilla">Con la anilla</string>
+    <string name="info_llevar_anilla_texto">Cuélgalo de la mochila o de una cinta</string>
+    <string name="info_llevar_rejilla">Rejilla al aire</string>
+    <string name="info_llevar_rejilla_texto">No lo tapes: el aire entra por delante y por los lados</string>
+    <string name="info_conoce_titulo">Conoce tu sensor</string>
+    <string name="info_conoce_descripcion">Sensor AERIS: carcasa en forma de gota con rejilla en espiral y anilla para colgarlo</string>
+    <string name="info_llamada_anilla">Anilla para colgarlo</string>
+    <string name="info_llamada_rejilla">Rejilla: entra el aire</string>
+    <string name="info_llamada_ventilacion">Ranuras de ventilación</string>
+    <string name="info_piezas_titulo">Por dentro</string>
+    <string name="info_piezas_subtitulo">Baja para ver cómo se separan las piezas</string>
+    <string name="info_pieza_tapa">Tapa frontal</string>
+    <string name="info_pieza_filtro">Filtro de polvo</string>
+    <string name="info_pieza_modulo">Sensor de O₃</string>
+    <string name="info_pieza_carcasa">Carcasa con clip</string>
+    <string name="info_datos_titulo">Tus datos</string>
+    <string name="info_datos_subtitulo">Qué se comparte y qué no</string>
+    <string name="info_datos_texto">Cada medición se envía con la concentración de ozono, la hora y el lugar. En el mapa público solo se ve la calidad del aire por zonas, nunca tu nombre ni tu recorrido.</string>
+
+    <string name="info_limites_titulo">Límites legales</string>
+    <string name="info_limites_subtitulo">Qué dicen la UE, España y la OMS</string>
+    <string name="info_limite_informacion">Umbral de información</string>
+    <string name="info_limite_informacion_valor">180 µg/m³ en una hora</string>
+    <string name="info_limite_alerta">Umbral de alerta</string>
+    <string name="info_limite_alerta_valor">240 µg/m³ en una hora</string>
+    <string name="info_limite_objetivo">Valor objetivo (salud)</string>
+    <string name="info_limite_objetivo_valor">120 µg/m³ en 8 horas, máx. 25 días al año</string>
+    <string name="info_limite_oms">Guía de la OMS (2021)</string>
+    <string name="info_limite_oms_valor">100 µg/m³ en 8 horas</string>
+    <string name="info_limites_nota">Directiva 2008/50/CE y Real Decreto 102/2011. AERIS usa el valor de la OMS como límite de «Bueno».</string>
+    <string name="info_fuentes">Fuentes: Directiva 2008/50/CE, Real Decreto 102/2011, OMS (2021) y SPEC Sensors.</string>
+>>>>>>> origin/main
 </resources>

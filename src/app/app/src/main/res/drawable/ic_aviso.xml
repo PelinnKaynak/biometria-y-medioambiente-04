@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono de aviso (triángulo): última medición antigua en Inicio. T006 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp" android:height="20dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:pathData="M12,3.5L22,20.5H2Z"
+        android:strokeColor="#B7860F" android:strokeWidth="1.8"
+        android:strokeLineJoin="round" />
+    <path android:pathData="M12,10V14M12,17.2V17.3"
+        android:strokeColor="#B7860F" android:strokeWidth="2"
+        android:strokeLineCap="round" />
+</vector>

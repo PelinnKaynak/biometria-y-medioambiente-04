@@ -3,8 +3,9 @@
 // Descripción: Pantalla «Perfil» (Figma «perfil»): muestra el nombre y el
 //              correo del usuario, guarda el interruptor de notificaciones en
 //              el servidor, cambia la foto de perfil (cámara o galería), abre «Editar mis datos»
-//              y permite cerrar sesión. Se abre desde la barra de navegación
-//              inferior. Diseño en doc/app_design.md. Tarea T010.
+//              y permite cerrar sesión. Sin sensor, «Mi sensor» abre «Vincular
+//              sensor». Se abre desde la barra de navegación inferior.
+//              Diseño en doc/app_design.md. Tareas T010, T005.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       04/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -13,8 +14,10 @@ package com.example.aeris;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.TypedValue;
 import android.widget.CompoundButton;
 import android.view.View;
 import android.widget.ImageView;
@@ -47,7 +50,9 @@ public class PerfilActivity extends AppCompatActivity {
     private ImageView imagenAvatar;
     private ProgressBar progresoFoto;
     private TextView errorPerfil;
+    private TextView valorMiSensor;
     private boolean tieneFoto = false;
+    private Boolean tieneSensor = null;     // null: aún no ha respondido el servidor
 
     // Preparar la foto (recortar y reducir) es lento: se hace fuera del hilo principal
     private static final ExecutorService HILO_FOTO = Executors.newSingleThreadExecutor();
@@ -93,6 +98,7 @@ public class PerfilActivity extends AppCompatActivity {
         imagenAvatar = findViewById(R.id.imagenAvatar);
         progresoFoto = findViewById(R.id.progresoFoto);
         errorPerfil = findViewById(R.id.errorPerfil);
+        valorMiSensor = findViewById(R.id.valorMiSensor);
 
         // Mientras llegan los datos del servidor se ve lo guardado al iniciar sesión
         textoNombre.setText(textoONada(Sesion.nombre(this)));
@@ -108,13 +114,12 @@ public class PerfilActivity extends AppCompatActivity {
         for (int id : opcionesProximamente) {
             findViewById(id).setClickable(false);   // aún no hacen nada
         }
-        findViewById(R.id.opcionMiSensor).setOnClickListener(vista ->
-                startActivity(new Intent(this, MiSensorActivity.class)));
         findViewById(R.id.opcionNotificaciones).setOnClickListener(vista -> {
             if (interruptorNotificaciones.isClickable()) {
                 interruptorNotificaciones.toggle();     // aquí sí se anima: lo ha tocado el usuario
             }
         });
+        findViewById(R.id.opcionMiSensor).setOnClickListener(vista -> pulsarMiSensor());
         findViewById(R.id.opcionEditarDatos).setOnClickListener(vista ->
                 startActivity(new Intent(this, EditarDatosActivity.class)));
         findViewById(R.id.botonEditarFoto).setOnClickListener(vista -> pulsarFoto());
@@ -285,8 +290,43 @@ public class PerfilActivity extends AppCompatActivity {
         textoCorreo.setText(datos.correo);
         errorPerfil.setVisibility(View.GONE);
         mostrarFoto(datos.foto);
+        mostrarSensor(datos);
         Sesion.guardarAlertas(this, datos.alertas);
         ponerInterruptor(datos.alertas);
+    }
+
+    // -----------------------------------------------------------------------
+    // datos: DatosUsuario --> mostrarSensor() -->
+    // What it does: in the «Mi sensor» row, the name of the linked sensor or,
+    //               without sensor, «Vincular  >» in violet.
+    // -----------------------------------------------------------------------
+    private void mostrarSensor(DatosUsuario datos) {
+        tieneSensor = datos.tieneSensor();
+        if (datos.tieneSensor()) {
+            valorMiSensor.setText(getString(R.string.perfil_sensor_nombre, datos.sensor));
+            valorMiSensor.setTextColor(getColor(R.color.texto_secundario));
+            valorMiSensor.setTypeface(null, Typeface.NORMAL);
+        } else {
+            valorMiSensor.setText(R.string.perfil_sensor_vincular);
+            valorMiSensor.setTextColor(getColor(R.color.violeta));
+            valorMiSensor.setTypeface(null, Typeface.BOLD);
+        }
+        valorMiSensor.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+    }
+
+    // -----------------------------------------------------------------------
+    // pulsarMiSensor() -->
+    // What it does: without sensor, opens «Vincular sensor» (when it ends, it
+    //               comes back here). With sensor (or in preview mode),
+    //               opens «Mi sensor» (T011).
+    // -----------------------------------------------------------------------
+    private void pulsarMiSensor() {
+        if (Boolean.FALSE.equals(tieneSensor)) {
+            startActivity(new Intent(this, VincularSensorActivity.class)
+                    .putExtra(VincularSensorActivity.EXTRA_DESDE_PERFIL, true));
+        } else {
+            startActivity(new Intent(this, MiSensorActivity.class));
+        }
     }
 
     // -----------------------------------------------------------------------

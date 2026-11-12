@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono marcador de lugar («Mis lugares» de Inicio). T006 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:pathData="M12,21C12,21 5,14.6 5,9.5a7,7 0,0 1,14 0C19,14.6 12,21 12,21Z"
+        android:strokeColor="#7958A7" android:strokeWidth="1.8"
+        android:strokeLineJoin="round" />
+    <path android:pathData="M9.5,9.5a2.5,2.5 0,1 0,5 0a2.5,2.5 0,1 0,-5 0Z"
+        android:strokeColor="#7958A7" android:strokeWidth="1.8" />
+</vector>

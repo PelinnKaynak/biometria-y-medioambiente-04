@@ -27,6 +27,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Pestaña «Info» de la barra de navegación (T009) -->
+        <activity
+            android:name=".InformacionActivity"
+            android:exported="false" />
+
         <activity
             android:name=".LoginActivity"
             android:exported="false"
@@ -52,6 +57,11 @@
 
         <activity
             android:name=".InicioActivity"
+            android:exported="false" />
+
+        <!-- Secciones aún no hechas: Mapa, Mis datos, Previsión, Mis lugares (T006) -->
+        <activity
+            android:name=".ProximamenteActivity"
             android:exported="false" />
 
         <activity
