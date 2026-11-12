@@ -17,6 +17,12 @@
   --bueno: #4E9C83;
   --moderado: #E3B341;
   --malo: #D9636B;
+  /* Versiones más oscuras para usar como color de texto.
+     Cumplen el contraste mínimo de 4,5:1 sobre blanco y sobre el fondo. */
+  --texto-gris: #6A6585;
+  --bueno-texto: #2B735B;
+  --moderado-texto: #85600F;
+  --malo-texto: #B5414A;
   --radio: 10px;
   --sombra: 0 4px 16px rgba(67, 46, 96, 0.08);
 }
@@ -61,7 +67,7 @@ a { color: var(--morado); font-weight: 600; }
 .campo.error { border-color: var(--malo); }
 
 .aviso-error {
-  color: var(--malo);
+  color: var(--malo-texto);
   font-size: 14px;
   font-weight: 500;
 }

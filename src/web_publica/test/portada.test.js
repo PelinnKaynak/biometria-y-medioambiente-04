@@ -204,7 +204,7 @@ describe("plano de cobertura", () => {
 
 describe("pie", () => {
     test("enlaza al mapa, a las páginas de información y a la cuenta", () => {
-        const enlaces = [...document.querySelectorAll(".pie-portada a")].map(a => a.getAttribute("href"));
+        const enlaces = [...document.querySelectorAll(".pie-web a")].map(a => a.getAttribute("href"));
         expect(enlaces).toEqual(expect.arrayContaining(["mapa.html", "contaminantes.html", "normativa.html", "consejos.html", "login.html", "registro.html"]));
     });
 

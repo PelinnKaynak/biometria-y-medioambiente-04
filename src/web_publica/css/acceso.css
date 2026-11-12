@@ -79,7 +79,7 @@
   font-size: 15px;
 }
 
-.formulario-acceso .campo::placeholder { color: #8992B8; }
+.formulario-acceso .campo::placeholder { color: var(--texto-gris); }
 
 .formulario-acceso .campo.error { border-width: 1.5px; }
 
@@ -108,7 +108,7 @@
   padding: 8px 12px;
   border-radius: 8px;
   background: #FDECEE;
-  color: var(--malo);
+  color: var(--malo-texto);
   font-size: 14px;
   font-weight: 500;
 }
@@ -154,7 +154,7 @@
 
 .nota {
   margin: 20px 0 0;
-  color: #8992B8;
+  color: var(--texto-gris);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -196,7 +196,7 @@
 
 .aviso-ok {
   margin: 12px 0 0;
-  color: var(--bueno);
+  color: var(--bueno-texto);
   font-size: 14px;
   font-weight: 500;
 }
@@ -292,7 +292,7 @@
 
 .pista {
   margin: -12px 0 14px;
-  color: #8992B8;
+  color: var(--texto-gris);
   font-size: 13px;
 }
 

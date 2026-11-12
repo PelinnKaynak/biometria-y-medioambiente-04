@@ -341,17 +341,31 @@ Funciones principales de `js/mi_cuenta.js`: `nivelOzono()`, `formatearNumero()`,
 
 Desde el 10/11/2026 la web pública sigue el diseño «Inicio · opción A (app)» de Figma:
 
-- `index.html` es la portada. Arriba, «Respira con datos.» con el botón «Ver el mapa» y un móvil con la pantalla de inicio de la app y tres tarjetas (sensor conectado, ozono en Gandia y aviso). Debajo: Qué es AERIS, Cómo funciona, La app AERIS (cuatro pantallas de la app: inicio, Mis datos, previsión de ozono y ruta limpia), Niveles de ozono, Quiénes somos y Preguntas frecuentes. Estilos en `css/portada.css`; la cabecera, las secciones y el pie son los de `css/inicio.css`.
+- `index.html` es la portada (actualizada el 11/11/2026). De arriba abajo:
+    - Portada: «Respira con datos.», el botón «Ver el mapa» y el móvil con la pantalla de inicio de la app. Debajo del texto hay cuatro botones («Prueba los avisos de la app»): al pulsar uno, el móvil vibra y baja ese aviso en la parte de arriba de la pantalla; se esconde a los 5 segundos.
+    - Qué es AERIS: el problema del ozono y por qué hacen falta más sensores. Debajo, un plano de una ciudad de ejemplo con 12 barrios y el interruptor «Solo estaciones oficiales / Con AERIS»: con las estaciones hay datos en 2 barrios y con los portadores en 11 (los barrios con datos se ponen verdes y aparecen los portadores). Los datos del plano están en `PLANO` de `js/portada.js`. Al final, tres datos clave (100 y 180 µg/m³ y las 48 h de previsión).
+    - El proyecto: esquema Sensor → App → Servidor → Base de datos → Web. Al pulsar cada parte se explica qué hace y con qué tecnología. Debajo, los tres pasos.
+    - El sensor: el concepto 4 de la carcasa en tres pestañas. «Cómo es» (anilla, forma de gota, rejilla en espiral, símbolo O₃, canales de aire y ranuras), «Medidas» (vistas frontal, lateral y trasera: 62 × 48 × 22 mm, clip y ventilación trasera) y «Por dentro» (tapa, filtro de polvo, módulo con el sensor SPEC y la placa nRF52840, y carcasa trasera). Cada parte tiene un punto numerado sobre la imagen; al pulsarlo, o al pulsar la parte en la lista, se abre su explicación. «Medidas» y «Por dentro» llevan una frase debajo de la imagen; «Cómo es» no. Las imágenes (`img/sensor-principal.jpg`, `img/sensor-vistas.jpg` e `img/sensor-despiece.jpg`) están recortadas de la lámina del concepto, sin las anotaciones en inglés. Los datos de cada vista están en `VISTAS_SENSOR` de `js/portada.js`.
+    - La app AERIS: cuatro funciones. Al pulsar una, el móvil enseña su pantalla; si no se toca, van pasando solas cada 6 segundos.
+    - Niveles de ozono: un deslizador para probar un valor, que dice el nivel, el consejo y resalta la fila de la tabla.
+    - Planes: Gratuito (0 €), Premium (2,99 € al mes o 24,99 € al año, con selector mensual/anual que calcula el ahorro) y Empresas y ayuntamientos (a medida). Los precios están en `PRECIOS_PREMIUM` de `js/portada.js`.
+    - Quiénes somos: logo de SenseTech, el proyecto y una tarjeta por persona.
+    - Preguntas frecuentes.
+    - Pie oscuro común a todas las páginas (ver el apartado 10).
+    - Las secciones aparecen con una animación suave al bajar. Si el sistema tiene activado «reducir movimiento», no hay animaciones y los avisos y las funciones no pasan solos.
+    - Estilos en `css/portada.css` y comportamiento en `js/portada.js`. Funciones: `siguienteIndice()`, `formatearEuros()`, `precioPremium()`, `porcentajeAhorro()`, `resultadoOzono()`, `barriosDelPlano()`, `barrioCubierto()`, `coberturaRed()`, `mostrarRed()`, `mostrarCapa()`, `mostrarVistaSensor()`, `mostrarPieza()`, `mostrarFuncion()`, `mostrarOzono()`, `mostrarPeriodo()`, `mostrarAviso()` y `lanzarAviso()`.
 - `mapa.html` es el mapa que antes estaba en `index.html` (diseño «Homepage Mapa»), con la franja «Descargar la app».
-- El menú de todas las páginas públicas es Inicio, Mapa y Contaminantes. Mi cuenta enlaza a `mapa.html`.
+- El menú de todas las páginas públicas es Inicio, Mapa y Contaminantes (en la portada, también Planes). Mi cuenta enlaza a `mapa.html`.
+- El menú se queda fijo arriba al bajar (`position: sticky` en `css/inicio.css`, con fondo un poco transparente). En la portada, al bajar le sale una sombra. Los enlaces a secciones (#proyecto, #planes...) dejan sitio para que el menú no tape el título.
 - Las pantallas de la app están en `img/app-inicio.jpg`, `img/app-mis-datos.jpg`, `img/app-prevision.jpg` y `img/app-ruta-limpia.jpg`, exportadas de Figma al doble de tamaño para que se vean nítidas.
-- La app todavía no está publicada, así que «Descargar la app» baja a la sección de la app y allí una nota lo dice.
+- La app todavía no está publicada; lo dice una de las preguntas frecuentes.
 - La portada usa `informacion.js` para la cabecera (Acceder o Mi cuenta y el menú del móvil). El mapa usa `inicio.js`, que solo se arranca si la página tiene `#mapa`.
 
 #### Mapa
 
-- Mapa de Leaflet 1.9.4 con teselas de OpenStreetMap, centrado en las mediciones que haya.
-- Cada medición se pinta como una mancha de color difuminada (el nivel) y un punto que, al pulsarlo, dice el municipio, el valor, si es un sensor ciudadano o una estación oficial y cuándo se midió.
+- Mapa de Leaflet 1.9.4 con teselas de OpenStreetMap.
+- El mapa se abre acercado a Gandia (zoom 12). Con el botón − o pellizcando se puede alejar hasta el zoom 5 para ver toda España.
+- Cada medición se pinta como una mancha de color difuminada de 55 px con el color del nivel. La mancha mide lo mismo en pantalla con cualquier zoom, así que de cerca la de otra ciudad no tapa Gandia. Encima va un punto que, al pulsarlo, dice el municipio, el valor, si es un sensor ciudadano o una estación oficial y cuándo se midió.
 - Botones de contaminante: ozono, NO₂, partículas PM10 y CO. Los sensores de AERIS solo miden ozono, así que los otros tres solo tienen estaciones oficiales.
 - Capas: sensores ciudadanos y estaciones oficiales. En el móvil se abren con el botón de capas que hay al lado del buscador.
 - Buscador de municipios. Si el municipio tiene mediciones, pasa a ser «Tu zona» y el mapa se acerca. Si no, avisa.
@@ -386,13 +400,21 @@ Funciones principales de `js/inicio.js`: `nivelContaminante()`, `distanciaKm()`,
 
 ### 9. Contaminantes, Normativa y Consejos (T012)
 
-Páginas públicas `contaminantes.html`, `normativa.html` y `consejos.html`, según los diseños «Homepage Contaminantes», «Normativa», «Consejos» y sus versiones móviles de Figma. Comparten la cabecera y el pie de la página principal (`css/inicio.css`) y sus estilos están en `css/informacion.css`.
+Páginas públicas `contaminantes.html`, `normativa.html` y `consejos.html`, según los diseños «Homepage Contaminantes», «Normativa», «Consejos» y sus versiones móviles de Figma. Comparten la cabecera de la página principal (`css/inicio.css`), el pie común (`css/pie.css`) y sus estilos están en `css/informacion.css`.
 
 - Contaminantes: explica cómo se forma el ozono y tiene una tarjeta por contaminante. Al pulsar una tarjeta, la tabla «niveles y qué hacer» cambia a ese contaminante, con los mismos límites que el mapa (`LIMITES_NIVEL` de `inicio.js`) y un consejo por nivel. Enlaza con Normativa y Consejos.
 - Normativa: valores del ozono (100 de la OMS, 120 valor objetivo, 180 umbral de información, 240 umbral de alerta), cómo los usa AERIS y enlaces a los textos oficiales (Directiva 2008/50/CE, RD 102/2011, Ley 34/2007 y guías de la OMS de 2021). Nota sobre la Directiva (UE) 2024/2881.
 - Consejos: qué hacer al moverse, en casa y cuando el ozono está alto, y la franja «Descargar la app».
 
 `js/informacion.js` reutiliza `LIMITES_NIVEL`, `NIVELES` y `pintarCabecera()` de `inicio.js`, que por eso solo arranca el mapa si la página tiene `#mapa`. Funciones: `filasNiveles()`, `pintarNiveles()` e `iniciarCabeceraInfo()`.
+
+### 10. Pie común y contraste del texto
+
+- Todas las páginas públicas con cabecera (portada, mapa, Contaminantes, Normativa, Consejos y Mi cuenta) tienen el mismo pie oscuro: logo, frase, tres columnas de enlaces y «© 2026 SenseTech · AERIS». Sus estilos están en `css/pie.css` y cada página lo carga después de su hoja propia.
+- En la portada los enlaces del pie a sus secciones son anclas (`#planes`). En el resto de páginas llevan delante `index.html` (`index.html#planes`).
+- En Mi cuenta la columna «Tu cuenta» solo enlaza a Mi cuenta, porque ya hay sesión.
+- Las páginas de acceso (login, registro, recuperar y restablecer) no llevan pie, porque son una tarjeta centrada sin menú.
+- Los textos secundarios usan colores con un contraste de al menos 4,5:1 sobre blanco y sobre el fondo `#F5F6FA` (nivel AA de la WCAG 2.1). En `css/estilos.css` hay cuatro variables para texto: `--texto-gris` (#6A6585, sustituye al antiguo #8992B8), `--bueno-texto` (#2B735B), `--moderado-texto` (#85600F) y `--malo-texto` (#B5414A). Los colores de nivel de siempre (`--bueno`, `--moderado`, `--malo`) se siguen usando para puntos, barras y manchas del mapa, pero no para texto.
 
 ## Reglas generales
 
@@ -432,3 +454,5 @@ Páginas públicas `contaminantes.html`, `normativa.html` y `consejos.html`, seg
 - La cabecera de las tres páginas de información cambia con la sesión y abre el menú.
 - La portada: menú, enlaces de «Ver el mapa» y «Cómo funciona», las cuatro funciones de la app con su imagen y que no cargue el mapa.
 - Todas las páginas públicas enlazan a Inicio, Mapa y Contaminantes.
+- Pie y contraste (`pie_y_contraste.test.js`): las seis páginas tienen el pie con tres columnas y cargan `pie.css`, fuera de la portada los enlaces a secciones llevan `index.html#`, y los colores de texto de `estilos.css` llegan a 4,5:1 sobre blanco y sobre el fondo.
+- Portada interactiva (`portada.test.js`): esquema del proyecto, funciones de la app, probador de ozono en los límites, precios mensual y anual con el ahorro, que los botones de avisos bajen el suyo y lo escondan a los 5 segundos, y las tres vistas del sensor con sus puntos, el plano de cobertura (2 barrios con estaciones y 11 con AERIS) y los enlaces del pie.

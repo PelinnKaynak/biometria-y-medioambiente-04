@@ -105,7 +105,7 @@
 
 .elemento-ozono { color: var(--morado); }
 
-.operador { margin-top: 14px; color: #8992B8; font-size: 20px; }
+.operador { margin-top: 14px; color: var(--texto-gris); font-size: 20px; }
 
 .circulo {
     display: flex;
@@ -170,7 +170,7 @@
 
 .formula-sensor { background: var(--morado); color: var(--blanco); }
 
-.origen { color: #8992B8; font-size: 14px; }
+.origen { color: var(--texto-gris); font-size: 14px; }
 .origen-sensor { color: var(--morado); font-weight: 600; }
 
 .niveles { max-width: 1106px; padding: 0; overflow: hidden; }
@@ -181,7 +181,7 @@
 
 .tabla-info th {
     padding: 12px;
-    color: #8992B8;
+    color: var(--texto-gris);
     font-size: 14px;
     font-weight: 400;
     text-align: left;
@@ -221,7 +221,7 @@
 
 .tarjeta-enlace .icono { width: 28px; height: 28px; background-color: transparent; background-size: 24px; }
 .tarjeta-enlace strong { font-size: 18px; font-weight: 600; }
-.tarjeta-enlace .descripcion { grid-column: 1 / -1; margin: 14px 0 24px; color: #8992B8; font-size: 14px; font-weight: 400; }
+.tarjeta-enlace .descripcion { grid-column: 1 / -1; margin: 14px 0 24px; color: var(--texto-gris); font-size: 14px; font-weight: 400; }
 .tarjeta-enlace .mas { grid-column: 1 / -1; color: var(--texto); font-size: 16px; font-weight: 400; text-decoration: underline; }
 .tarjeta-enlace:hover .mas { color: var(--morado); }
 
@@ -240,7 +240,7 @@
 .tabla-normativa td:first-child { display: flex; align-items: center; gap: 14px; width: 236px; }
 .tabla-normativa .punto { width: 9px; height: 9px; }
 .tabla-normativa .valor { font-size: 17px; font-weight: 500; }
-.tabla-normativa small { display: block; color: #8992B8; font-size: 12px; font-weight: 400; }
+.tabla-normativa small { display: block; color: var(--texto-gris); font-size: 12px; font-weight: 400; }
 .tabla-normativa .norma { width: 246px; color: var(--texto-suave); font-size: 13px; }
 
 .como-usa { padding: 26px 20px; }
@@ -264,11 +264,11 @@
 }
 
 .tarjeta-texto strong { font-size: 16px; font-weight: 600; }
-.tarjeta-texto span { color: #8992B8; font-size: 13px; font-weight: 400; }
+.tarjeta-texto span { color: var(--texto-gris); font-size: 13px; font-weight: 400; }
 .tarjeta-texto .externo { color: var(--morado); font-weight: 500; text-decoration: underline; }
 .tarjeta-texto .externo::after { content: " ↗"; }
 
-.nota-pie { margin: 36px 0 0; color: #8992B8; font-size: 13px; }
+.nota-pie { margin: 36px 0 0; color: var(--texto-gris); font-size: 13px; }
 
 /* ---------- Consejos ---------- */
 
@@ -333,7 +333,7 @@
     .niveles td { width: auto !important; padding: 0; border: none; }
     .niveles td.rango::before { content: "\00a0· "; }
     .niveles td.rango::after { content: " " attr(data-unidad); }
-    .niveles td:last-child { grid-column: 1 / -1; margin-top: 2px; color: #8992B8; font-size: 14px; }
+    .niveles td:last-child { grid-column: 1 / -1; margin-top: 2px; color: var(--texto-gris); font-size: 14px; }
 
     .enlaces-info { grid-template-columns: 1fr; gap: 16px; margin-top: 18px; }
     .tarjeta-enlace { padding: 16px; }

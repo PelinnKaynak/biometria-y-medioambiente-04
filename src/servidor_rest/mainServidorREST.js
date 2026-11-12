@@ -1,7 +1,7 @@
 // ---------------------------------------------------------------------------
 // Fichero:     mainServidorREST.js
 // Descripción: Programa principal del servidor REST. Lee la configuración de
-//              .env, conecta la lógica con MySQL y escucha en el puerto 8080.
+//              ..env, conecta la lógica con MySQL y escucha en el puerto 8080.
 //              Uso:  npm start   (desde src/servidor_rest)
 //              Diseño en doc/servidor_rest_design.md. Tarea T016.
 // Autores:     Equipo 04 – SenseTech
@@ -36,11 +36,11 @@ async function main() {
     });
 
     // Clave secreta que firma los tokens de sesión y de recuperación.
-    // En producción hay que poner una propia y larga en .env (CLAVE_TOKENS).
+    // En producción hay que poner una propia y larga en ..env (CLAVE_TOKENS).
     let claveTokens = entorno.CLAVE_TOKENS;
     if (!claveTokens) {
         claveTokens = 'clave-de-desarrollo-aeris-cambiar-en-produccion';
-        console.warn('Aviso: falta CLAVE_TOKENS en .env; se usa una clave de desarrollo.');
+        console.warn('Aviso: falta CLAVE_TOKENS en ..env; se usa una clave de desarrollo.');
     }
 
     let logica;

@@ -272,7 +272,7 @@
     animation: flotar 7s ease-in-out infinite;
 }
 
-.tarjeta-flotante small { display: block; color: #8992B8; font-size: 13px; font-weight: 500; }
+.tarjeta-flotante small { display: block; color: var(--texto-gris); font-size: 13px; font-weight: 500; }
 
 .tarjeta-sensor { top: 200px; left: 0; animation-delay: -2s; }
 .tarjeta-ozono { top: 400px; left: 360px; animation-delay: -4s; }
@@ -528,8 +528,6 @@
     width: 100%;
     height: auto;
     mix-blend-mode: multiply;
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent), linear-gradient(180deg, transparent, #000 5%, #000 95%, transparent);
-    -webkit-mask-composite: source-in;
     mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent), linear-gradient(180deg, transparent, #000 5%, #000 95%, transparent);
     mask-composite: intersect;
 }
@@ -758,7 +756,7 @@
 
 .selector-periodo-planes button.activo { background: var(--morado); color: var(--blanco); }
 
-.ahorro { padding: 2px 7px; border-radius: 8px; background: #E6F2EE; color: var(--bueno); font-size: 12px; }
+.ahorro { padding: 2px 7px; border-radius: 8px; background: #E6F2EE; color: var(--bueno-texto); font-size: 12px; }
 .activo .ahorro { background: rgba(255, 255, 255, 0.2); color: var(--blanco); }
 
 .planes {
@@ -884,42 +882,6 @@
 .pagina-portada .preguntas details p { font-size: 17px; }
 .pagina-portada .preguntas details[open] p { animation: entrar 0.3s ease; }
 
-/* ---------- Pie ---------- */
-
-.pie-portada { background: #2A2138; color: #CFC6DE; }
-
-.pie-contenido {
-    display: grid;
-    grid-template-columns: 1fr 1.6fr;
-    gap: 60px;
-    max-width: 1160px;
-    margin: 0 auto;
-    padding: 72px 42px 48px;
-}
-
-.pie-logo { width: 150px; filter: brightness(0) invert(1); opacity: 0.95; }
-.pie-marca p { max-width: 320px; margin: 18px 0 0; font-size: 16px; line-height: 1.6; }
-
-.pie-columnas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
-.pie-columnas h2 { margin: 0 0 16px; color: var(--blanco); font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.pie-columnas ul { margin: 0; padding: 0; list-style: none; }
-.pie-columnas li { margin-bottom: 12px; }
-.pie-columnas a { color: #CFC6DE; font-size: 16px; text-decoration: none; transition: color 0.2s; }
-.pie-columnas a:hover { color: var(--blanco); text-decoration: underline; }
-
-.pie-final {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
-    max-width: 1160px;
-    margin: 0 auto;
-    padding: 22px 42px 28px;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
-    font-size: 14px;
-}
-
-
 /* ---------- Pantallas medianas ---------- */
 
 @media (max-width: 1300px) {
@@ -931,12 +893,17 @@
 }
 
 @media (max-width: 1000px) {
+    /* En tablet el texto y el móvil van uno debajo del otro */
+    .portada { grid-template-columns: 1fr; min-height: 0; padding: 56px 40px 0; }
+    .portada-texto { max-width: 680px; }
+    .portada-visual { justify-self: center; margin: 0 auto -110px; transform: scale(0.8); transform-origin: top center; }
     .portada h1 { font-size: 64px; }
     .planes { grid-template-columns: 1fr; max-width: 520px; }
     .visor-sensor { grid-template-columns: 1fr; gap: 28px; }
     .app-interactiva { grid-template-columns: 1fr 240px; gap: 40px; }
     .comparador { grid-template-columns: 1fr; }
     .telefono-app { width: 240px; }
+    .tarjeta-ozono { left: auto; right: 0; }
 }
 
 /* ---------- Móvil ---------- */
@@ -959,15 +926,13 @@
     .probar-avisos { margin-top: 24px; padding-top: 20px; }
     .boton-aviso { font-size: 14px; }
     .portada-visual { width: 560px; margin: 8px auto -150px; left: 50%; transform: translateX(-50%) scale(0.62); transform-origin: top center; }
+    .tarjeta-ozono { left: auto; right: 0; }
 
     .datos-clave { grid-template-columns: 1fr; gap: 12px; margin-top: 36px; }
     .comparador { grid-template-columns: 1fr; gap: 24px; margin-top: 40px; padding: 20px; }
     .comparador-texto h3 { font-size: 20px; }
     .interruptor-red button { font-size: 14px; padding: 10px 6px; }
     .contador-barrios strong { font-size: 32px; }
-    .pie-contenido { grid-template-columns: 1fr; gap: 36px; padding: 48px 16px 32px; }
-    .pie-columnas { grid-template-columns: 1fr 1fr; gap: 24px; }
-    .pie-final { padding: 18px 16px 24px; flex-direction: column; }
     .dato-clave { padding: 20px; }
     .dato-clave strong { font-size: 30px; }
 
@@ -1013,4 +978,14 @@
     .avatar-equipo { width: 56px; height: 56px; font-size: 22px; }
 
     .pagina-portada .preguntas summary { font-size: 17px; }
+}
+
+/* ---------- Móviles estrechos (360 px) ---------- */
+
+@media (max-width: 380px) {
+    .portada-visual { transform: translateX(-50%) scale(0.58); margin-bottom: -170px; }
+}
+
+@media (max-width: 340px) {
+    .portada-visual { transform: translateX(-50%) scale(0.54); margin-bottom: -195px; }
 }

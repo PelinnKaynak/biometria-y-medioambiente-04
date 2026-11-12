@@ -107,6 +107,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 120px; }
 
 .buscador input {
     flex: 1;
+    min-width: 0;
     height: 41px;
     padding: 0 14px 0 38px;
     border: 1px solid var(--borde);
@@ -132,7 +133,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 120px; }
     padding: 6px 10px;
     border-radius: 8px;
     background: var(--blanco);
-    color: var(--malo);
+    color: var(--malo-texto);
     font-size: 13px;
     font-weight: 500;
 }
@@ -208,12 +209,12 @@ html { scroll-behavior: smooth; scroll-padding-top: 120px; }
 }
 
 .nivel-zona { margin: 24px 0 14px; font-size: 24px; font-weight: 600; }
-.nivel-zona.nivel-bueno { color: var(--bueno); }
-.nivel-zona.nivel-moderado { color: #C8961C; }
-.nivel-zona.nivel-malo { color: var(--malo); }
+.nivel-zona.nivel-bueno { color: var(--bueno-texto); }
+.nivel-zona.nivel-moderado { color: var(--moderado-texto); }
+.nivel-zona.nivel-malo { color: var(--malo-texto); }
 .nivel-zona.nivel-muy-malo { color: var(--muy-malo); }
 
-.valor-zona { margin: 0 0 18px; color: #8992B8; font-size: 14px; }
+.valor-zona { margin: 0 0 18px; color: var(--texto-gris); font-size: 14px; }
 .hora-zona { margin: 0 0 28px; font-size: 16px; }
 .hora-zona:empty { display: none; }
 
@@ -410,13 +411,19 @@ html { scroll-behavior: smooth; scroll-padding-top: 120px; }
 
 /* ---------- Pie ---------- */
 
-.pie-inicio { padding: 20px 42px; background: #ECEAF2; color: var(--texto-suave); font-size: 13px; }
 
 /* ---------- Pantallas medianas ---------- */
 
 @media (max-width: 1100px) {
     .cabecera-inicio { gap: 40px; padding: 0 28px; }
     .menu-inicio { gap: 28px; }
+}
+
+/* Entre 801 y 960 px caben los cuatro enlaces si se juntan un poco */
+@media (max-width: 960px) {
+    .cabecera-inicio { gap: 24px; padding: 0 20px; }
+    .logo-inicio img { width: 130px; }
+    .menu-inicio { gap: 18px; }
 }
 
 /* ---------- Móvil (diseño de 390 px) ---------- */
@@ -484,7 +491,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 120px; }
 
     .nivel-zona { margin: 14px 0 6px; font-size: 22px; }
     .valor-zona { margin-bottom: 4px; }
-    .hora-zona { margin-bottom: 14px; color: #8992B8; font-size: 14px; }
+    .hora-zona { margin-bottom: 14px; color: var(--texto-gris); font-size: 14px; }
 
     .leaflet-bottom.leaflet-right { bottom: 210px; }
     .leyenda-mapa { display: none; }
@@ -503,5 +510,4 @@ html { scroll-behavior: smooth; scroll-padding-top: 120px; }
     .equipo { grid-template-columns: 1fr; }
     .texto-seccion p { font-size: 16px; }
 
-    .pie-inicio { padding: 16px; }
 }
