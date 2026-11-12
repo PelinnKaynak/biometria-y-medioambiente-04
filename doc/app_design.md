@@ -268,14 +268,14 @@ LoginActivity:               onCreate(), pulsarAcceder(), enviarInicioSesion(), 
                              mostrarEnviando(), abrirInicio()
 RecuperarContrasenaActivity: onCreate(), pulsarEnviar(), enviarSolicitud(), mostrarErrorCorreo()
 CorreoEnviadoActivity:       onCreate(), reenviar()
-InicioActivity (provisional hasta T006): onCreate()      (con la barra de navegación, T010)
+InicioActivity: ver la sección 3c (T006)
 ```
 
 ---
 
 ## 3. Perfil, editar mis datos y barra de navegación (T010)
 
-Pantalla de Figma «perfil» y componente «barra navegacion». La barra está en las pantallas principales (por ahora Inicio, Información y Perfil); Mapa y Mis datos llegan en otras tareas y de momento no hacen nada al pulsarlas.
+Pantalla de Figma «perfil» y componente «barra navegacion». La barra está en las pantallas principales (Inicio, Información y Perfil). Mapa y Mis datos llegan en otras tareas; hasta entonces abren la pantalla provisional `ProximamenteActivity` (T006).
 
 ```text
 InicioActivity <--barra--> PerfilActivity
@@ -421,7 +421,7 @@ Pestanya     ∈ { INICIO, MAPA, MIS_DATOS, INFO, PERFIL }
                                     |    B <--
                                     |
                                     |    pestanya: Pestanya --> pantallaDe() --x
-                                    |    Class | null <--          (null = aún no hecha)
+                                    |    Class <--          (Mapa y Mis datos: ProximamenteActivity, T006)
                                     |
                                     -------------------------------------------------
 ```
@@ -508,7 +508,139 @@ InformacionActivity (NUEVA): onCreate(), onResume(), onPause(), prepararConsejo(
 - **Consejo de hoy:** cinco consejos (`info_consejos`). Cada día empieza por uno distinto (`ConsejosDelDia.deHoy()` con el día del año); cambia solo cada 7 s (solo mientras la pantalla se ve: `onResume()` / `onPause()`) o al tocarlo, con un fundido (`TextSwitcher`). Los puntos de abajo marcan cuál se ve.
 - **Entrada:** al abrir la pantalla, el consejo y las tarjetas de «El aire que respiras» aparecen uno detrás de otro (fundido y desplazamiento hacia arriba, 60 ms entre cada una).
 
----
+## 3c. Pantalla de inicio (T006 · H006)
+
+Pantallas de Figma «inicio», «inicio (sin sensor)» e «inicio · notificaciones abiertas». Se sigue el diseño de Figma (textos, tarjetas y orden) y se añaden animaciones. Es la pantalla que se abre con sesión iniciada y la pestaña «Inicio» de la barra.
+
+```text
+InicioActivity.onResume() --> LogicaFakeInicio.obtenerUltimasMediciones()   (GET /ultimasMediciones?cantidad=5, T017)
+                          --> LogicaFakePerfil.obtenerUsuario()             (GET /usuarioActual: ¿tiene sensor?)
+InicioActivity --(«Vincular», sin sensor)--> VincularSensorActivity (extra desdePerfil: al terminar vuelve a Inicio)
+InicioActivity --(«Ver» / «Ver más» / «Mejor hora para salir» / «Mis lugares»)--> ProximamenteActivity
+InicioActivity --(campana)--> panel de notificaciones (Aviso.calcular() o los de ejemplo)
+InicioActivity --(tocar una de las últimas mediciones)--> elegir() (esa medición pasa al arco)
+barra («Mapa» / «Mis datos») --> ProximamenteActivity
+```
+
+### Tipos
+
+```text
+Medicion: { valor: R (µg/m³), momento: Z (ms desde 1970, UTC) }
+Seccion ∈ { MAPA, MIS_DATOS, PREVISION, MIS_LUGARES, MI_SENSOR }     // secciones aún no hechas
+Aviso: { tipo ∈ { CONTAMINACION, BATERIA, DESCONECTADO }, titulo: Text, texto: Text, momento: Z, clave: Text }
+```
+
+### Clase Medicion (NUEVA)
+
+```text
+                                    --------- Medicion -----------------------------
+                                    |
+                                --> nivel() --x
+  NivelOzono                    <-- |
+                                    |
+                                --> valorRedondeado() --x
+  Z                             <-- |
+                                    |
+  cuerpo: Text                  --> listaDesdeJSON() --x
+  [Medicion] | null             <-- |     lee [{"valor", "fecha"}] ("fecha" en ISO o ms),
+                                    |     salta las no válidas, de la más nueva a la más antigua
+                                    ------------------------------------------------
+```
+
+### Clase TiempoTranscurrido (NUEVA)
+
+```text
+                                    --------- TiempoTranscurrido -------------------
+                                    |
+  momento: Z, ahora: Z          --> haceCuanto() --x
+  Text                          <-- |     «ahora mismo», «hace 5 min», «hace 2 h», «hace 3 días»
+                                    |
+  momento: Z, ahora: Z          --> esAntigua() --x
+  B                             <-- |     más de 1 hora (H006)
+                                    |
+  momento: Z, zona: ZoneId      --> hora() --x
+  Text                          <-- |     «18:42»
+                                    |
+  momento: Z, ahora: Z,
+  zona: ZoneId                  --> horaODia() --x
+  Text                          <-- |     «18:42» si es hoy, «Ayer», o «09/11»
+                                    ------------------------------------------------
+```
+
+### Clase Aviso (NUEVA)
+
+```text
+  mediciones: [Medicion],
+  tieneSensor: B, ahora: Z      --> calcular() --x
+  [Aviso]                       <--       última > 180 µg/m³ → «Contaminación alta»;
+                                          con sensor y última de más de 1 h → «Sensor desconectado»
+```
+
+### Clase AvisosLeidos (NUEVA)
+
+```text
+  contexto: Context             --> leer() --x          {Text} <--   claves de los avisos leídos
+  contexto: Context, claves: [Text] --> marcar() -->
+  avisos: [Aviso], leidos: {Text} --> Aviso.cuantosSinLeer() --x      N <--
+```
+
+### Clase EfectoPulsar (NUEVA)
+
+```text
+  vistas: [View]                --> aplicar() -->       al pulsar se hunde (0,97) y al soltar vuelve con rebote
+```
+
+### Clase LogicaFakeInicio (NUEVA)
+
+```text
+                                    --------- LogicaFakeInicio ---------------------
+                                    |
+  token: Text                   --> obtenerUltimasMediciones() -->
+  RespuestaMediciones           <-- |     USAR_DATOS_DE_EJEMPLO: las de ejemplo;
+                                    |     si no, GET /ultimasMediciones?cantidad=5
+                                    |
+                                    |    ahora: Z --> medicionesDeEjemplo() --x
+                                    |    [Medicion] <--
+                                    |
+                                    |    ahora: Z --> avisosDeEjemplo() --x
+                                    |    [Aviso] <--         (los 3 del Figma)
+                                    |
+                                    |    codigo: Z, cuerpo: Text --> notificarMediciones() --x
+                                    ------------------------------------------------
+
+RespuestaMediciones: medicionesObtenidas(mediciones: [Medicion], deEjemplo: B), sesionCaducada(), error(mensaje: Text)
+```
+
+### Clase IndicadorCalidad (NUEVA, vista)
+
+```text
+  valor: R, color: Z, animar: B --> mostrar() -->      (arco gris de 220° y la parte del valor, de 0 a 300 µg/m³, con punto blanco en la punta;
+                                                        pasa del valor y color anteriores al nuevo)
+                                --> vaciar() -->
+  valor: R                      --> fraccionDe() --x   R <--
+```
+
+### Pantallas
+
+```text
+InicioActivity (MODIFICADA): onCreate(), onResume(), onPause(), cargarMediciones(), cargarSensor(),
+                             mostrarMediciones(), elegir(), refrescarTextos(), mostrarSensor(), mostrarAccesos(),
+                             actualizarAvisos(), abrirAvisos(), cerrarAvisos(), mostrarError(), contarHasta(),
+                             animarEntrada(), colorDe(), nombreDe(), mensajeDe(), marcarLeidos(), cerrarSesion()
+ProximamenteActivity (NUEVA, provisional): onCreate(), intentPara(), seccionDe()
+```
+
+- **Cabecera:** «Bienvenido», «Así está el aire que respiras ahora.» y la campana con el número de avisos (insignia violeta). Cuando hay avisos nuevos la insignia aparece con un rebote y la campana se balancea.
+- **Calidad del aire ahora:** la medición elegida (al abrir, la última) en el arco (`IndicadorCalidad`), con su valor en µg/m³, la calidad («Buena», «Moderada», «Mala», «Muy mala»; mismos colores que «Información» y el mapa de la web), un consejo según el nivel y «Medido hace 4 min · 18:42». Al abrir la pantalla el arco se llena y el número sube de 0 al valor (0,9 s). Si la última medición tiene más de 1 hora sale el aviso amarillo «No hay datos nuevos desde hace 2 h…» (H006). Sin mediciones: arco vacío y «Todavía no hay mediciones…». Sin conexión: el error en rojo y «Reintentar».
+- **Últimas mediciones:** se piden 5: la última va en el arco («ahora») y las 4 anteriores en cajas (valor y hora) que entran una detrás de otra con un pequeño rebote. Al tocar una, se marca (borde violeta y una rayita del color de su nivel) y el arco, el número, la calidad y «Medido hace…» pasan a esa medición; el título cambia de «Calidad del aire ahora» a «Calidad del aire a las 15:19» (con un fundido) y aparece el botón «Ahora» arriba a la derecha; «Ahora» o tocar otra vez la caja vuelve a la última. Con sensor el título es «Últimas mediciones (µg/m³)»; sin sensor, «Últimas horas en tu zona (µg/m³)». «Ver más» abrirá «Mis datos».
+- **Mi sensor / Vincular:** con `GET /usuarioActual` se sabe si hay sensor (`DatosUsuario.tieneSensor()`; el servidor enviará el sensor con T017). Con sensor: «Mi sensor» con «Conectado» (punto verde con un halo que late) o «Desconectado» (gris, última medición de más de 1 hora), «Batería: 78 %» (solo con los datos de ejemplo: el sensor aún no la envía) y «Ver», que abre la pantalla provisional «Mi sensor». Sin sensor: «¿Tienes un sensor AERIS?» con «Vincular». Al volver de vincular, `onResume()` recarga y cambia la tarjeta.
+- **Accesos:** «Mejor hora para salir» (con los datos de ejemplo: «Hoy de 8:00 a 10:00 · pico a las 14:00») y «Mis lugares» (con los de ejemplo: «● Casa: Buena  ● Trabajo: Moderada») abren `ProximamenteActivity` hasta que se hagan sus tareas.
+- **Notificaciones:** la campana abre el panel de Figma: velo oscuro, el panel crece desde la campana y los avisos entran uno detrás de otro (título, texto y hora o «Ayer»). Los no leídos llevan un punto violeta a la izquierda y la insignia de la campana cuenta solo esos. Tocar un aviso lo marca como leído (el punto se encoge y se va); al cerrar el panel (tocar fuera o «atrás») se marcan todos. Lo leído se guarda en el teléfono por la clave de cada aviso (`AvisosLeidos`, SharedPreferences); los 3 avisos de ejemplo no se guardan, así que al volver a abrir la app salen otra vez sin leer. Con los datos de ejemplo son los 3 avisos del Figma; con datos reales, `Aviso.calcular()`.
+- **Pulsar:** las filas, las cajas y los botones se hunden un poco al pulsarlos (`EfectoPulsar`).
+- **Textos de tiempo:** «hace X min» se actualiza cada minuto mientras la pantalla se ve (`onResume()` / `onPause()`).
+- **Datos de ejemplo (hasta T017):** el servidor aún no tiene `GET /ultimasMediciones`, así que `LogicaFakeInicio.USAR_DATOS_DE_EJEMPLO = true` devuelve los datos del Figma: 5 mediciones (84 ahora y 90, 102, 96 y 88 µg/m³, una cada 20 min), la batería, la mejor hora, Mis lugares y los 3 avisos. Como el servidor aún no envía el sensor del usuario, `SENSOR_DE_EJEMPLO = true` da por vinculado un sensor de ejemplo para ver «Mi sensor» (también sin conexión); para ver la tarjeta «Vincular», ponerlo a `false`. Con T017 se ponen los dos a `false`. Respuesta esperada: `200` con `[{"valor": 84, "fecha": "2026-11-12T17:42:00Z"}, ...]`; `401` sesión caducada.
+- **Entrada:** las tarjetas aparecen una detrás de otra (fundido y desplazamiento, 70 ms entre cada una); la de Mi sensor / Vincular entra a la vez que las demás con lo que se sabía (lo que respondió el servidor la última vez, guardado en el teléfono; hasta T017, el sensor de ejemplo) y luego el servidor la confirma o la cambia.
+- **ProximamenteActivity:** título, icono, etiqueta «Próximamente» y un texto de la sección, con la barra de navegación (la pestaña marcada si se abrió desde la barra; desde un acceso de Inicio no se marca ninguna y tiene flecha de volver).
 
 ## 4. Aclaraciones del diseño
 
@@ -526,10 +658,10 @@ InformacionActivity (NUEVA): onCreate(), onResume(), onPause(), prepararConsejo(
 - **Cerrar sesión:** `Sesion.cerrar()` borra el token del teléfono; el servidor no guarda sesiones.
 - **Login:** `POST /iniciarSesion` con `{"correo", "contrasena"}`. `200` → sesión iniciada; `401` → «Correo o contraseña incorrectos» (mismo mensaje si el correo no existe), se borra la contraseña escrita y no se da acceso.
 - **Recuperar contraseña:** `POST /solicitarRecuperacion` con `{"correo"}`. `200` → el servidor ha enviado un enlace que caduca a los 30 minutos y se abre «Revisa tu correo»; `404` → el correo no tiene cuenta: no se envía nada y la app muestra «No hay ninguna cuenta con este correo.» debajo del campo. «¿No te ha llegado? Reenviar» pide otro enlace.
-- **Tras el registro** se abre `VincularSensorActivity`. No hay «Omitir por ahora» ni «Podrás vincular tu sensor más tarde…»: la pantalla solo ofrece escanear (o escribir) el código y vincular el sensor. La flecha de volver abre el inicio.
+- **Tras el registro** se abre `VincularSensorActivity`: escanear (o escribir) el código y vincular el sensor. Abajo hay un enlace gris «Ahora no, lo vincularé más tarde» que abre el inicio (igual que la flecha de volver); solo sale tras el registro, no desde Perfil ni Inicio. No está en Figma: se añadió para poder seguir sin sensor (por ejemplo, en la demo). El sensor se puede vincular luego desde Inicio o Perfil.
 - **Desde el perfil** (extra `desdePerfil`): volver (o vincular el sensor) cierra la pantalla y se vuelve al perfil, que recarga sus datos en `onResume()`. Todo pasa por `salir()`.
 - **Vincular sensor (T005):** el sensor se vincula escaneando con la cámara el código (DataMatrix) de la etiqueta del sensor de ozono, p. ej. `092021010920 110406 03 2109 -44.75`. «Escanear código» abre el escáner de Google (`play-services-code-scanner`, no hace falta el permiso `CAMERA`). `CodigoSensor.desdeTexto()` separa el texto en número de serie (12 cifras), modelo (6), gas (2, `03` = ozono), fecha AAMM y sensibilidad (nA/ppm); si no tiene esa forma devuelve `null` y se enseña «Este código no es el de un sensor AERIS…» debajo del botón. Si la cámara no funciona, «¿No funciona la cámara? Escribe el código» enseña dos campos, «Número de serie» (12 cifras) y «Sensibilidad (nA/ppm)» (con coma o punto), que se comprueban con `CodigoSensor.desdeCampos()`; los errores salen debajo de cada campo y «Volver a escanear» vuelve al botón. Con un código válido se enseña la tarjeta «Sensor leído» (número de serie, tipo de sensor y fecha) con «Vincular» y «Escanear otro código». La petición al servidor (`POST /vincularSensor` con el número de serie y la sensibilidad) es de T005/T017 y va en `pulsarVincular()` (marcada con «T005»).
-- **Inicio provisional:** `InicioActivity` solo saluda y tiene la barra de navegación; la pantalla de inicio real es T006.
+- **Inicio (T006):** ver la sección 3c.
 - **Perfil (T010):** al abrirse muestra el nombre y el correo guardados en `Sesion` y pide `GET /usuarioActual` (con `Authorization: Bearer <token>`) para mostrar el nombre completo, el correo y el interruptor «Notificaciones». El interruptor sale ya en su posición, sin animación: se recuerda el último valor en `Sesion` (`alertas()` / `guardarAlertas()`) y, cuando llega la respuesta, se coloca con `jumpDrawablesToCurrentState()`. Solo se anima cuando el usuario lo toca.
 - **Interruptor «Notificaciones»:** al cambiarlo se envía `POST /cambiarAlertas` con `{"alertas": true | false}` y se guarda en la columna `alertas` de `Usuarios`. Mientras se guarda no se puede tocar (sin cambiar su aspecto); si falla (sin conexión o error), vuelve a su posición y se muestra el error. Tocar la fila también lo cambia.
 - **Sesión caducada:** si el servidor responde `401` (token caducado o la contraseña ha cambiado), la app cierra la sesión y vuelve a la bienvenida.

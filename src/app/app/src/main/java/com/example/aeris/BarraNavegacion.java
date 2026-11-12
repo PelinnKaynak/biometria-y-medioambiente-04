@@ -4,7 +4,7 @@
 //              (Inicio, Mapa, Mis datos, Info, Perfil), como el componente
 //              «barra navegacion» de Figma. Pinta la pestaña activa en violeta
 //              y abre la pantalla de cada pestaña. Diseño en doc/app_design.md.
-//              Tarea T010 (Info: T009).
+//              Tarea T010 (Info: T009; Mapa y Mis datos provisionales: T006).
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       04/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -32,8 +32,8 @@ public class BarraNavegacion {
     // -----------------------------------------------------------------------
     // actividad: Activity, activa: Pestanya --> conectar() -->
     // What it does: paints the active tab in violet (the others in grey) and
-    //               makes each tab open its screen. Tabs whose screen is not
-    //               done yet do nothing.
+    //               makes each tab open its screen. activa can be null (no
+    //               tab marked: a screen opened from a shortcut).
     // -----------------------------------------------------------------------
     public static void conectar(Activity actividad, Pestanya activa) {
         conectarPestanya(actividad, activa, Pestanya.INICIO,
@@ -63,8 +63,9 @@ public class BarraNavegacion {
     // -----------------------------------------------------------------------
     // pestanya: Pestanya --> pantallaDe() --x
     // Class | null <--
-    // What it does: returns the screen of the tab, or null if it is not done
-    //               yet (Mapa and Mis datos come in other tasks).
+    // What it does: returns the screen of the tab. Mapa and Mis datos are
+    //               done in other tasks: until then they open the temporary
+    //               screen ProximamenteActivity (T006).
     // -----------------------------------------------------------------------
     static Class<? extends Activity> pantallaDe(Pestanya pestanya) {
         switch (pestanya) {
@@ -75,7 +76,7 @@ public class BarraNavegacion {
             case PERFIL:
                 return PerfilActivity.class;
             default:
-                return null;
+                return ProximamenteActivity.class;
         }
     }
 
@@ -110,11 +111,13 @@ public class BarraNavegacion {
             return;
         }
         Class<? extends Activity> pantalla = pantallaDe(destino);
-        if (pantalla == null) {
-            return;     // pantalla aún no hecha: la pestaña no hace nada
-        }
         Intent intent = new Intent(actividad, pantalla);
         intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+        ProximamenteActivity.Seccion seccion = ProximamenteActivity.seccionDe(destino);
+        if (pantalla == ProximamenteActivity.class && seccion != null) {
+            intent.putExtra(ProximamenteActivity.EXTRA_SECCION, seccion.name());
+            intent.putExtra(ProximamenteActivity.EXTRA_PESTANYA, destino.name());
+        }
         if (destino == Pestanya.INICIO) {
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         }

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cuadrado verde grisáceo detrás del icono de cada aviso (Figma). T006 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/aviso_icono_fondo" />
+    <corners android:radius="10dp" />
+</shape>

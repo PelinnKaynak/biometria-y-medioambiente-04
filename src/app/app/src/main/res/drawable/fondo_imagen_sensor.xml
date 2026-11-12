@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fondo redondeado lila suave de la foto del sensor en las tarjetas de Inicio. T006 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/info_lila_suave" />
+    <corners android:radius="14dp" />
+</shape>

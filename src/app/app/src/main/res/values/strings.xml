@@ -41,6 +41,7 @@
     <string name="vincular_error_codigo">Este código no es el de un sensor AERIS. Escanea el código de la etiqueta del sensor.</string>
     <string name="vincular_error_camara">No se ha podido abrir la cámara. Inténtalo de nuevo.</string>
     <string name="vincular_boton">Vincular</string>
+    <string name="vincular_mas_tarde">Ahora no, lo vincularé más tarde</string>
 
     <!-- Permiso de red local (Android 17) -->
     <string name="permiso_red_denegado">AERIS necesita permiso para conectar con dispositivos de la red local (el servidor).</string>
@@ -74,9 +75,58 @@
     <string name="enviado_reenviar">¿No te ha llegado? <u>Reenviar</u></string>
     <string name="enviado_reenviado">Te hemos enviado otro enlace.</string>
 
-    <!-- Pantalla de inicio provisional (hasta T006) -->
-    <string name="inicio_saludo">Hola, %1$s</string>
-    <string name="inicio_texto">Has iniciado sesión. La pantalla de inicio con la calidad del aire llega en la tarea T006. Tu perfil y «Cerrar sesión» están en la pestaña Perfil de abajo.</string>
+    <!-- Pantalla de inicio (T006) -->
+    <string name="inicio_titulo">Bienvenido</string>
+    <string name="inicio_subtitulo">Así está el aire que respiras ahora.</string>
+    <string name="inicio_notificaciones">Notificaciones</string>
+    <string name="inicio_sin_notificaciones">No tienes notificaciones.</string>
+    <string name="inicio_calidad_titulo">Calidad del aire ahora</string>
+    <string name="inicio_ahora">Ahora</string>
+    <string name="inicio_calidad_titulo_hora">Calidad del aire a las %1$s</string>
+    <string name="inicio_valor">%1$d µg/m³</string>
+    <string name="inicio_sin_valor">— µg/m³</string>
+    <string name="inicio_momento">Medido %1$s · %2$s</string>
+    <string name="inicio_calidad_buena">Buena</string>
+    <string name="inicio_calidad_moderada">Moderada</string>
+    <string name="inicio_calidad_mala">Mala</string>
+    <string name="inicio_calidad_muy_mala">Muy mala</string>
+    <string name="inicio_mensaje_bueno">El aire es seguro para actividades al aire libre.</string>
+    <string name="inicio_mensaje_moderado">Si eres sensible, evita el ejercicio intenso al aire libre.</string>
+    <string name="inicio_mensaje_malo">Mejor reducir el ejercicio al aire libre.</string>
+    <string name="inicio_mensaje_muy_malo">Reduce el tiempo al aire libre y cierra las ventanas.</string>
+    <string name="inicio_sin_mediciones">Todavía no hay mediciones en tu zona.</string>
+    <string name="inicio_sin_mediciones_sensor">Tu sensor aún no ha enviado ninguna medición.</string>
+    <string name="inicio_aviso_antigua">No hay datos nuevos desde %1$s. El valor puede no ser el actual.</string>
+    <string name="inicio_reintentar">Reintentar</string>
+    <string name="inicio_ultimas_mediciones">Últimas mediciones (µg/m³)</string>
+    <string name="inicio_ultimas_zona">Últimas horas en tu zona (µg/m³)</string>
+    <string name="inicio_ver_mas"><u>Ver más</u></string>
+    <string name="inicio_mi_sensor">Mi sensor</string>
+    <string name="inicio_sensor_conectado">Conectado</string>
+    <string name="inicio_sensor_desconectado">Desconectado</string>
+    <string name="inicio_bateria">Batería: %1$d %%</string>
+    <string name="inicio_ver">Ver</string>
+    <string name="inicio_vincular_titulo">¿Tienes un sensor AERIS?</string>
+    <string name="inicio_vincular_texto">Vincúlalo para medir el aire que respiras en tus recorridos.</string>
+    <string name="inicio_vincular">Vincular</string>
+    <string name="inicio_prevision_titulo">Mejor hora para salir</string>
+    <string name="inicio_prevision_texto">Consulta la previsión del aire de hoy</string>
+    <string name="inicio_lugares_titulo">Mis lugares</string>
+    <string name="inicio_lugares_texto">Guarda casa, el trabajo y tus sitios</string>
+    <string name="inicio_lugar_nivel">%1$s: %2$s</string>
+
+    <!-- Secciones aún no hechas (pantalla provisional, T006) -->
+    <string name="proximamente_etiqueta">Próximamente</string>
+    <string name="proximamente_mapa">Mapa</string>
+    <string name="proximamente_mapa_texto">Aquí verás el mapa de la calidad del aire de tu ciudad. Esta sección se está preparando.</string>
+    <string name="proximamente_mis_datos">Mis datos</string>
+    <string name="proximamente_mis_datos_texto">Aquí verás todas tus mediciones, con gráficas por día y por semana. Esta sección se está preparando.</string>
+    <string name="proximamente_prevision">Previsión</string>
+    <string name="proximamente_prevision_texto">Aquí verás cómo estará el aire las próximas horas y la mejor hora para salir. Esta sección se está preparando.</string>
+    <string name="proximamente_lugares">Mis lugares</string>
+    <string name="proximamente_mi_sensor">Mi sensor</string>
+    <string name="proximamente_mi_sensor_texto">Aquí verás el estado de tu sensor, su batería y sus mediciones, y podrás desvincularlo. Esta sección se está preparando.</string>
+    <string name="proximamente_lugares_texto">Aquí podrás guardar casa, el trabajo y tus sitios para ver su calidad del aire. Esta sección se está preparando.</string>
 
     <!-- Barra de navegación inferior (T010) -->
     <string name="barra_inicio">Inicio</string>

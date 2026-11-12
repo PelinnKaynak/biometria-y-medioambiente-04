@@ -312,5 +312,19 @@
                 android:textSize="13sp"
                 android:textStyle="bold" />
         </LinearLayout>
+
+        <!-- Solo después del registro: seguir sin sensor (no está en Figma) -->
+        <TextView
+            android:id="@+id/enlaceMasTarde"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:background="?attr/selectableItemBackground"
+            android:padding="8dp"
+            android:text="@string/vincular_mas_tarde"
+            android:textColor="@color/texto_secundario"
+            android:textSize="14sp"
+            android:visibility="gone" />
     </LinearLayout>
 </ScrollView>

@@ -84,6 +84,11 @@ public class VincularSensorActivity extends AppCompatActivity {
         TeclaEnter.pulsaBoton(campoSensibilidad, findViewById(R.id.botonContinuar));
         findViewById(R.id.botonVincular).setOnClickListener(vista -> pulsarVincular());
         findViewById(R.id.botonVolver).setOnClickListener(vista -> salir());
+        // Después del registro se puede seguir sin sensor y vincularlo luego
+        // desde Inicio o Perfil (no está en Figma; para probar sin sensor)
+        View enlaceMasTarde = findViewById(R.id.enlaceMasTarde);
+        enlaceMasTarde.setVisibility(desdePerfil ? View.GONE : View.VISIBLE);
+        enlaceMasTarde.setOnClickListener(vista -> salir());
     }
 
     // -----------------------------------------------------------------------

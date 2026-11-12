@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Un aviso del panel de notificaciones de Inicio: punto violeta si no se
+     ha leído, título, texto y hora (Figma: inicio · notificaciones abiertas) · T006 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:background="@drawable/fondo_tarjeta_inicio_pulsable"
+    android:clickable="true"
+    android:elevation="2dp"
+    android:focusable="true"
+    android:orientation="horizontal"
+    android:outlineAmbientShadowColor="@color/sombra_tarjeta"
+    android:outlineSpotShadowColor="@color/sombra_tarjeta"
+    android:paddingStart="12dp"
+    android:paddingTop="14dp"
+    android:paddingEnd="12dp"
+    android:paddingBottom="16dp">
+
+    <!-- Punto de «sin leer»: INVISIBLE (no GONE) para que el texto no se mueva -->
+    <View
+        android:id="@+id/puntoAviso"
+        android:layout_width="9dp"
+        android:layout_height="9dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/fondo_punto_nivel"
+        android:backgroundTint="@color/violeta" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tituloAviso"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/texto_principal"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            tools:text="Contaminación alta" />
+
+        <TextView
+            android:id="@+id/textoAviso"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:textColor="@color/texto_secundario"
+            android:textSize="12sp"
+            tools:text="El ozono ha superado el límite en tu zona." />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/horaAviso"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/texto_secundario"
+        android:textSize="10sp"
+        tools:text="18:42" />
+</LinearLayout>

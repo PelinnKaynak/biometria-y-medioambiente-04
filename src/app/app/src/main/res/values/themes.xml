@@ -155,6 +155,62 @@
         <item name="android:textSize">11sp</item>
     </style>
 
+    <!-- Fila de acceso de Inicio (Mejor hora para salir, Mis lugares), T006 -->
+    <style name="AERIS.AccesoInicio" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:background">@drawable/fondo_tarjeta_inicio_pulsable</item>
+        <item name="android:elevation">3dp</item>
+        <item name="android:outlineAmbientShadowColor">@color/sombra_tarjeta</item>
+        <item name="android:outlineSpotShadowColor">@color/sombra_tarjeta</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingTop">12dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:paddingBottom">12dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="AERIS.AccesoInicioIcono" parent="">
+        <item name="android:layout_width">40dp</item>
+        <item name="android:layout_height">40dp</item>
+        <item name="android:background">@drawable/fondo_icono_acceso</item>
+        <item name="android:padding">9dp</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <style name="AERIS.AccesoInicioFlecha" parent="">
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
+        <item name="android:src">@drawable/ic_flecha_derecha</item>
+        <item name="android:importantForAccessibility">no</item>
+    </style>
+
+    <style name="AERIS.AccesoInicioTextos" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:orientation">vertical</item>
+    </style>
+
+    <style name="AERIS.AccesoInicioTitulo" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/texto_principal</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="AERIS.AccesoInicioTexto" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:textColor">@color/texto_secundario</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
     <!-- Forma de círculo para la foto de perfil (ShapeableImageView) -->
     <style name="AERIS.FormaCirculo" parent="">
         <item name="cornerFamily">rounded</item>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Caja de una de las «Últimas mediciones» de Inicio: valor y hora
+     (Figma: inicio). Al tocarla se marca y su valor pasa al arco · T006 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/fondo_caja_medicion"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:paddingTop="14dp"
+    android:paddingBottom="12dp">
+
+    <TextView
+        android:id="@+id/valorMedicion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/texto_principal"
+        android:textSize="17sp"
+        android:textStyle="bold"
+        tools:text="84" />
+
+    <TextView
+        android:id="@+id/horaMedicion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/texto_secundario"
+        android:textSize="11sp"
+        tools:text="18:42" />
+
+    <!-- Rayita del color del nivel: solo en la caja elegida -->
+    <View
+        android:id="@+id/marcaMedicion"
+        android:layout_width="18dp"
+        android:layout_height="3dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/fondo_marca_medicion"
+        android:backgroundTint="@color/nivel_bueno"
+        android:scaleX="0" />
+</LinearLayout>

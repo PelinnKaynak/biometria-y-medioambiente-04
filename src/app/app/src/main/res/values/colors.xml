@@ -35,4 +35,13 @@
     <color name="nivel_moderado">#E2B33F</color>
     <color name="nivel_malo">#D9645F</color>
     <color name="nivel_muy_malo">#8E2F55</color>
+    <!-- Inicio (T006): aviso de medición antigua -->
+    <color name="aviso_fondo">#FDF5E1</color>
+    <color name="aviso_texto">#8A6512</color>
+    <!-- Inicio (T006): panel de notificaciones -->
+    <color name="velo_avisos">#66433A58</color>
+    <color name="aviso_icono_fondo">#D3E4DE</color>
+    <!-- Inicio (T006): sombra lila suave de las tarjetas y onda al pulsar -->
+    <color name="sombra_tarjeta">#7A5A3D8C</color>
+    <color name="onda_pulsar">#1F7958A7</color>
 </resources>

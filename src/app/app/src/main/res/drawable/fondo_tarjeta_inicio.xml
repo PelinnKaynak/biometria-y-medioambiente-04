@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tarjeta blanca de Inicio con esquinas de 16dp; la sombra suave la da
+     android:elevation (Figma: inicio). T006 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/blanco" />
+    <corners android:radius="16dp" />
+</shape>
