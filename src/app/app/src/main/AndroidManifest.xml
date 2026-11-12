@@ -69,6 +69,11 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Mi sensor (T011): se abre desde el perfil -->
+        <activity
+            android:name=".MiSensorActivity"
+            android:exported="false" />
+
         <!-- Comparte con la app de cámara el fichero donde guarda la foto de perfil (T010) -->
         <provider
             android:name="androidx.core.content.FileProvider"

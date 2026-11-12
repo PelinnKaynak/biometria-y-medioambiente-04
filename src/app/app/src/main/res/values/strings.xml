@@ -115,4 +115,22 @@
     <!-- Mapa sin cuenta (provisional) -->
     <string name="mapa_titulo">Mapa del aire</string>
     <string name="mapa_texto">Aquí podrás ver el mapa de la calidad del aire de tu ciudad sin crear una cuenta. El mapa llega en su propia tarea.</string>
+
+    <!-- Mi sensor (T011) -->
+    <string name="mi_sensor_titulo">Mi sensor</string>
+    <string name="mi_sensor_subtitulo">Estado y configuración de tu dispositivo AERIS.</string>
+    <string name="mi_sensor_seccion_dispositivo">Dispositivo</string>
+    <string name="mi_sensor_identificador_etiqueta">Identificador</string>
+    <string name="mi_sensor_estado_etiqueta">Estado</string>
+    <string name="mi_sensor_bateria_etiqueta">Nivel de batería</string>
+    <string name="mi_sensor_sincronizacion_etiqueta">Última sincronización</string>
+    <string name="mi_sensor_seccion_controles">Controles</string>
+    <string name="mi_sensor_luz_titulo">Luz del sensor</string>
+    <string name="mi_sensor_luz_subtitulo">Enciende o apaga la luz LED del sensor.</string>
+    <string name="mi_sensor_desvincular">Desvincular sensor</string>
+    <string name="mi_sensor_desvincular_dialogo_titulo">¿Desvincular sensor?</string>
+    <string name="mi_sensor_desvincular_dialogo_mensaje">El sensor dejará de estar asociado a tu cuenta. Podrás volver a vincularlo en cualquier momento.</string>
+    <string name="mi_sensor_desvincular_confirmar">Desvincular</string>
+    <string name="mi_sensor_cancelar">Cancelar</string>
+    <string name="mi_sensor_sin_sensor">No tienes ningún sensor vinculado actualmente.</string>
 </resources>

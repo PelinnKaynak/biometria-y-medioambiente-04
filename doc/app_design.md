@@ -282,6 +282,7 @@ InicioActivity <--barra--> PerfilActivity
 PerfilActivity --> LogicaFakePerfil.obtenerUsuario() --> PeticionarioREST --> GET /usuarioActual   (con token)
 PerfilActivity --(interruptor «Notificaciones»)--> LogicaFakePerfil.cambiarAlertas() --> POST /cambiarAlertas
 PerfilActivity --(foto)--> cámara o galería --> FotoPerfil.prepararFoto() --> LogicaFakePerfil.cambiarFoto() --> POST /cambiarFoto
+PerfilActivity --(«Mi sensor»)--> MiSensorActivity (T011)
 PerfilActivity --(«Editar mis datos»)--> EditarDatosActivity
 EditarDatosActivity --> ValidadorEditarDatos --> LogicaFakeEditarDatos.actualizarDatos()   --> POST /actualizarDatos
                                              --> LogicaFakeEditarDatos.cambiarContrasena() --> POST /cambiarContrasenya
@@ -447,6 +448,83 @@ InicioActivity (MODIFICADA): ya no tiene «Cerrar sesión»; tiene la barra de n
 
 ---
 
+## 3.1. Pantalla Mi sensor (T011)
+
+Pantalla «Mi sensor» accesible desde el perfil (`PerfilActivity`). Muestra el estado del sensor (identificador, si está conectado, nivel de batería, última sincronización), un interruptor para la luz LED y la opción de desvincular el sensor. Como aún no se dispone de conexión física por Bluetooth ni endpoints reales en el servidor, se implementa con lógica desacoplada (`LogicaFakeMiSensor`) con valores representativos iniciales y persistencia provisional en la sesión.
+
+```text
+PerfilActivity --(«Mi sensor»)--> MiSensorActivity
+MiSensorActivity --> LogicaFakeMiSensor.obtenerEstadoSensor() --> PeticionarioREST --> GET /miSensor
+MiSensorActivity --(interruptor «Luz»)--> LogicaFakeMiSensor.cambiarLuz() --> POST /cambiarLuzSensor
+MiSensorActivity --(«Desvincular sensor»)--> LogicaFakeMiSensor.desvincularSensor() --> POST /desvincularSensor --> PerfilActivity
+```
+
+### Tipos
+
+```text
+DatosSensor = ( idSensor: Text, conectado: B, bateria: Z, luz: B, ultimaSincronizacion: Text )
+```
+
+### Clase DatosSensor (NUEVA)
+
+```text
+                                    --------- DatosSensor ---------------------------
+                                    |
+                                    | idSensor, ultimaSincronizacion: Text
+                                    | conectado, luz: B, bateria: Z
+                                    |
+                                --> textoConexion() --x
+  Text                          <-- |     "Conectado" si conectado, "Desconectado" si no
+                                    |
+                                --> textoBateria() --x
+  Text                          <-- |     bateria + "%"
+                                    |
+  luz: B                        --> crearJSONLuz() --x
+  Text                          <-- |     {"luz": true | false}
+                                    |
+  cuerpo: Text                  --> desdeJSON() --x
+  DatosSensor | null            <-- |     null si no es JSON válido o no tiene idSensor
+                                    |
+                                    -------------------------------------------------
+```
+
+### Clase LogicaFakeMiSensor (NUEVA)
+
+```text
+                                    --------- LogicaFakeMiSensor --------------------
+                                    |
+                                    | CODIGO_OK: Z = 200, CODIGO_GUARDADO: Z = 204
+                                    | CODIGO_SIN_SESION: Z = 401, CODIGO_NO_ENCONTRADO: Z = 404
+                                    | CODIGO_SIN_CONEXION: Z = 0
+                                    |
+  token: Text                   --> obtenerEstadoSensor() -->
+                                    |     callback: sensorObtenido(DatosSensor),
+                                    |     sinSensor(), sesionCaducada(), error(Text)
+                                    |
+  token: Text, encendida: B     --> cambiarLuz() -->
+                                    |     callback: luzCambiada(B), sesionCaducada(), error(Text)
+                                    |
+  token: Text                   --> desvincularSensor() -->
+                                    |     callback: sensorDesvinculado(), sesionCaducada(), error(Text)
+                                    |
+                                    |    codigo: Z, cuerpo: Text --> notificarEstado() --x
+                                    |
+                                    |    codigo: Z, encendida: B --> notificarLuz() --x
+                                    |
+                                    |    codigo: Z --> notificarDesvinculacion() --x
+                                    |
+                                    -------------------------------------------------
+```
+
+### Pantallas
+
+```text
+MiSensorActivity (NUEVA):   onCreate(), cargarEstado(), mostrarEstado(), cambiarLuz(),
+                            confirmarDesvinculacion(), desvincular(), volver()
+```
+
+---
+
 ## 4. Aclaraciones del diseño
 
 - **Petición REST:** `POST /registrarUsuario` con el cuerpo `{"nombre": ..., "apellidos": ..., "correo": ..., "contrasena": ...}`. Respuestas: `201` cuenta creada, `409` el correo ya tiene cuenta, `400` datos incorrectos, `500` error del servidor. Si no hay conexión el código es `0`.
@@ -474,7 +552,8 @@ InicioActivity (MODIFICADA): ya no tiene «Cerrar sesión»; tiene la barra de n
 - **Tecla Enter (`TeclaEnter.pulsaBoton()`):** en el último campo de cada formulario el teclado muestra «Hecho» y Enter pulsa el botón: contraseña → «Acceder» (login), repetir contraseña → «Continuar» (registro), correo → «Enviar enlace» (recuperar contraseña), correo → «Guardar cambios» y repetir contraseña nueva → «Cambiar contraseña» (editar mis datos). Si el botón está desactivado (enviando), no hace nada.
 - **Mensajes en la pantalla, sin avisos emergentes (Toast):** los errores y las confirmaciones se escriben en la propia pantalla: en el perfil, en rojo debajo del correo; en «Editar mis datos», los errores debajo de cada botón y, al cambiar la contraseña, una etiqueta verde «✓ Cambiada» al lado del título «Contraseña»; en «Revisa tu correo», debajo de «Reenviar». Al guardar los datos no sale ningún mensaje: se vuelve al perfil, que ya enseña los datos nuevos.
 - **Cambiar contraseña:** pide la actual, la nueva (segura y distinta de la actual) y repetirla; `POST /cambiarContrasenya`. `200` → el servidor devuelve una sesión nueva, que se guarda con `Sesion.iniciar()` (la sesión de los otros teléfonos se cierra); `403` → «La contraseña actual no es correcta.» y se borra ese campo.
-- **Opciones de otras tareas:** «Mi sensor» (T011), «Umbral de alerta», «Puntos y recompensas», «Mis lugares» (T019) y «AERIS Premium» aún no hacen nada al pulsarlas. «Umbral de alerta» enseña «Normal», el valor por defecto (`umbralAlerta` NULL).
+- **Mi sensor (T011):** accesible desde el perfil. Muestra el estado del sensor (identificador, si está conectado, nivel de batería y última sincronización), un interruptor para encender o apagar la luz del sensor (`POST /cambiarLuzSensor`) y el botón «Desvincular sensor» (`POST /desvincularSensor`). Hasta disponer de conexión física Bluetooth y endpoints reales, se gestiona con `LogicaFakeMiSensor`.
+- **Opciones de otras tareas:** «Umbral de alerta», «Puntos y recompensas», «Mis lugares» (T019) y «AERIS Premium» aún no hacen nada al pulsarlas. «Umbral de alerta» enseña «Normal», el valor por defecto (`umbralAlerta` NULL).
 - **Barra de navegación:** `barra_navegacion.xml` se añade con `<include>` y `BarraNavegacion.conectar()` la pinta y conecta. Inicio siempre queda debajo: desde cualquier pestaña se cierra la pantalla actual al cambiar (`cierraLaActual()`), así «atrás» vuelve a Inicio y «atrás» en Inicio sale de la app. Al volver a Inicio se reutiliza (`FLAG_ACTIVITY_CLEAR_TOP`). Las pestañas cambian sin animación.
 - **PeticionarioREST:** es el código proporcionado por el profesor, con la misma interfaz, pero sin `AsyncTask` (obsoleta desde Android 11): la petición se hace en un hilo de fondo (`Executor`) y el callback se llama en el hilo principal.
 - **Visibilidad:** los métodos auxiliares de `ValidadorRegistro` y `LogicaFakeRegistro` son de paquete (sin `public`) para poder probarlos con JUnit; ninguna otra clase los usa.
@@ -485,4 +564,4 @@ InicioActivity (MODIFICADA): ya no tiene «Cerrar sesión»; tiene la barra de n
 
 - **Lenguaje:** Java 11, Android 10 (API 29) o superior.
 - **Cabecera de fichero** con nombre, descripción, autores, fecha y copyright; **cabecera de cada método** con su diseño lógico en la notación de la asignatura y una línea `What it does:`.
-- **Tests automáticos (JUnit 4):** `ValidadorRegistroTest` (campos vacíos, nombre y apellidos, correo, contraseña segura, confirmación), `LogicaFakeRegistroTest` (JSON enviado y respuesta para 201 con token, 409, 500 y sin conexión), `ValidadorLoginTest` (campos vacíos y correo) `LogicaFakeSesionTest` (JSON enviado, 200 con token, 401, 500, sin conexión y recuperación) `LogicaFakePerfilTest` (lectura de `DatosUsuario` con la foto, JSON de la foto, respuestas de `GET /usuarioActual`, `POST /cambiarAlertas` y `POST /cambiarFoto`, y qué pantalla cierra la barra) y `LogicaFakeEditarDatosTest` (validación de los datos y de la contraseña, JSON enviado y respuestas 200, 400, 401, 403, 409 y sin conexión). Se ejecutan con `./gradlew test` desde `src/app`.
+- **Tests automáticos (JUnit 4):** `ValidadorRegistroTest` (campos vacíos, nombre y apellidos, correo, contraseña segura, confirmación), `LogicaFakeRegistroTest` (JSON enviado y respuesta para 201 con token, 409, 500 y sin conexión), `ValidadorLoginTest` (campos vacíos y correo) `LogicaFakeSesionTest` (JSON enviado, 200 con token, 401, 500, sin conexión y recuperación) `LogicaFakePerfilTest` (lectura de `DatosUsuario` con la foto, JSON de la foto, respuestas de `GET /usuarioActual`, `POST /cambiarAlertas` y `POST /cambiarFoto`, y qué pantalla cierra la barra) y `LogicaFakeEditarDatosTest` (validación de los datos y de la contraseña, JSON enviado y respuestas 200, 400, 401, 403, 409 y sin conexión) y `LogicaFakeMiSensorTest` (parseo de `DatosSensor`, formato de batería y conexión, creación de JSON de luz y respuestas 200, 204, 401, 404 y sin conexión para estado, luz y desvinculación). Se ejecutan con `./gradlew test` desde `src/app`.
