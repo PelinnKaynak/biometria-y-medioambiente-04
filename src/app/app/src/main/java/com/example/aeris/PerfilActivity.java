@@ -14,7 +14,6 @@ package com.example.aeris;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -305,11 +304,11 @@ public class PerfilActivity extends AppCompatActivity {
         if (datos.tieneSensor()) {
             valorMiSensor.setText(getString(R.string.perfil_sensor_nombre, datos.sensor));
             valorMiSensor.setTextColor(getColor(R.color.texto_secundario));
-            valorMiSensor.setTypeface(null, Typeface.NORMAL);
+            valorMiSensor.setTypeface(Tipografia.inter(this, Tipografia.NORMAL));
         } else {
             valorMiSensor.setText(R.string.perfil_sensor_vincular);
             valorMiSensor.setTextColor(getColor(R.color.violeta));
-            valorMiSensor.setTypeface(null, Typeface.BOLD);
+            valorMiSensor.setTypeface(Tipografia.inter(this, Tipografia.SEMINEGRITA));
         }
         valorMiSensor.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
     }

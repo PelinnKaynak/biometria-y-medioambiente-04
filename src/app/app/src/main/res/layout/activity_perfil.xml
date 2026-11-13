@@ -78,7 +78,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="6dp"
-                android:fontFamily="sans-serif-medium"
+                android:textFontWeight="500"
                 android:textColor="@color/texto_principal"
                 android:textSize="18sp"
                 tools:text="Pelin Kaynak" />
@@ -195,7 +195,7 @@
 
                 <TextView
                     style="@style/AERIS.FilaFlecha"
-                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="500"
                     android:text="@string/perfil_premium_valor"
                     android:textColor="@color/violeta"
                     android:textSize="14sp" />
@@ -204,7 +204,7 @@
             <TextView
                 android:id="@+id/botonCerrarSesion"
                 android:layout_width="180dp"
-                android:layout_height="40dp"
+                android:layout_height="44dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="18dp"
                 android:layout_marginBottom="16dp"
@@ -215,8 +215,8 @@
                 android:gravity="center"
                 android:text="@string/perfil_cerrar_sesion"
                 android:textColor="@color/blanco"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textSize="16sp"
+                android:textFontWeight="600" />
         </LinearLayout>
     </ScrollView>
 

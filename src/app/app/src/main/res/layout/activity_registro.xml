@@ -193,7 +193,7 @@
             android:text="@string/registro_continuar"
             android:textColor="@color/blanco"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textFontWeight="600" />
 
         <ProgressBar
             android:id="@+id/progreso"
@@ -226,7 +226,7 @@
                 android:text="@string/registro_inicia_sesion"
                 android:textColor="@color/violeta"
                 android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textFontWeight="600" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

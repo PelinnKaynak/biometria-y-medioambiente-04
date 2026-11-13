@@ -81,7 +81,7 @@
                         android:text="@string/info_consejo_titulo"
                         android:textColor="@color/consejo_etiqueta"
                         android:textSize="11sp"
-                        android:textStyle="bold" />
+                        android:textFontWeight="600" />
                 </LinearLayout>
 
                 <TextSwitcher

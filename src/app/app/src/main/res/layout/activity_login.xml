@@ -137,7 +137,7 @@
             android:text="@string/login_recuperar"
             android:textColor="@color/violeta"
             android:textSize="12sp"
-            android:textStyle="bold" />
+            android:textFontWeight="600" />
 
         <!-- Error general: «Correo o contraseña incorrectos», sin conexión… -->
         <TextView
@@ -161,7 +161,7 @@
             android:text="@string/login_acceder"
             android:textColor="@color/blanco"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textFontWeight="600" />
 
         <ProgressBar
             android:id="@+id/progreso"
@@ -194,7 +194,7 @@
                 android:text="@string/login_registrate"
                 android:textColor="@color/violeta"
                 android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textFontWeight="600" />
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

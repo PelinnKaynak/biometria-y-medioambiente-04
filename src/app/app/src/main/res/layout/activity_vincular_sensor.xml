@@ -97,8 +97,8 @@
                     android:layout_marginStart="8dp"
                     android:text="@string/vincular_escanear"
                     android:textColor="@color/blanco"
-                    android:textSize="15sp"
-                    android:textStyle="bold" />
+                    android:textSize="16sp"
+                    android:textFontWeight="600" />
             </LinearLayout>
 
             <TextView
@@ -118,7 +118,7 @@
                 android:text="@string/vincular_enlace_a_mano"
                 android:textColor="@color/violeta"
                 android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textFontWeight="600" />
         </LinearLayout>
 
         <!-- Si la cámara no funciona: la línea de números de la etiqueta escrita a mano -->
@@ -167,7 +167,7 @@
             <TextView
                 android:id="@+id/botonContinuar"
                 android:layout_width="180dp"
-                android:layout_height="40dp"
+                android:layout_height="44dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
                 android:background="@drawable/fondo_boton_principal"
@@ -177,8 +177,8 @@
                 android:gravity="center"
                 android:text="@string/vincular_continuar"
                 android:textColor="@color/blanco"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textSize="16sp"
+                android:textFontWeight="600" />
 
             <TextView
                 android:id="@+id/enlaceVolverEscanear"
@@ -190,7 +190,7 @@
                 android:text="@string/vincular_volver_escanear"
                 android:textColor="@color/violeta"
                 android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textFontWeight="600" />
         </LinearLayout>
 
         <!-- Paso 2: el sensor leído y el botón «Vincular» -->
@@ -228,7 +228,7 @@
                     android:text="@string/vincular_leido"
                     android:textColor="@color/verde_ok"
                     android:textSize="13sp"
-                    android:textStyle="bold" />
+                    android:textFontWeight="600" />
             </LinearLayout>
 
             <TextView
@@ -243,7 +243,7 @@
                 android:id="@+id/textoNumeroSerie"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
+                android:textFontWeight="500"
                 android:textColor="@color/texto_principal"
                 android:textSize="20sp"
                 tools:text="092021010920" />
@@ -260,7 +260,7 @@
             <TextView
                 android:id="@+id/botonVincular"
                 android:layout_width="180dp"
-                android:layout_height="40dp"
+                android:layout_height="44dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
                 android:background="@drawable/fondo_boton_principal"
@@ -270,8 +270,8 @@
                 android:gravity="center"
                 android:text="@string/vincular_boton"
                 android:textColor="@color/blanco"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textSize="16sp"
+                android:textFontWeight="600" />
 
             <TextView
                 android:id="@+id/errorVincular"
@@ -291,7 +291,7 @@
                 android:text="@string/vincular_escanear_otro"
                 android:textColor="@color/violeta"
                 android:textSize="13sp"
-                android:textStyle="bold" />
+                android:textFontWeight="600" />
         </LinearLayout>
 
         <!-- Solo después del registro: seguir sin sensor (no está en Figma) -->

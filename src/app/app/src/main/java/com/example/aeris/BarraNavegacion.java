@@ -14,7 +14,6 @@ package com.example.aeris;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.res.ColorStateList;
-import android.graphics.Typeface;
 import android.os.Build;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -94,7 +93,7 @@ public class BarraNavegacion {
         ImageViewCompat.setImageTintList(icono, ColorStateList.valueOf(color));
         TextView texto = actividad.findViewById(idTexto);
         texto.setTextColor(color);
-        texto.setTypeface(null, esActiva ? Typeface.BOLD : Typeface.NORMAL);
+        texto.setTypeface(Tipografia.inter(actividad, esActiva ? Tipografia.SEMINEGRITA : Tipografia.NORMAL));
 
         actividad.findViewById(idPestanya).setSelected(esActiva);
         actividad.findViewById(idPestanya).setOnClickListener(vista -> abrir(actividad, activa, pestanya));

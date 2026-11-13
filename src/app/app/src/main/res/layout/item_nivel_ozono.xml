@@ -36,7 +36,7 @@
                 android:layout_weight="1"
                 android:textColor="@color/texto_principal"
                 android:textSize="14sp"
-                android:textStyle="bold"
+                android:textFontWeight="600"
                 tools:text="Bueno" />
 
             <TextView

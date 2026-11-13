@@ -51,7 +51,7 @@
             android:gravity="center"
             android:text="@string/enviado_titulo"
             android:textColor="@color/texto_principal"
-            android:textSize="24sp"
+            android:textSize="28sp"
             android:textStyle="bold" />
 
         <TextView
@@ -78,7 +78,7 @@
             android:text="@string/enviado_volver_login"
             android:textColor="@color/blanco"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textFontWeight="600" />
 
         <TextView
             android:id="@+id/enlaceReenviar"

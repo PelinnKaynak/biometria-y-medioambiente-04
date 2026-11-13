@@ -135,7 +135,6 @@ public class VincularSensorActivity extends AppCompatActivity {
             mostrarSensor(codigo);
         }
     }
-    }
 
     // -----------------------------------------------------------------------
     // codigo: CodigoSensor --> mostrarSensor() -->

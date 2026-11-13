@@ -176,9 +176,9 @@ public class InformacionActivity extends AppCompatActivity {
         textoConsejo.setFactory(() -> {
             TextView texto = new TextView(this);
             texto.setTextColor(ContextCompat.getColor(this, R.color.blanco));
-            texto.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+            texto.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
             texto.setLineSpacing(0, 1.3f);
-            texto.setTypeface(android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL));
+            texto.setTypeface(Tipografia.inter(this, Tipografia.MEDIA));
             return texto;
         });
         textoConsejo.setInAnimation(AnimationUtils.loadAnimation(this, android.R.anim.fade_in));
