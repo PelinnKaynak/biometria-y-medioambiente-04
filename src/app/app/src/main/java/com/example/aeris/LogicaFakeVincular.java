@@ -18,9 +18,10 @@ import org.json.JSONObject;
 // LogicaFakeVincular class: the phone's fake logic for linking the sensor.
 public class LogicaFakeVincular {
 
-    // T037: poner a false cuando el servidor tenga POST /solicitarVinculacion,
-    // GET /estadoVinculacion y POST /reenviarCorreoVinculacion
-    static final boolean USAR_DATOS_DE_EJEMPLO = true;
+    // false: usa el servidor (POST /solicitarVinculacion, GET /estadoVinculacion,
+    // POST /reenviarCorreoVinculacion) y el correo se envía de verdad.
+    // true: solicitud de ejemplo, para ver las pantallas sin servidor
+    static final boolean USAR_DATOS_DE_EJEMPLO = false;
     // Estado que devuelve la consulta con datos de ejemplo: cambiar a
     // CONFIRMADA o RECHAZADA para ver esas pantallas
     static final SolicitudVinculacion.Estado ESTADO_DE_EJEMPLO = SolicitudVinculacion.Estado.PENDIENTE;

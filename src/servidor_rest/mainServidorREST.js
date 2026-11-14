@@ -51,7 +51,9 @@ async function main() {
             user: entorno.BD_USUARIO || 'root',
             password: entorno.BD_CONTRASENYA || '',
             database: entorno.BD_NOMBRE || 'aeris'
-        }, enviarCorreo, entorno.URL_RESTABLECER || `http://localhost:${puerto}/restablecer.html`, claveTokens);
+        }, enviarCorreo, entorno.URL_RESTABLECER || `http://localhost:${puerto}/restablecer.html`, claveTokens,
+            // Enlaces del correo de vinculación (T005): por defecto, en este mismo servidor
+            entorno.URL_VINCULACION || `http://localhost:${puerto}/responderVinculacion`);
     } catch (error) {
         console.error('No se puede conectar con MySQL. ¿Está MySQL en marcha en XAMPP y existe la BD aeris?');
         console.error(error.message);

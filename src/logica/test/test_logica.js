@@ -249,9 +249,9 @@ describe('Logica (usuarios y autenticación)', function () {
         assert.strictEqual(await logica.comprobarSesion(tokenDelUltimoCorreo()), null);
     });
 
-    it('no hay tablas de sesiones: la BD solo tiene Usuarios', async function () {
+    it('no hay tablas de sesiones ni de tokens: la BD solo tiene Usuarios y Sensores', async function () {
         const [tablas] = await logica.conexion.query('SHOW TABLES');
-        assert.deepStrictEqual(tablas.map(t => Object.values(t)[0].toLowerCase()), ['usuarios']);
+        assert.deepStrictEqual(tablas.map(t => Object.values(t)[0].toLowerCase()).sort(), ['sensores', 'usuarios']);
     });
 
     // --- recuperación de contraseña -----------------------------------------

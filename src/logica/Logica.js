@@ -3,9 +3,11 @@
 // Descripción: Lógica de negocio de usuarios y autenticación: registro,
 //              inicio de sesión, comprobación de la sesión y del rol, y
 //              recuperación de la contraseña, y el aviso de alertas del
-//              perfil, la edición de los datos y la foto (T010). Es la única parte que habla con
-//              la base de datos (MySQL, tabla Usuarios). Las sesiones y los
-//              enlaces de recuperación son tokens firmados: no usan tablas.
+//              perfil, la edición de los datos y la foto (T010), y la
+//              vinculación de sensores confirmada por correo (T005). Es la
+//              única parte que habla con la base de datos (MySQL, tablas
+//              Usuarios y Sensores). Las sesiones y los enlaces de
+//              recuperación y de vinculación son tokens firmados: no usan tablas.
 //              Diseño en doc/logica_design.md. Tarea T016 · H001, H002.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
@@ -18,17 +20,24 @@ const Seguridad = require('./Seguridad');
 const Validador = require('./ValidadorUsuario');
 const { crearCorreoBienvenida } = require('./CorreoBienvenida');
 const { crearCorreoRecuperacion } = require('./CorreoRecuperacion');
+const { crearCorreoVinculacion } = require('./CorreoVinculacion');
 
 const ROL_PORTADOR = 'portador';        // rol de quien se registra desde la app
 const DURACION_SESION_SEGUNDOS = 30 * 24 * 60 * 60;      // 30 días
 const DURACION_RECUPERACION_SEGUNDOS = 30 * 60;          // 30 minutos (criterio de T003)
 const TIPO_SESION = 'sesion';
 const TIPO_RECUPERACION = 'recuperacion';
+const TIPO_VINCULACION = 'vinculacion';
+const DURACION_VINCULACION_SEGUNDOS = 48 * 60 * 60;     // 48 horas (diseño de Figma)
+const ESTADO_PENDIENTE = 'pendiente';
+const ESTADO_CONFIRMADA = 'confirmada';
+const ESTADO_RECHAZADA = 'rechazada';
 
 // ---------------------------------------------------------------------------
 // ErrorLogica: error con un código que el servidor REST traduce a HTTP.
 //   codigo ∈ { DATOS_NO_VALIDOS, CORREO_YA_REGISTRADO, CORREO_NO_REGISTRADO,
-//              CREDENCIALES_INCORRECTAS, TOKEN_NO_VALIDO }
+//              CREDENCIALES_INCORRECTAS, TOKEN_NO_VALIDO,
+//              SENSOR_NO_REGISTRADO, SENSOR_YA_VINCULADO, SIN_SOLICITUD }
 // ---------------------------------------------------------------------------
 class ErrorLogica extends Error {
     constructor(codigo, mensaje, campos = []) {
@@ -55,40 +64,56 @@ function esFotoValida(foto) {
 }
 
 // ---------------------------------------------------------------------------
+// correo: Texto --> ocultarCorreo() --> Texto
+// What it does: keeps the first letter and the domain:
+//               «pkaynak@upv.edu.es» -> «p•••••@upv.edu.es». The app only
+//               sees this, never the buyer's full e-mail.
+// ---------------------------------------------------------------------------
+function ocultarCorreo(correo) {
+    const arroba = String(correo || '').indexOf('@');
+    return arroba > 0 ? correo[0] + '•••••' + correo.substring(arroba) : '•••••';
+}
+
+// ---------------------------------------------------------------------------
 // Logica class: business logic of users and authentication.
 // ---------------------------------------------------------------------------
 class Logica {
 
     // -----------------------------------------------------------------------
-    // conexion: Pool, enviarCorreo: Función, urlRestablecer: Texto, claveTokens: Texto
+    // conexion: Pool, enviarCorreo: Función, urlRestablecer: Texto, claveTokens: Texto,
+    // urlVinculacion: Texto
     //     --> constructor()
     // What it does: keeps the BD connection, the function that sends emails,
-    //               the web page that opens the recovery link and the secret
-    //               key that signs the tokens. Use Logica.crear() instead of new.
+    //               the web page that opens the recovery link, the secret
+    //               key that signs the tokens and the address of the links
+    //               of the linking e-mail (by default, /responderVinculacion
+    //               on the same server as urlRestablecer). Use Logica.crear()
+    //               instead of new.
     // -----------------------------------------------------------------------
-    constructor(conexion, enviarCorreo, urlRestablecer, claveTokens) {
+    constructor(conexion, enviarCorreo, urlRestablecer, claveTokens, urlVinculacion) {
         this.conexion = conexion;
         this.enviarCorreo = enviarCorreo;
         this.urlRestablecer = urlRestablecer;
         this.claveTokens = claveTokens;
+        this.urlVinculacion = urlVinculacion || `${new URL(urlRestablecer).origin}/responderVinculacion`;
     }
 
     // -----------------------------------------------------------------------
     // configBD: { host, port, user, password, database },
     // enviarCorreo: ( destinatario: Texto, asunto: Texto, texto: Texto, extra ) --> Promesa,
-    // urlRestablecer: Texto, claveTokens: Texto
+    // urlRestablecer: Texto, claveTokens: Texto, urlVinculacion: Texto (opcional)
     //     --> crear() --> Logica
     // What it does: opens the connection pool, checks that the BD answers and
     //               returns the Logica object.
     // -----------------------------------------------------------------------
-    static async crear(configBD, enviarCorreo, urlRestablecer, claveTokens) {
+    static async crear(configBD, enviarCorreo, urlRestablecer, claveTokens, urlVinculacion) {
         if (Validador.estaVacio(claveTokens)) {
             throw new Error('Falta la clave para firmar los tokens');
         }
         // timezone 'Z': las fechas de la BD están en UTC
         const conexion = mysql.createPool({ ...configBD, timezone: 'Z', waitForConnections: true, connectionLimit: 10 });
         await conexion.query('SELECT 1');
-        return new Logica(conexion, enviarCorreo, urlRestablecer, claveTokens);
+        return new Logica(conexion, enviarCorreo, urlRestablecer, claveTokens, urlVinculacion);
     }
 
     // -----------------------------------------------------------------------
@@ -335,6 +360,179 @@ class Logica {
             [hash, usuario.idUsuario]);
     }
 
+    // =======================================================================
+    // Vinculación de sensores confirmada por correo (T005)
+    // =======================================================================
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N, numeroSerie: Texto, sensibilidad: R | null
+    //     --> solicitarVinculacion() --> Solicitud
+    // Solicitud = { numeroSerie, correoComprador (oculto), estado, fecha }
+    // What it does: the user has scanned the label of a sensor. Saves the
+    //               request in the sensor (pending, with the date) and sends
+    //               the e-mail to whoever bought it (correoCompra), with a
+    //               link to confirm and another to reject (48 h). If the
+    //               sensor is already his, answers «confirmada» without
+    //               sending anything. If the e-mail fails it is only written
+    //               in the console: the request stays and can be re-sent.
+    //               Throws DATOS_NO_VALIDOS (serial is not 12 digits or the
+    //               sensitivity is not a number), SENSOR_NO_REGISTRADO or
+    //               SENSOR_YA_VINCULADO (it belongs to another account).
+    // -----------------------------------------------------------------------
+    async solicitarVinculacion(idUsuario, numeroSerie, sensibilidad) {
+        const serie = String(numeroSerie || '').trim();
+        if (!/^\d{12}$/.test(serie)) {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', 'El número de serie no es válido', ['numeroSerie']);
+        }
+        if (sensibilidad !== undefined && sensibilidad !== null
+            && (typeof sensibilidad !== 'number' || !Number.isFinite(sensibilidad))) {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', 'La sensibilidad no es válida', ['sensibilidad']);
+        }
+        const [filas] = await this.conexion.execute(
+            'SELECT idSensor, numeroSerie, correoCompra, idUsuario FROM Sensores WHERE numeroSerie = ?', [serie]);
+        if (filas.length !== 1) {
+            throw new ErrorLogica('SENSOR_NO_REGISTRADO', 'Este sensor no está registrado');
+        }
+        const sensor = filas[0];
+        if (sensor.idUsuario === idUsuario) {
+            return { numeroSerie: serie, correoComprador: ocultarCorreo(sensor.correoCompra),
+                estado: ESTADO_CONFIRMADA, fecha: new Date() };
+        }
+        if (sensor.idUsuario !== null) {
+            throw new ErrorLogica('SENSOR_YA_VINCULADO', 'Este sensor ya está vinculado a otra cuenta');
+        }
+        const fecha = this.ahoraEnSegundos();
+        await this.conexion.execute(
+            `UPDATE Sensores SET sensibilidad = COALESCE(?, sensibilidad), idSolicitante = ?,
+                    estadoSolicitud = ?, fechaSolicitud = ? WHERE idSensor = ?`,
+            [typeof sensibilidad === 'number' ? sensibilidad : null, idUsuario, ESTADO_PENDIENTE, fecha, sensor.idSensor]);
+        await this.enviarCorreoVinculacion(sensor, idUsuario, fecha);
+        return { numeroSerie: serie, correoComprador: ocultarCorreo(sensor.correoCompra),
+            estado: ESTADO_PENDIENTE, fecha };
+    }
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N --> estadoVinculacion() --> Solicitud
+    // What it does: the user's last request. A pending one older than 48 h
+    //               counts as «rechazada» (the link has expired). Throws
+    //               SIN_SOLICITUD if he has not asked for any.
+    // -----------------------------------------------------------------------
+    async estadoVinculacion(idUsuario) {
+        const sensor = await this.ultimaSolicitud(idUsuario);
+        if (!sensor) {
+            throw new ErrorLogica('SIN_SOLICITUD', 'No has pedido vincular ningún sensor');
+        }
+        let estado = sensor.estadoSolicitud;
+        if (estado === ESTADO_PENDIENTE && this.haCaducado(sensor.fechaSolicitud)) {
+            estado = ESTADO_RECHAZADA;
+        }
+        return { numeroSerie: sensor.numeroSerie, correoComprador: ocultarCorreo(sensor.correoCompra),
+            estado, fecha: sensor.fechaSolicitud };
+    }
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N --> reenviarCorreoVinculacion() -->
+    // What it does: sends the e-mail of the pending request again with a new
+    //               date: the 48 h start again and the old links stop
+    //               working. Throws SIN_SOLICITUD if there is no pending one.
+    // -----------------------------------------------------------------------
+    async reenviarCorreoVinculacion(idUsuario) {
+        const sensor = await this.ultimaSolicitud(idUsuario);
+        if (!sensor || sensor.estadoSolicitud !== ESTADO_PENDIENTE) {
+            throw new ErrorLogica('SIN_SOLICITUD', 'No hay ninguna vinculación pendiente');
+        }
+        const fecha = this.ahoraEnSegundos();
+        await this.conexion.execute('UPDATE Sensores SET fechaSolicitud = ? WHERE idSensor = ?',
+            [fecha, sensor.idSensor]);
+        await this.enviarCorreoVinculacion(sensor, idUsuario, fecha);
+    }
+
+    // -----------------------------------------------------------------------
+    // token: Texto, acepta: V/F --> responderVinculacion() --> Respuesta
+    // Respuesta = { estado, numeroSerie, nombreSolicitante }
+    // What it does: the buyer has pressed a button of the e-mail. If the
+    //               link is valid (signed, not expired, and it is the last
+    //               e-mail of a request that is still pending), links the
+    //               sensor to the user who asked (acepta) or rejects it.
+    //               Throws TOKEN_NO_VALIDO otherwise.
+    // -----------------------------------------------------------------------
+    async responderVinculacion(token, acepta) {
+        const datos = Seguridad.leerToken(token, this.claveTokens);
+        if (!datos || datos.t !== TIPO_VINCULACION || !Number.isInteger(datos.s) || !Number.isInteger(datos.u)) {
+            throw new ErrorLogica('TOKEN_NO_VALIDO', 'El enlace no es válido o ha caducado');
+        }
+        const [filas] = await this.conexion.execute(
+            `SELECT s.idSensor, s.numeroSerie, s.idUsuario, s.idSolicitante, s.estadoSolicitud, s.fechaSolicitud,
+                    u.nombre, u.apellidos
+               FROM Sensores s JOIN Usuarios u ON u.idUsuario = s.idSolicitante
+              WHERE s.idSensor = ?`, [datos.s]);
+        const sensor = filas[0];
+        if (!sensor || sensor.idSolicitante !== datos.u || sensor.estadoSolicitud !== ESTADO_PENDIENTE
+            || Math.floor(sensor.fechaSolicitud.getTime() / 1000) !== datos.f || sensor.idUsuario !== null) {
+            throw new ErrorLogica('TOKEN_NO_VALIDO', 'El enlace no es válido o ya se ha usado');
+        }
+        if (acepta) {
+            await this.conexion.execute(
+                'UPDATE Sensores SET idUsuario = ?, estadoSolicitud = ? WHERE idSensor = ?',
+                [datos.u, ESTADO_CONFIRMADA, sensor.idSensor]);
+        } else {
+            await this.conexion.execute('UPDATE Sensores SET estadoSolicitud = ? WHERE idSensor = ?',
+                [ESTADO_RECHAZADA, sensor.idSensor]);
+        }
+        return { estado: acepta ? ESTADO_CONFIRMADA : ESTADO_RECHAZADA,
+            numeroSerie: sensor.numeroSerie, nombreSolicitante: `${sensor.nombre} ${sensor.apellidos}` };
+    }
+
+    // -----------------------------------------------------------------------
+    // sensor: { idSensor, numeroSerie, correoCompra }, idUsuario: N, fecha: Date
+    //     --> enviarCorreoVinculacion() -->
+    // What it does: signs the link token { s: idSensor, u: idUsuario,
+    //               f: fecha in seconds } (48 h) and sends the e-mail to
+    //               correoCompra. A failure is only written in the console.
+    // -----------------------------------------------------------------------
+    async enviarCorreoVinculacion(sensor, idUsuario, fecha) {
+        const [filas] = await this.conexion.execute(
+            'SELECT nombre, apellidos, email FROM Usuarios WHERE idUsuario = ?', [idUsuario]);
+        const usuario = filas[0];
+        const token = Seguridad.firmarToken({
+            s: sensor.idSensor, u: idUsuario, t: TIPO_VINCULACION,
+            f: Math.floor(fecha.getTime() / 1000),
+            exp: Math.floor(fecha.getTime() / 1000) + DURACION_VINCULACION_SEGUNDOS
+        }, this.claveTokens);
+        const mensaje = crearCorreoVinculacion({
+            nombreSolicitante: `${usuario.nombre} ${usuario.apellidos}`, correoSolicitante: usuario.email,
+            numeroSerie: sensor.numeroSerie, fecha,
+            enlaceSi: `${this.urlVinculacion}?token=${token}&respuesta=si`,
+            enlaceNo: `${this.urlVinculacion}?token=${token}&respuesta=no`,
+            horas: DURACION_VINCULACION_SEGUNDOS / 3600
+        });
+        try {
+            await this.enviarCorreo(sensor.correoCompra, mensaje.asunto, mensaje.texto,
+                { html: mensaje.html, adjuntos: mensaje.adjuntos });
+        } catch (error) {
+            console.error(`No se ha podido enviar el correo de vinculación a ${sensor.correoCompra}:`, error.message);
+        }
+    }
+
+    // idUsuario: N --> ultimaSolicitud() --> FilaSensor | null   (la más reciente)
+    async ultimaSolicitud(idUsuario) {
+        const [filas] = await this.conexion.execute(
+            `SELECT idSensor, numeroSerie, correoCompra, estadoSolicitud, fechaSolicitud FROM Sensores
+              WHERE idSolicitante = ? AND fechaSolicitud IS NOT NULL
+              ORDER BY fechaSolicitud DESC, idSensor DESC LIMIT 1`, [idUsuario]);
+        return filas[0] || null;
+    }
+
+    // fecha: Date --> haCaducado() --> V/F   (más de 48 h)
+    haCaducado(fecha) {
+        return Date.now() - fecha.getTime() > DURACION_VINCULACION_SEGUNDOS * 1000;
+    }
+
+    // --> ahoraEnSegundos() --> Date   (sin milisegundos: es lo que guarda DATETIME)
+    ahoraEnSegundos() {
+        return new Date(Math.floor(Date.now() / 1000) * 1000);
+    }
+
     // -----------------------------------------------------------------------
     // idUsuario: N --> crearSesion() --> SesionIniciada
     // What it does: makes a signed session token (30 days) and returns
@@ -382,4 +580,4 @@ class Logica {
     }
 }
 
-module.exports = { Logica, ErrorLogica };
+module.exports = { Logica, ErrorLogica, ocultarCorreo };

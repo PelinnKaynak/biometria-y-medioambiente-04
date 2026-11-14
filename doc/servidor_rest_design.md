@@ -28,6 +28,11 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `POST /solicitarRecuperacion` | `{ correo }` | **200** enlace enviado · **400** correo no válido · **404** el correo no tiene cuenta (no se envía nada) |
 | `GET /restablecer.html` | — | **200** página de `src/web_publica` para crear la contraseña nueva (la abre el enlace del correo) |
 | `POST /restablecerContrasenya` | `{ token, contrasena }` | **204** · **400** enlace no válido o caducado, o contraseña débil |
+| `POST /solicitarVinculacion` 🔒 | `{ numeroSerie, sensibilidad }` | **201** `{ numeroSerie, correoComprador (oculto), estado: "pendiente", fecha }` y correo a quien lo compró · **200** `estado: "confirmada"` si ya era suyo · **400** · **404** sensor no registrado · **409** vinculado a otra cuenta · **401** (T005) |
+| `GET /estadoVinculacion` 🔒 | — | **200** `{ numeroSerie, correoComprador, estado: pendiente \| confirmada \| rechazada, fecha }` · **404** sin solicitud · **401** (T005) |
+| `POST /reenviarCorreoVinculacion` 🔒 | — | **200** `{ mensaje }` · **404** no hay ninguna pendiente · **401** (T005) |
+| `GET /responderVinculacion?token=…&respuesta=si\|no` | — | **200** HTML «¿Vinculamos el sensor?» con un botón · **400** HTML enlace no válido — lo abren los botones del correo (T005) |
+| `POST /responderVinculacion` | formulario `token`, `respuesta` | **200** HTML «Sensor vinculado» o «Vinculación rechazada» · **400** HTML «Enlace no válido» (T005) |
 
 Errores comunes: **400** JSON mal formado · **401** sin sesión · **403** el rol no tiene permiso · **404** ruta que no existe · **500** error del servidor (sin detalles).
 
@@ -93,6 +98,8 @@ servidor.get('/usuarios', requiereSesion(logica, ['administrador', 'tecnico']), 
 - **Configuración** en `src/servidor_rest/.env` (copiar de `.env.ejemplo`; `.env` no se sube a GitHub): puerto, conexión a MySQL, `CLAVE_TOKENS` (clave secreta que firma los tokens; sin ella se usa una de desarrollo y se avisa en la consola), URL de la página de restablecer contraseña y SMTP.
 - **Páginas estáticas:** el servidor sirve la carpeta `src/web_publica` (`express.static`). Por ahora solo `restablecer.html` (ver `web_publica_design.md`).
 - **Sin SMTP** (`SMTP_HOST` vacío) el correo de recuperación se muestra en la consola del servidor en lugar de enviarse. Así se puede probar en local sin una cuenta de correo.
+- **Vinculación por correo (T005):** el GET del enlace del correo **no cambia nada**: solo enseña la pregunta con un botón, y el botón hace el POST. Así, si el programa de correo (por ejemplo, Outlook de la UPV) abre los enlaces solo para revisarlos, no se vincula ni se rechaza nada sin que la persona pulse. Las páginas las monta `PaginaVinculacion.js`, con los colores de AERIS.
+- **`URL_VINCULACION`** (en `.env`): dirección que llevan los botones del correo. Por defecto `http://localhost:8080/responderVinculacion`, así que el correo hay que abrirlo en el mismo ordenador donde corre el servidor.
 - **Puerto 8080:** la app lo usa en el emulador como `http://10.0.2.2:8080` (`LogicaFakeRegistro.URL_SERVIDOR`).
 - **El registro abre sesión:** `POST /registrarUsuario` ya devuelve el token, para que la app no tenga que iniciar sesión justo después de registrarse.
 - **JSON de la app:** las claves son las de `LogicaFakeRegistro.crearJSON()` (`nombre`, `apellidos`, `correo`, `contrasena`). En la BD se guardan en `nombre`, `apellidos`, `email` y `passwordHash`.
@@ -103,4 +110,4 @@ servidor.get('/usuarios', requiereSesion(logica, ['administrador', 'tecnico']), 
 
 - **Lenguaje:** JavaScript (Node.js 18 o superior), Express 4.
 - **Cabecera de fichero** y **cabecera de cada función** con su diseño lógico y una línea `What it does:`.
-- **Tests automáticos (mocha):** `npm test` desde `src/servidor_rest`. Arrancan el servidor en un puerto libre con la BD de pruebas `aeris_test` y hacen peticiones HTTP reales a cada ruta (códigos 200/201/204/400/401/403/404/409).
+- **Tests automáticos (mocha):** `npm test` desde `src/servidor_rest`. Arrancan el servidor en un puerto libre con la BD de pruebas `aeris_test` y hacen peticiones HTTP reales a cada ruta (códigos 200/201/204/400/401/403/404/409). La vinculación tiene su propio fichero, `test_api_vinculacion.js`.
