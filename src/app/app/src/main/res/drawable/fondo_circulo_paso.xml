@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Círculo de 28 dp para los números de los pasos y los iconos de los avisos;
+     el color se pone con backgroundTint · T005 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="@color/blanco" />
+    <size android:width="28dp" android:height="28dp" />
+</shape>

@@ -34,7 +34,9 @@ public class ProximamenteActivity extends AppCompatActivity {
         MIS_DATOS(R.string.proximamente_mis_datos, R.string.proximamente_mis_datos_texto, R.drawable.ic_mis_datos),
         PREVISION(R.string.proximamente_prevision, R.string.proximamente_prevision_texto, R.drawable.ic_reloj),
         MIS_LUGARES(R.string.proximamente_lugares, R.string.proximamente_lugares_texto, R.drawable.ic_lugar),
-        MI_SENSOR(R.string.proximamente_mi_sensor, R.string.proximamente_mi_sensor_texto, R.drawable.ic_sensor);
+        MI_SENSOR(R.string.proximamente_mi_sensor, R.string.proximamente_mi_sensor_texto, R.drawable.ic_sensor),
+        // T043: hasta que esté la pantalla Ayuda (se abre desde Vincular sensor)
+        AYUDA(R.string.proximamente_ayuda, R.string.proximamente_ayuda_texto, R.drawable.ic_info);
 
         final int titulo;
         final int texto;

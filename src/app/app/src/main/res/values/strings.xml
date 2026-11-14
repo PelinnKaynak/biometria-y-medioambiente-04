@@ -40,6 +40,28 @@
     <string name="vincular_error_camara">No se ha podido abrir la cámara. Inténtalo de nuevo.</string>
     <string name="vincular_boton">Vincular</string>
     <string name="vincular_mas_tarde">Ahora no, lo vincularé más tarde</string>
+    <!-- Vinculación confirmada por correo por quien compró el sensor -->
+    <string name="vincular_nota_correo">Enviaremos un correo a quien compró el sensor para que confirme la vinculación.</string>
+    <string name="vincular_texto_esperando">Ya has escaneado tu sensor. Falta que se confirme la vinculación por correo.</string>
+    <string name="vincular_texto_rechazada">No se ha podido vincular el sensor %1$s.</string>
+    <string name="vincular_esperando_titulo">Esperando la confirmación</string>
+    <string name="vincular_esperando_texto">Hemos enviado un correo a %1$s, el correo con el que se compró el sensor %2$s. Cuando lo confirme, tu sensor empezará a funcionar. El enlace caduca en 48 horas.</string>
+    <string name="vincular_reenviar">Reenviar correo</string>
+    <string name="vincular_reenviado">Te hemos vuelto a enviar el correo.</string>
+    <string name="vincular_estado_titulo">Estado de la vinculación</string>
+    <string name="vincular_paso_escaneado">Sensor escaneado</string>
+    <string name="vincular_paso_escaneado_detalle">%1$s · %2$s</string>
+    <string name="vincular_paso_correo">Confirmación por correo</string>
+    <string name="vincular_paso_correo_detalle">Pendiente · %1$s</string>
+    <string name="vincular_paso_vinculado">Sensor vinculado</string>
+    <string name="vincular_paso_vinculado_detalle">Verás tus mediciones en Inicio</string>
+    <string name="vincular_esperando_nota">Si te lo ha regalado alguien, avísale para que mire su correo. Si no lo confirma a tiempo, podrás volver a escanear el código.</string>
+    <string name="vincular_ayuda">¿Algún problema? Necesito ayuda</string>
+    <string name="vincular_rechazada_titulo">Vinculación rechazada</string>
+    <string name="vincular_rechazada_texto">La persona que compró el sensor ha pulsado «No conozco a esta persona» o el enlace ha caducado. El sensor sigue sin dueño.</string>
+    <string name="vincular_escanear_de_nuevo">Escanear de nuevo</string>
+    <string name="vincular_ayuda_error">¿Crees que es un error? Necesito ayuda</string>
+    <string name="vincular_confirmada">¡Sensor vinculado!</string>
 
     <!-- Permiso de red local (Android 17) -->
     <string name="permiso_red_denegado">AERIS necesita permiso para conectar con dispositivos de la red local (el servidor).</string>
@@ -125,6 +147,8 @@
     <string name="proximamente_mi_sensor">Mi sensor</string>
     <string name="proximamente_mi_sensor_texto">Aquí verás el estado de tu sensor, su batería y sus mediciones, y podrás desvincularlo. Esta sección se está preparando.</string>
     <string name="proximamente_lugares_texto">Aquí podrás guardar casa, el trabajo y tus sitios para ver su calidad del aire. Esta sección se está preparando.</string>
+    <string name="proximamente_ayuda">Ayuda</string>
+    <string name="proximamente_ayuda_texto">Aquí podrás contarnos un problema con tu sensor, tus datos o tu cuenta y ver nuestras respuestas. Esta sección se está preparando.</string>
 
     <!-- Barra de navegación inferior (T010) -->
     <string name="barra_inicio">Inicio</string>

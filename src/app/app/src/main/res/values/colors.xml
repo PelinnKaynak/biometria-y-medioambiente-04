@@ -44,4 +44,13 @@
     <!-- Inicio (T006): sombra lila suave de las tarjetas y onda al pulsar -->
     <color name="sombra_tarjeta">#7A5A3D8C</color>
     <color name="onda_pulsar">#1F7958A7</color>
+    <!-- Vincular sensor: avisos de «esperando la confirmación» y «rechazada» -->
+    <color name="espera_fondo">#FBF1D9</color>
+    <color name="espera_borde">#F0DCA6</color>
+    <color name="espera_icono">#E3B341</color>
+    <color name="espera_texto">#85600F</color>
+    <color name="rechazo_fondo">#FBEAEA</color>
+    <color name="rechazo_borde">#F2C7C5</color>
+    <color name="rechazo_icono">#C4473F</color>
+    <color name="rechazo_texto">#9E2F28</color>
 </resources>

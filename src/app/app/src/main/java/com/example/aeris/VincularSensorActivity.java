@@ -7,8 +7,10 @@
 //              etiqueta del sensor (CodigoSensor). Si la cámara no funciona,
 //              «¿No funciona la cámara? Escribe el código» deja escribir el
 //              número de serie y la sensibilidad. Después se enseña el sensor
-//              con el botón «Vincular». La petición al servidor es de
-//              T005/T017: está marcada con «T005» en pulsarVincular().
+//              con el botón «Vincular». Al pulsarlo se pide la vinculación
+//              (LogicaFakeVincular) y el servidor envía un correo a quien
+//              compró el sensor: la pantalla espera a que lo confirme
+//              («Esperando la confirmación») o enseña si lo ha rechazado.
 //              Diseño en doc/app_design.md.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       05/11/2026
@@ -21,6 +23,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -28,6 +31,8 @@ import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanner;
 import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions;
 import com.google.mlkit.vision.codescanner.GmsBarcodeScanning;
+
+import java.time.ZoneId;
 
 // VincularSensorActivity class: the «Vincular sensor» screen.
 public class VincularSensorActivity extends AppCompatActivity {
@@ -46,6 +51,15 @@ public class VincularSensorActivity extends AppCompatActivity {
     private TextView textoNumeroSerie;
     private TextView textoDetalleSensor;
     private TextView errorVincular;
+    private View botonVincular;
+    private TextView textoVincular;
+    private View tarjetaEsperando;
+    private View tarjetaRechazada;
+    private TextView textoEsperando;
+    private TextView textoPasoEscaneado;
+    private TextView textoPasoCorreo;
+    private TextView textoReenviado;
+    private final LogicaFakeVincular logica = new LogicaFakeVincular();
     private boolean desdePerfil;
     private CodigoSensor sensorLeido;   // null hasta que se escanea un código válido
 
@@ -53,7 +67,9 @@ public class VincularSensorActivity extends AppCompatActivity {
     // onCreate() -->       (lo llama Android al abrir la pantalla)
     // What it does: finds the views and connects «Escanear código», the
     //               link to write the code by hand, «Continuar», «Vincular»,
-    //               «Escanear otro código» and the back button. After the
+    //               «Escanear otro código», «Reenviar correo», «Escanear de
+    //               nuevo», the «Necesito ayuda» links and the back button,
+    //               and asks if there was already a request. After the
     //               sign-up, back opens the home screen; from the profile, it
     //               returns to the profile.
     // -----------------------------------------------------------------------
@@ -72,6 +88,14 @@ public class VincularSensorActivity extends AppCompatActivity {
         tarjetaAMano = findViewById(R.id.tarjetaAMano);
         campoCodigo = findViewById(R.id.campoCodigo);
         errorCodigo = findViewById(R.id.errorCodigo);
+        botonVincular = findViewById(R.id.botonVincular);
+        textoVincular = findViewById(R.id.textoVincular);
+        tarjetaEsperando = findViewById(R.id.tarjetaEsperando);
+        tarjetaRechazada = findViewById(R.id.tarjetaRechazada);
+        textoEsperando = findViewById(R.id.textoEsperando);
+        textoPasoEscaneado = findViewById(R.id.textoPasoEscaneado);
+        textoPasoCorreo = findViewById(R.id.textoPasoCorreo);
+        textoReenviado = findViewById(R.id.textoReenviado);
         desdePerfil = getIntent().getBooleanExtra(EXTRA_DESDE_PERFIL, false);
 
         botonEscanear.setOnClickListener(vista -> escanear());
@@ -80,13 +104,36 @@ public class VincularSensorActivity extends AppCompatActivity {
         findViewById(R.id.enlaceVolverEscanear).setOnClickListener(vista -> mostrarSolo(tarjetaEscanear));
         findViewById(R.id.botonContinuar).setOnClickListener(vista -> pulsarContinuar());
         TeclaEnter.pulsaBoton(campoCodigo, findViewById(R.id.botonContinuar));
-        findViewById(R.id.botonVincular).setOnClickListener(vista -> pulsarVincular());
+        botonVincular.setOnClickListener(vista -> pulsarVincular());
+        findViewById(R.id.botonReenviar).setOnClickListener(vista -> reenviarCorreo());
+        findViewById(R.id.botonEscanearDeNuevo).setOnClickListener(vista -> escanear());
+        findViewById(R.id.enlaceAyudaEsperando).setOnClickListener(vista -> abrirAyuda());
+        findViewById(R.id.enlaceAyudaRechazada).setOnClickListener(vista -> abrirAyuda());
         findViewById(R.id.botonVolver).setOnClickListener(vista -> salir());
         // Después del registro se puede seguir sin sensor y vincularlo luego
         // desde Inicio o Perfil (no está en Figma; para probar sin sensor)
         View enlaceMasTarde = findViewById(R.id.enlaceMasTarde);
         enlaceMasTarde.setVisibility(desdePerfil ? View.GONE : View.VISIBLE);
         enlaceMasTarde.setOnClickListener(vista -> salir());
+
+        // Si ya había pedido la vinculación, se enseña en qué estado está
+        logica.consultarEstado(Sesion.token(this), respuestaSolicitud(false));
+    }
+
+    // -----------------------------------------------------------------------
+    // onResume() -->       (lo llama Android al volver a la pantalla)
+    // What it does: while «Esperando la confirmación» is shown, asks again
+    //               in which state the request is, so that when the user
+    //               comes back after the e-mail was confirmed (or rejected)
+    //               the screen shows it. (Not in the other cards: the code
+    //               scanner also pauses this screen.)
+    // -----------------------------------------------------------------------
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (tarjetaEsperando.getVisibility() == View.VISIBLE) {
+            logica.consultarEstado(Sesion.token(this), respuestaSolicitud(false));
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -150,12 +197,19 @@ public class VincularSensorActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // tarjeta: View --> mostrarSolo() -->
-    // What it does: shows that card (scan, by hand or sensor) and hides the others.
+    // What it does: shows that card (scan, by hand, sensor, waiting or
+    //               rejected) and hides the others. The text below the title
+    //               goes back to «Escanea con la cámara…» in the first three.
     // -----------------------------------------------------------------------
     private void mostrarSolo(View tarjeta) {
         tarjetaEscanear.setVisibility(tarjeta == tarjetaEscanear ? View.VISIBLE : View.GONE);
         tarjetaAMano.setVisibility(tarjeta == tarjetaAMano ? View.VISIBLE : View.GONE);
         tarjetaSensor.setVisibility(tarjeta == tarjetaSensor ? View.VISIBLE : View.GONE);
+        tarjetaEsperando.setVisibility(tarjeta == tarjetaEsperando ? View.VISIBLE : View.GONE);
+        tarjetaRechazada.setVisibility(tarjeta == tarjetaRechazada ? View.VISIBLE : View.GONE);
+        if (tarjeta != tarjetaEsperando && tarjeta != tarjetaRechazada) {
+            textoVincular.setText(R.string.vincular_texto);
+        }
     }
 
     private void marcar(EditText campo, TextView etiquetaError, String mensaje) {
@@ -190,16 +244,124 @@ public class VincularSensorActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // pulsarVincular() -->
-    // What it does: T005/T017: sends sensorLeido (serial and sensitivity) to
-    //               the server to link it to the user's account and, if it
-    //               works, calls salir(). The server part does not exist yet.
+    // What it does: asks to link sensorLeido (serial and sensitivity). The
+    //               server sends the e-mail to whoever bought the sensor and
+    //               the screen shows «Esperando la confirmación». If it fails,
+    //               the error is shown below the button.
     // -----------------------------------------------------------------------
     private void pulsarVincular() {
         if (sensorLeido == null) {
             return;
         }
-        // T005/T017: petición al servidor (POST /vincularSensor) con
-        // sensorLeido.numeroSerie y sensorLeido.sensibilidad; si va bien, salir()
+        botonVincular.setEnabled(false);
+        errorVincular.setVisibility(View.GONE);
+        logica.solicitarVinculacion(Sesion.token(this), sensorLeido, respuestaSolicitud(true));
+    }
+
+    // -----------------------------------------------------------------------
+    // alPedirla: B --> respuestaSolicitud() --x
+    // RespuestaSolicitud <--
+    // What it does: what to do with the answer about the request. Errors
+    //               are only shown below «Vincular» when the user pressed it
+    //               (alPedirla); when asking the state in onResume they are
+    //               ignored.
+    // -----------------------------------------------------------------------
+    private LogicaFakeVincular.RespuestaSolicitud respuestaSolicitud(final boolean alPedirla) {
+        return new LogicaFakeVincular.RespuestaSolicitud() {
+            @Override
+            public void solicitudObtenida(SolicitudVinculacion solicitud) {
+                botonVincular.setEnabled(true);
+                mostrarSolicitud(solicitud);
+            }
+
+            @Override
+            public void sinSolicitud() {
+                botonVincular.setEnabled(true);
+            }
+
+            @Override
+            public void sesionCaducada() {
+                cerrarSesion();
+            }
+
+            @Override
+            public void error(String mensaje) {
+                botonVincular.setEnabled(true);
+                if (alPedirla) {
+                    errorVincular.setText(mensaje);
+                    errorVincular.setVisibility(View.VISIBLE);
+                }
+            }
+        };
+    }
+
+    // -----------------------------------------------------------------------
+    // solicitud: SolicitudVinculacion --> mostrarSolicitud() -->
+    // What it does: pending -> «Esperando la confirmación» with the hidden
+    //               e-mail, the serial and when it was scanned; confirmed ->
+    //               «¡Sensor vinculado!» and salir(); rejected -> «Vinculación
+    //               rechazada».
+    // -----------------------------------------------------------------------
+    private void mostrarSolicitud(SolicitudVinculacion solicitud) {
+        switch (solicitud.estado) {
+            case PENDIENTE:
+                textoVincular.setText(R.string.vincular_texto_esperando);
+                textoEsperando.setText(getString(R.string.vincular_esperando_texto,
+                        solicitud.correoComprador, solicitud.numeroSerie));
+                textoPasoEscaneado.setText(getString(R.string.vincular_paso_escaneado_detalle,
+                        solicitud.numeroSerie, SolicitudVinculacion.cuando(solicitud.momento,
+                                System.currentTimeMillis(), ZoneId.systemDefault())));
+                textoPasoCorreo.setText(getString(R.string.vincular_paso_correo_detalle,
+                        solicitud.correoComprador));
+                mostrarSolo(tarjetaEsperando);
+                break;
+            case CONFIRMADA:
+                Toast.makeText(this, R.string.vincular_confirmada, Toast.LENGTH_SHORT).show();
+                salir();
+                break;
+            case RECHAZADA:
+                textoVincular.setText(getString(R.string.vincular_texto_rechazada, solicitud.numeroSerie));
+                mostrarSolo(tarjetaRechazada);
+                break;
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // reenviarCorreo() -->
+    // What it does: asks to send the confirmation e-mail again and says
+    //               below the button whether it worked.
+    // -----------------------------------------------------------------------
+    private void reenviarCorreo() {
+        logica.reenviarCorreo(Sesion.token(this), new LogicaFakeVincular.RespuestaReenvio() {
+            @Override
+            public void correoReenviado() {
+                textoReenviado.setText(R.string.vincular_reenviado);
+                textoReenviado.setVisibility(View.VISIBLE);
+            }
+
+            @Override
+            public void error(String mensaje) {
+                textoReenviado.setText(mensaje);
+                textoReenviado.setVisibility(View.VISIBLE);
+            }
+        });
+    }
+
+    // -----------------------------------------------------------------------
+    // abrirAyuda() -->
+    // What it does: opens Ayuda. Until the Ayuda screen exists (T043) it is
+    //               the «Próximamente» screen.
+    // -----------------------------------------------------------------------
+    private void abrirAyuda() {
+        startActivity(ProximamenteActivity.intentPara(this, ProximamenteActivity.Seccion.AYUDA));
+    }
+
+    private void cerrarSesion() {
+        Sesion.cerrar(this);
+        Intent intent = new Intent(this, BienvenidaActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 
     // -----------------------------------------------------------------------

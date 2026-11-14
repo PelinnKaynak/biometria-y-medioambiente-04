@@ -40,6 +40,7 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/textoVincular"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -273,6 +274,16 @@
                 android:textSize="16sp"
                 android:textFontWeight="600" />
 
+            <!-- La vinculación se confirma por correo (Figma: «código leído») -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:text="@string/vincular_nota_correo"
+                android:textColor="@color/texto_secundario"
+                android:textSize="13sp" />
+
             <TextView
                 android:id="@+id/errorVincular"
                 style="@style/AERIS.Error"
@@ -291,6 +302,338 @@
                 android:text="@string/vincular_escanear_otro"
                 android:textColor="@color/violeta"
                 android:textSize="13sp"
+                android:textFontWeight="600" />
+        </LinearLayout>
+
+        <!-- Paso 3: esperando a que quien compró el sensor confirme por correo
+             (Figma: «vincular sensor · esperando confirmación») -->
+        <LinearLayout
+            android:id="@+id/tarjetaEsperando"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/fondo_aviso_espera"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/fondo_circulo_paso"
+                        android:backgroundTint="@color/espera_icono"
+                        android:gravity="center"
+                        android:text="!"
+                        android:textColor="@color/blanco"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="@string/vincular_esperando_titulo"
+                        android:textColor="@color/espera_texto"
+                        android:textSize="16sp"
+                        android:textFontWeight="600" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/textoEsperando"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="3dp"
+                    android:textColor="@color/texto_cuerpo"
+                    android:textSize="14sp"
+                    tools:text="Hemos enviado un correo a m•••••@gmail.com, el correo con el que se compró el sensor 092021010920. Cuando lo confirme, tu sensor empezará a funcionar. El enlace caduca en 48 horas." />
+
+                <TextView
+                    android:id="@+id/botonReenviar"
+                    android:layout_width="170dp"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/fondo_boton_secundario"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:text="@string/vincular_reenviar"
+                    android:textColor="@color/violeta"
+                    android:textSize="16sp"
+                    android:textFontWeight="600" />
+
+                <TextView
+                    android:id="@+id/textoReenviado"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/texto_cuerpo"
+                    android:textSize="13sp"
+                    android:visibility="gone"
+                    tools:text="@string/vincular_reenviado" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/fondo_tarjeta"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/vincular_estado_titulo"
+                    android:textColor="@color/texto_principal"
+                    android:textSize="16sp"
+                    android:textFontWeight="600" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="@drawable/fondo_circulo_paso"
+                    android:backgroundTint="@color/verde_ok_fondo"
+                    android:gravity="center"
+                    android:text="✓"
+                    android:textColor="@color/verde_ok"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/vincular_paso_escaneado"
+                        android:textColor="@color/texto_principal"
+                        android:textSize="16sp"
+                        android:textFontWeight="600" />
+
+                    <TextView
+                        android:id="@+id/textoPasoEscaneado"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        tools:text="092021010920 · hoy, 18:40"
+                        android:textColor="@color/texto_secundario"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="@drawable/fondo_circulo_paso"
+                    android:backgroundTint="@color/violeta"
+                    android:gravity="center"
+                    android:text="2"
+                    android:textColor="@color/blanco"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/vincular_paso_correo"
+                        android:textColor="@color/texto_principal"
+                        android:textSize="16sp"
+                        android:textFontWeight="600" />
+
+                    <TextView
+                        android:id="@+id/textoPasoCorreo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        tools:text="Pendiente · m•••••@gmail.com"
+                        android:textColor="@color/texto_secundario"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:background="@drawable/fondo_circulo_paso"
+                    android:backgroundTint="@color/info_lila_suave"
+                    android:gravity="center"
+                    android:text="3"
+                    android:textColor="@color/violeta"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/vincular_paso_vinculado"
+                        android:textColor="@color/texto_principal"
+                        android:textSize="16sp"
+                        android:textFontWeight="600" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/vincular_paso_vinculado_detalle"
+                        android:textColor="@color/texto_secundario"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:lineSpacingExtra="2dp"
+                    android:text="@string/vincular_esperando_nota"
+                    android:textColor="@color/texto_secundario"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/enlaceAyudaEsperando"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:padding="6dp"
+                android:text="@string/vincular_ayuda"
+                android:textColor="@color/violeta"
+                android:textSize="14sp"
+                android:textFontWeight="600" />
+        </LinearLayout>
+
+        <!-- Si quien compró el sensor la rechaza o el enlace caduca
+             (Figma: «vincular sensor · vinculación rechazada») -->
+        <LinearLayout
+            android:id="@+id/tarjetaRechazada"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/fondo_aviso_rechazo"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:background="@drawable/fondo_circulo_paso"
+                        android:backgroundTint="@color/rechazo_icono"
+                        android:gravity="center"
+                        android:text="✕"
+                        android:textColor="@color/blanco"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="@string/vincular_rechazada_titulo"
+                        android:textColor="@color/rechazo_texto"
+                        android:textSize="16sp"
+                        android:textFontWeight="600" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:lineSpacingExtra="3dp"
+                    android:text="@string/vincular_rechazada_texto"
+                    android:textColor="@color/texto_cuerpo"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/botonEscanearDeNuevo"
+                android:layout_width="220dp"
+                android:layout_height="44dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/fondo_boton_principal"
+                android:clickable="true"
+                android:elevation="4dp"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/vincular_escanear_de_nuevo"
+                android:textColor="@color/blanco"
+                android:textSize="16sp"
+                android:textFontWeight="600" />
+
+            <TextView
+                android:id="@+id/enlaceAyudaRechazada"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:padding="6dp"
+                android:text="@string/vincular_ayuda_error"
+                android:textColor="@color/violeta"
+                android:textSize="14sp"
                 android:textFontWeight="600" />
         </LinearLayout>
 
