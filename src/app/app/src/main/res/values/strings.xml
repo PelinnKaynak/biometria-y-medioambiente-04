@@ -282,5 +282,21 @@
     <string name="info_limite_oms_valor">100 µg/m³ en 8 horas</string>
     <string name="info_limites_nota">Directiva 2008/50/CE y Real Decreto 102/2011. AERIS usa el valor de la OMS como límite de «Bueno».</string>
     <string name="info_fuentes">Fuentes: Directiva 2008/50/CE, Real Decreto 102/2011, OMS (2021) y SPEC Sensors.</string>
->>>>>>> origin/main
+
+    <!-- Mis datos (T007) -->
+    <string name="mis_datos_titulo">Mis datos</string>
+    <string name="mis_datos_subtitulo">Resumen de tu actividad y calidad del aire de hoy.</string>
+    <string name="mis_datos_seccion_resumen">Resumen de hoy</string>
+    <string name="mis_datos_distancia_titulo">Distancia recorrida</string>
+    <string name="mis_datos_distancia_subtitulo">En tus trayectos de hoy</string>
+    <string name="mis_datos_calidad_titulo">Calidad media</string>
+    <string name="mis_datos_calidad_subtitulo_fmt">%1$.0f µg/m³ de media</string>
+    <string name="mis_datos_ozono_titulo">Ozono respirado</string>
+    <string name="mis_datos_ozono_subtitulo">Exposición acumulada</string>
+    <string name="mis_datos_seccion_mediciones">Mediciones de hoy</string>
+    <string name="mis_datos_sin_mediciones">Todavía no hay mediciones registradas hoy.</string>
+    <string name="mis_datos_sin_sensor_titulo">Sin sensor vinculado</string>
+    <string name="mis_datos_sin_sensor_texto">Para medir la distancia recorrida, la calidad media del aire y el ozono que respiras durante el día, vincula tu sensor AERIS.</string>
+    <string name="mis_datos_vincular_boton">Vincular sensor</string>
+    <string name="mis_datos_error_carga">No se han podido cargar tus datos de hoy.</string>
 </resources>

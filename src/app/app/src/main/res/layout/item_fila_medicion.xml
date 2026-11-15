@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fila de una medición en la lista de «Mis datos» (T007) -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <!-- Punto del color de nivel -->
+    <View
+        android:id="@+id/puntoNivelMedicion"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:background="@drawable/fondo_punto_nivel"
+        android:backgroundTint="@color/nivel_bueno" />
+
+    <TextView
+        android:id="@+id/horaMedicionFila"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:textColor="@color/texto_principal"
+        android:textSize="14sp"
+        tools:text="18:42" />
+
+    <TextView
+        android:id="@+id/valorMedicionFila"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/texto_principal"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        tools:text="74 µg/m³" />
+
+    <TextView
+        android:id="@+id/etiquetaNivelFila"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:textColor="@color/verde_ok"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        tools:text="Buena" />
+</LinearLayout>

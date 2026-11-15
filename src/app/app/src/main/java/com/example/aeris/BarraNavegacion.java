@@ -71,6 +71,8 @@ public class BarraNavegacion {
         switch (pestanya) {
             case INICIO:
                 return InicioActivity.class;
+            case MIS_DATOS:
+                return MisDatosActivity.class;
             case INFO:
                 return InformacionActivity.class;
             case PERFIL:

@@ -142,7 +142,8 @@ public class InicioActivity extends AppCompatActivity {
                         .putExtra(VincularSensorActivity.EXTRA_DESDE_PERFIL, true)));
         // «Mi sensor», «Mis datos», la previsión y «Mis lugares» son otras tareas
         findViewById(R.id.botonVerSensor).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.MI_SENSOR));
-        findViewById(R.id.botonVerMas).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.MIS_DATOS));
+        findViewById(R.id.botonVerMas).setOnClickListener(vista ->
+                startActivity(new Intent(this, MisDatosActivity.class)));
         findViewById(R.id.filaPrevision).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.PREVISION));
         findViewById(R.id.filaLugares).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.MIS_LUGARES));
         findViewById(R.id.botonReintentar).setOnClickListener(vista -> cargarMediciones());

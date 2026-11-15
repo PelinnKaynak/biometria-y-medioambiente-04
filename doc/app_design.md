@@ -720,6 +720,78 @@ MiSensorActivity (NUEVA):   onCreate(), cargarEstado(), mostrarEstado(), cambiar
 
 ---
 
+## 3.2. Pantalla Mis datos (T007)
+
+Pantalla «Mis datos» accesible desde la pestaña de la barra de navegación inferior (`BarraNavegacion.Pestanya.MIS_DATOS`) y desde el enlace «Ver más» de las últimas mediciones en `InicioActivity`. Muestra el resumen del día de hoy para el usuario con sesión iniciada: la distancia recorrida (en km), la calidad media del aire (y su nivel de ozono) y el ozono respirado durante el día, junto con la lista de mediciones tomadas hoy. Si el usuario no tiene sensor vinculado, se muestra una tarjeta destacada de aviso para vincularlo que enlaza con `VincularSensorActivity`.
+
+```text
+BarraNavegacion (MIS_DATOS) / InicioActivity («Ver más») --> MisDatosActivity
+MisDatosActivity.onResume() --> LogicaFakeMisDatos.obtenerDatosHoy() --> PeticionarioREST --> GET /misDatos/hoy
+MisDatosActivity --(«Vincular sensor», si no tiene)--> VincularSensorActivity
+```
+
+### Tipos
+
+```text
+ResumenMisDatos = ( distanciaKm: R, ozonoMedio: R, ozonoRespiradoTexto: Text, medicionesHoy: [Medicion], tieneSensor: B )
+```
+
+### Clase ResumenMisDatos (NUEVA)
+
+```text
+                                    --------- ResumenMisDatos -----------------------
+                                    |
+                                    | distanciaKm: R, ozonoMedio: R, ozonoRespiradoTexto: Text,
+                                    | medicionesHoy: [Medicion], tieneSensor: B
+                                    |
+                                --> textoDistancia() --x
+  Text                          <-- |     ej. "4,2 km" o "0 km"
+                                    |
+                                --> nivelCalidadMedia() --x
+  NivelOzono                    <-- |     NivelOzono.desdeValor(ozonoMedio)
+                                    |
+                                --> textoCalidadMedia() --x
+  Text                          <-- |     "Buena", "Moderada", "Mala" o "Muy mala"
+                                    |
+                                --> textoOzonoRespirado() --x
+  Text                          <-- |     ej. "74 µg/m³"
+                                    |
+  mediciones: [Medicion],
+  distanciaKm: R, tieneSensor: B --> calcularDesdeMediciones() --x
+  ResumenMisDatos               <-- |     calcula ozonoMedio como promedio de las mediciones
+                                    |
+  cuerpo: Text, tieneSensor: B  --> desdeJSON() --x
+  ResumenMisDatos | null        <-- |     parsea el JSON devuelto por el servidor
+                                    |
+                                    -------------------------------------------------
+```
+
+### Clase LogicaFakeMisDatos (NUEVA)
+
+```text
+                                    --------- LogicaFakeMisDatos --------------------
+                                    |
+                                    | CODIGO_OK: Z = 200, CODIGO_SIN_SESION: Z = 401
+                                    | CODIGO_SIN_CONEXION: Z = 0
+                                    |
+  token: Text, tieneSensor: B   --> obtenerDatosHoy() -->
+                                    |     callback: datosObtenidos(ResumenMisDatos),
+                                    |     sesionCaducada(), error(Text)
+                                    |
+                                    |    codigo: Z, cuerpo: Text, tieneSensor: B --> notificarResumen() --x
+                                    |
+                                    -------------------------------------------------
+```
+
+### Pantallas
+
+```text
+MisDatosActivity (NUEVA):   onCreate(), onResume(), cargarDatos(), mostrarDatos(),
+                            mostrarSinSensor(), abrirVincular()
+```
+
+---
+
 ## 4. Aclaraciones del diseño
 
 - **Petición REST:** `POST /registrarUsuario` con el cuerpo `{"nombre": ..., "apellidos": ..., "correo": ..., "contrasena": ...}`. Respuestas: `201` cuenta creada, `409` el correo ya tiene cuenta, `400` datos incorrectos, `500` error del servidor. Si no hay conexión el código es `0`.
@@ -751,6 +823,7 @@ MiSensorActivity (NUEVA):   onCreate(), cargarEstado(), mostrarEstado(), cambiar
 - **Cambiar contraseña:** pide la actual, la nueva (segura y distinta de la actual) y repetirla; `POST /cambiarContrasenya`. `200` → el servidor devuelve una sesión nueva, que se guarda con `Sesion.iniciar()` (la sesión de los otros teléfonos se cierra); `403` → «La contraseña actual no es correcta.» y se borra ese campo.
 - **Mi sensor (perfil, T005):** hasta que responde `GET /usuarioActual` la fila solo enseña la flecha y no hace nada al pulsarla; sin sensor, enseña «Vincular  >» en violeta y abre `VincularSensorActivity` con el extra `desdePerfil`; con sensor enseña su nombre y abre `MiSensorActivity` (T011).
 - **Mi sensor (T011):** accesible desde el perfil cuando hay sensor. Muestra el estado del sensor (identificador, si está conectado, nivel de batería y última sincronización), un interruptor para encender o apagar la luz del sensor (`POST /cambiarLuzSensor`) y el botón «Desvincular sensor» (`POST /desvincularSensor`). Hasta disponer de conexión física Bluetooth y endpoints reales, se gestiona con `LogicaFakeMiSensor`.
+- **Mis datos (T007):** pestaña de la barra inferior y accesible desde «Ver más» en Inicio. Si el usuario tiene sensor y mediciones de hoy, enseña la distancia recorrida (en km), la calidad media del aire y el ozono respirado, además de las mediciones del día. Si no tiene sensor, muestra la tarjeta de aviso para vincularlo. Solo consulta y muestra datos del usuario con sesión.
 - **Opciones de otras tareas:** «Umbral de alerta», «Puntos y recompensas», «Mis lugares» (T019) y «AERIS Premium» aún no hacen nada al pulsarlas. «Umbral de alerta» enseña «Normal», el valor por defecto (`umbralAlerta` NULL).
 - **Barra de navegación:** `barra_navegacion.xml` se añade con `<include>` y `BarraNavegacion.conectar()` la pinta y conecta. Inicio siempre queda debajo: desde cualquier pestaña se cierra la pantalla actual al cambiar (`cierraLaActual()`), así «atrás» vuelve a Inicio y «atrás» en Inicio sale de la app. Al volver a Inicio se reutiliza (`FLAG_ACTIVITY_CLEAR_TOP`). Las pestañas cambian sin animación.
 - **PeticionarioREST:** es el código proporcionado por el profesor, con la misma interfaz, pero sin `AsyncTask` (obsoleta desde Android 11): la petición se hace en un hilo de fondo (`Executor`) y el callback se llama en el hilo principal.
@@ -762,4 +835,4 @@ MiSensorActivity (NUEVA):   onCreate(), cargarEstado(), mostrarEstado(), cambiar
 
 - **Lenguaje:** Java 11, Android 10 (API 29) o superior.
 - **Cabecera de fichero** con nombre, descripción, autores, fecha y copyright; **cabecera de cada método** con su diseño lógico en la notación de la asignatura y una línea `What it does:`.
-- **Tests automáticos (JUnit 4):** `ValidadorRegistroTest` (campos vacíos, nombre y apellidos, correo, contraseña segura, confirmación), `LogicaFakeRegistroTest` (JSON enviado y respuesta para 201 con token, 409, 500 y sin conexión), `ValidadorLoginTest` (campos vacíos y correo) `LogicaFakeSesionTest` (JSON enviado, 200 con token, 401, 500, sin conexión y recuperación) `LogicaFakePerfilTest` (lectura de `DatosUsuario` con la foto, JSON de la foto, respuestas de `GET /usuarioActual`, `POST /cambiarAlertas` y `POST /cambiarFoto`, y qué pantalla cierra la barra) `SensorEncontradoTest` (textos de señal y distancia), `CodigoSensorTest` (código de la etiqueta y datos escritos a mano), `InformacionTest` (niveles de ozono, consejo del día y pestaña «Info»), `LogicaFakeEditarDatosTest` (validación de los datos y de la contraseña, JSON enviado y respuestas 200, 400, 401, 403, 409 y sin conexión) y `LogicaFakeMiSensorTest` (parseo de `DatosSensor`, formato de batería y conexión, creación de JSON de luz y respuestas 200, 204, 401, 404 y sin conexión para estado, luz y desvinculación). Se ejecutan con `./gradlew test` desde `src/app`.
+- **Tests automáticos (JUnit 4):** `ValidadorRegistroTest` (campos vacíos, nombre y apellidos, correo, contraseña segura, confirmación), `LogicaFakeRegistroTest` (JSON enviado y respuesta para 201 con token, 409, 500 y sin conexión), `ValidadorLoginTest` (campos vacíos y correo) `LogicaFakeSesionTest` (JSON enviado, 200 con token, 401, 500, sin conexión y recuperación) `LogicaFakePerfilTest` (lectura de `DatosUsuario` con la foto, JSON de la foto, respuestas de `GET /usuarioActual`, `POST /cambiarAlertas` y `POST /cambiarFoto`, y qué pantalla cierra la barra) `SensorEncontradoTest` (textos de señal y distancia), `CodigoSensorTest` (código de la etiqueta y datos escritos a mano), `InformacionTest` (niveles de ozono, consejo del día y pestaña «Info»), `LogicaFakeEditarDatosTest` (validación de los datos y de la contraseña, JSON enviado y respuestas 200, 400, 401, 403, 409 y sin conexión) y `LogicaFakeMiSensorTest` (parseo de `DatosSensor`, formato de batería y conexión, creación de JSON de luz y respuestas 200, 204, 401, 404 y sin conexión para estado, luz y desvinculación) y `LogicaFakeMisDatosTest` (cálculo de calidad media, formateo de distancia recorrida, ozono respirado, aviso sin sensor y respuestas 200, 401 y sin conexión). Se ejecutan con `./gradlew test` desde `src/app`.

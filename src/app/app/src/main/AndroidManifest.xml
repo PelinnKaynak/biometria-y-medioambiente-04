@@ -59,9 +59,14 @@
             android:name=".InicioActivity"
             android:exported="false" />
 
-        <!-- Secciones aún no hechas: Mapa, Mis datos, Previsión, Mis lugares (T006) -->
+        <!-- Secciones aún no hechas: Mapa, Previsión, Mis lugares (T006) -->
         <activity
             android:name=".ProximamenteActivity"
+            android:exported="false" />
+
+        <!-- Mis datos (T007): se abre desde la barra de navegación inferior y desde Inicio -->
+        <activity
+            android:name=".MisDatosActivity"
             android:exported="false" />
 
         <activity
