@@ -23,7 +23,7 @@ const { crearEnviadorCorreo } = require('./EnviadorCorreo');
 // ---------------------------------------------------------------------------
 async function main() {
     const entorno = process.env;
-    const puerto = Number(entorno.PUERTO || 8080);
+    const puerto = Number(entorno.PORT || entorno.PUERTO || 8080);
 
     const enviarCorreo = crearEnviadorCorreo({
         host: entorno.SMTP_HOST,
@@ -34,6 +34,10 @@ async function main() {
         remitente: entorno.SMTP_REMITENTE
             || (entorno.SMTP_USUARIO ? `AERIS <${entorno.SMTP_USUARIO}>` : 'AERIS <no-responder@aeris.es>')
     });
+
+    if (entorno.NODE_ENV === 'production' && !entorno.CLAVE_TOKENS) {
+        throw new Error('Falta CLAVE_TOKENS en producción');
+    }
 
     // Clave secreta que firma los tokens de sesión y de recuperación.
     // En producción hay que poner una propia y larga en .env (CLAVE_TOKENS).
@@ -59,7 +63,7 @@ async function main() {
     }
 
     const servidor = crearServidor(logica);
-    const conexion = servidor.listen(puerto, () => {
+    const conexion = servidor.listen(puerto, '0.0.0.0', () => {
         console.log(`Servidor REST de AERIS escuchando en http://localhost:${puerto}`);
     });
 
