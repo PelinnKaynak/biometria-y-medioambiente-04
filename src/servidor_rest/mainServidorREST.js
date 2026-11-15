@@ -34,18 +34,17 @@ async function main() {
         remitente: entorno.SMTP_REMITENTE
             || (entorno.SMTP_USUARIO ? `AERIS <${entorno.SMTP_USUARIO}>` : 'AERIS <no-responder@aeris.es>')
     });
-
-    if (entorno.NODE_ENV === 'production' && !entorno.CLAVE_TOKENS) {
-        throw new Error('Falta CLAVE_TOKENS en producción');
-    }
-
     // Clave secreta que firma los tokens de sesión y de recuperación.
     // En producción hay que poner una propia y larga en .env (CLAVE_TOKENS).
-    let claveTokens = entorno.CLAVE_TOKENS;
-    if (!claveTokens) {
-        claveTokens = 'clave-de-desarrollo-aeris-cambiar-en-produccion';
-        console.warn('Aviso: falta CLAVE_TOKENS en .env; se usa una clave de desarrollo.');
+    
+    const claveTokens = entorno.CLAVE_TOKENS;
+
+    if (!claveTokens || claveTokens.length < 32) {
+        throw new Error(
+            'CLAVE_TOKENS debe estar configurada y tener al menos 32 caracteres'
+        );
     }
+
 
     let logica;
     try {
