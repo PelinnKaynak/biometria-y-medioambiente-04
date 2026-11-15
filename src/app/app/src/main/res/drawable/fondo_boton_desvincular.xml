@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Botón de acción peligrosa / desvincular (Mi sensor) · T011 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/blanco" />
+    <stroke android:width="1.5dp" android:color="@color/error" />
+    <corners android:radius="12dp" />
+</shape>
