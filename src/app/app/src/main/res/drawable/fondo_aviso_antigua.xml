@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Aviso amarillo claro «No hay datos nuevos desde…» de Inicio (H006). T006 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/aviso_fondo" />
+    <corners android:radius="12dp" />
+</shape>

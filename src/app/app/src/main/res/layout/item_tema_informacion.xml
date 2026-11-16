@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Una tarjeta de «Información»: icono, título, subtítulo y flecha; «Leer más»
+     abre el cuerpo (cuerpoTema). La rellena InformacionActivity. T009 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="12dp"
+    android:background="@drawable/fondo_tarjeta_info"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:paddingStart="16dp"
+    android:paddingTop="14dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="14dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:id="@+id/fondoIconoTema"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/fondo_icono_tema">
+
+            <ImageView
+                android:id="@+id/iconoTema"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:tint="@color/violeta" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tituloTema"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/texto_principal"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                tools:text="Ozono (O₃)" />
+
+            <TextView
+                android:id="@+id/subtituloTema"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/texto_secundario"
+                android:textSize="13sp"
+                tools:text="Qué es y cómo afecta a tu salud" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/flechaTema"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginStart="8dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_flecha_abajo"
+            android:tint="@color/texto_secundario" />
+    </LinearLayout>
+
+    <!-- Cuerpo: se ve al pulsar «Leer más» -->
+    <LinearLayout
+        android:id="@+id/cuerpoTema"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/linea_superior_cuerpo"
+        android:orientation="vertical"
+        android:paddingTop="14dp"
+        android:visibility="gone" />
+</LinearLayout>

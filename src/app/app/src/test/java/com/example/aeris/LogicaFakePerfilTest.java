@@ -64,6 +64,16 @@ public class LogicaFakePerfilTest {
     }
 
     @Test
+    public void desdeJSON_sensor() {
+        // El servidor aún no envía «sensor» (T017): sin el campo, no tiene sensor
+        assertFalse(DatosUsuario.desdeJSON(CUERPO_USUARIO).tieneSensor());
+        assertFalse(DatosUsuario.desdeJSON("{\"correo\":\"a@b.es\",\"sensor\":null}").tieneSensor());
+        DatosUsuario d = DatosUsuario.desdeJSON("{\"correo\":\"a@b.es\",\"sensor\":\"AERIS-04\"}");
+        assertTrue(d.tieneSensor());
+        assertEquals("AERIS-04", d.sensor);
+    }
+
+    @Test
     public void desdeJSON_textoNoValidoOSinCorreo_null() {
         assertNull(DatosUsuario.desdeJSON(null));
         assertNull(DatosUsuario.desdeJSON(""));

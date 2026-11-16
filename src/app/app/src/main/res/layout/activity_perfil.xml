@@ -122,7 +122,11 @@
                     style="@style/AERIS.FilaTexto"
                     android:text="@string/perfil_mi_sensor" />
 
-                <TextView style="@style/AERIS.FilaFlecha" />
+                <!-- Hasta que responde el servidor, solo la flecha. Sin sensor:
+                     «Vincular  >» en violeta; con sensor: su nombre -->
+                <TextView
+                    android:id="@+id/valorMiSensor"
+                    style="@style/AERIS.FilaFlecha" />
             </LinearLayout>
 
             <LinearLayout

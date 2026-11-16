@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dibujo de «Vincular sensor»: el código de la etiqueta dentro de un marco
+     de escáner. T005 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+    <!-- esquinas del marco -->
+    <path android:pathData="M14,38V22C14,17.6 17.6,14 22,14H38" android:strokeColor="@color/violeta" android:strokeWidth="5" android:strokeLineCap="round" />
+    <path android:pathData="M82,14H98C102.4,14 106,17.6 106,22V38" android:strokeColor="@color/violeta" android:strokeWidth="5" android:strokeLineCap="round" />
+    <path android:pathData="M106,82V98C106,102.4 102.4,106 98,106H82" android:strokeColor="@color/violeta" android:strokeWidth="5" android:strokeLineCap="round" />
+    <path android:pathData="M38,106H22C17.6,106 14,102.4 14,98V82" android:strokeColor="@color/violeta" android:strokeWidth="5" android:strokeLineCap="round" />
+    <!-- código (estilo DataMatrix): borde en L y cuadros -->
+    <path android:fillColor="@color/texto_principal" android:pathData="M34,34h6v52h-6zM34,80h52v6h-52z" />
+    <path android:fillColor="@color/texto_principal" android:pathData="M40,34h6v6h-6zM52,34h6v6h-6zM64,34h6v6h-6zM76,34h6v6h-6zM80,40h6v6h-6zM80,52h6v6h-6zM80,64h6v6h-6z" />
+    <path android:fillColor="@color/texto_principal" android:pathData="M46,46h6v6h-6zM58,46h6v6h-6zM52,52h6v6h-6zM64,52h6v6h-6zM46,58h6v6h-6zM70,58h6v6h-6zM58,64h6v6h-6zM46,70h6v6h-6zM64,70h6v6h-6zM70,64h6v6h-6z" />
+    <!-- línea del escáner -->
+    <path android:pathData="M24,60H96" android:strokeColor="@color/verde_ok" android:strokeWidth="2.5" android:strokeAlpha="0.8" android:strokeLineCap="round" />
+</vector>

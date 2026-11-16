@@ -8,11 +8,12 @@
     android:orientation="vertical"
     tools:context=".BienvenidaActivity">
 
-    <!-- Arriba: degradado con el logo -->
+    <!-- Arriba: degradado con el logo. Ocupa el espacio que deja el panel de
+         abajo, así en los móviles pequeños los botones y el enlace se ven enteros -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="52"
+        android:layout_weight="1"
         android:background="@drawable/fondo_bienvenida"
         android:fitsSystemWindows="true">
 
@@ -25,17 +26,18 @@
             android:src="@drawable/logo_aeris_simbolo" />
     </FrameLayout>
 
-    <!-- Abajo: título, texto, botones y enlace al mapa (oculto mientras se comprueba la sesión) -->
+    <!-- Abajo: título, texto, botones y enlace al mapa (oculto mientras se comprueba la sesión).
+         Margen lateral de 24dp: con más, en móviles de 360dp de ancho los botones
+         de 260dp no cabían y se cortaban por los lados -->
     <LinearLayout
         android:id="@+id/panelBienvenida"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="48"
+        android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingStart="56dp"
-        android:paddingEnd="56dp"
-        android:paddingBottom="24dp">
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="20dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -49,7 +51,9 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginStart="24dp"
             android:layout_marginTop="14dp"
+            android:layout_marginEnd="24dp"
             android:gravity="center"
             android:lineSpacingExtra="3dp"
             android:text="@string/bienvenida_texto"
@@ -60,7 +64,7 @@
             android:id="@+id/botonIniciarSesion"
             android:layout_width="260dp"
             android:layout_height="44dp"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="32dp"
             android:background="@drawable/fondo_boton_principal"
             android:clickable="true"
             android:focusable="true"
@@ -88,7 +92,7 @@
             android:id="@+id/enlaceMapa"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="26dp"
+            android:layout_marginTop="20dp"
             android:padding="6dp"
             android:text="@string/bienvenida_ver_mapa"
             android:textColor="@color/texto_secundario"

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tarjeta de acceso de Inicio (Mejor hora, Mis lugares): blanca con esquinas
+     de 16dp; al pulsarla, una onda lila suave que respeta las esquinas. T006 -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/onda_pulsar">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/blanco" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+</ripple>

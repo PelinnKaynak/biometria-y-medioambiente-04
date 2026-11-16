@@ -12,4 +12,36 @@
     <color name="verde_suave">#C5D8D3</color>
     <color name="verde_ok">#2E7D5B</color>
     <color name="verde_ok_fondo">#EAF5EF</color>
+
+    <!-- Información (T009) -->
+    <color name="violeta_oscuro">#5E3F8C</color>
+    <color name="texto_cuerpo">#5C5478</color>
+    <color name="texto_terciario">#A3A9C6</color>
+    <color name="consejo_etiqueta">#E9DEF7</color>
+    <color name="borde_tarjeta">#ECE8F3</color>
+    <color name="borde_tarjeta_abierta">#DDD3EE</color>
+    <color name="fondo_fila_alterna">#FAF9FC</color>
+    <color name="info_icono_fondo">#F4F1F9</color>
+    <color name="info_lila_suave">#F1ECF8</color>
+    <color name="info_verde">#E6F2EE</color>
+    <color name="info_verde_icono">#3B8A70</color>
+    <color name="info_azul">#E8EEFB</color>
+    <color name="info_azul_icono">#4A6FC1</color>
+    <color name="linea_llamada">#B9A5D6</color>
+    <color name="linea_suave">#F0ECF6</color>
+
+    <!-- Niveles de ozono (los mismos que el mapa de la web) -->
+    <color name="nivel_bueno">#4E9C83</color>
+    <color name="nivel_moderado">#E2B33F</color>
+    <color name="nivel_malo">#D9645F</color>
+    <color name="nivel_muy_malo">#8E2F55</color>
+    <!-- Inicio (T006): aviso de medición antigua -->
+    <color name="aviso_fondo">#FDF5E1</color>
+    <color name="aviso_texto">#8A6512</color>
+    <!-- Inicio (T006): panel de notificaciones -->
+    <color name="velo_avisos">#66433A58</color>
+    <color name="aviso_icono_fondo">#D3E4DE</color>
+    <!-- Inicio (T006): sombra lila suave de las tarjetas y onda al pulsar -->
+    <color name="sombra_tarjeta">#7A5A3D8C</color>
+    <color name="onda_pulsar">#1F7958A7</color>
 </resources>

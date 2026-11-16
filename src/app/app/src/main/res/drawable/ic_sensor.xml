@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono sensor AERIS (pantalla provisional «Mi sensor»). T006 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:pathData="M12,3.5C16,3.5 18.5,7 18.5,12.5C18.5,17 15.5,20.5 12,20.5C8.5,20.5 5.5,17 5.5,12.5C5.5,7 8,3.5 12,3.5Z"
+        android:strokeColor="#7958A7" android:strokeWidth="1.6" />
+    <path android:pathData="M9.5,13a2.5,2.5 0,1 0,5 0a2.5,2.5 0,1 0,-5 0Z"
+        android:strokeColor="#7958A7" android:strokeWidth="1.6" />
+    <path android:pathData="M12,3.5V1.8"
+        android:strokeColor="#7958A7" android:strokeWidth="1.6"
+        android:strokeLineCap="round" />
+</vector>

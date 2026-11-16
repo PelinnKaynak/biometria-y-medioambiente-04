@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Aviso «Contaminación alta»: triángulo con exclamación (Figma). T006 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:pathData="M12,4L21,19.5H3Z"
+        android:strokeColor="#7958A7" android:strokeWidth="1.6"
+        android:strokeLineJoin="round" />
+    <path android:pathData="M12,10V14M12,16.8V16.9"
+        android:strokeColor="#7958A7" android:strokeWidth="1.8"
+        android:strokeLineCap="round" />
+</vector>

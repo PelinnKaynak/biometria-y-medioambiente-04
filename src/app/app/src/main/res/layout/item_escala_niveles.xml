@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Escala de «Los niveles de AERIS»: barra de colores de 0 a 300 µg/m³ y las marcas
+     0, 100, 180 y 240 debajo. La pinta InformacionActivity.escalaNiveles(). T009 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="6dp"
+    android:orientation="vertical">
+
+    <View
+        android:id="@+id/barraEscala"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_marginTop="4dp" />
+
+    <FrameLayout
+        android:id="@+id/marcasEscala"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp" />
+</LinearLayout>

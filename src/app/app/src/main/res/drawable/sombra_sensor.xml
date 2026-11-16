@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sombra suave en el suelo debajo del sensor (Información). T009 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <gradient
+        android:centerColor="#1F432E60"
+        android:endColor="#00432E60"
+        android:gradientRadius="65dp"
+        android:startColor="#38432E60"
+        android:type="radial" />
+</shape>

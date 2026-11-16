@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Separación entre las cajas de «Últimas mediciones» (Inicio, T006) -->
+    <dimen name="inicio_separacion_cajas">10dp</dimen>
+</resources>

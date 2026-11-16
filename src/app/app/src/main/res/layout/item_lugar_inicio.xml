@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Un lugar en la fila «Mis lugares» de Inicio: punto del color de su
+     nivel y «Casa: Buena» (Figma: inicio) · T006 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="18dp"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <View
+        android:id="@+id/puntoLugar"
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:background="@drawable/fondo_punto_nivel"
+        android:backgroundTint="@color/nivel_bueno" />
+
+    <TextView
+        android:id="@+id/textoLugar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:textColor="@color/texto_secundario"
+        android:textSize="12sp"
+        tools:text="Casa: Buena" />
+</LinearLayout>

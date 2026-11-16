@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icono de Bluetooth (Figma: vincular sensor · icono bluetooth) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="22dp"
+    android:height="22dp"
+    android:viewportWidth="22"
+    android:viewportHeight="22">
+    <path
+        android:pathData="M6.42,6.42L15.58,15.58L11,20.17V1.83L15.58,6.42L6.42,15.58"
+        android:strokeColor="@color/violeta"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>
