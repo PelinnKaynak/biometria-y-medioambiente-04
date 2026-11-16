@@ -4,7 +4,7 @@ Motor: **MySQL / MariaDB** (XAMPP en local).
 Base de datos: `aeris` (codificación `utf8mb4`).
 Script: [`src/bd/usuarios.sql`](../src/bd/usuarios.sql)
 
-Sigue el diagrama de la BD en Figma (enlace en el README). Por ahora están las tablas `Usuarios` y `Sensores` (T005). Las sesiones y los enlaces de recuperación de contraseña de T016 son tokens firmados por el servidor, así que no necesitan tablas (ver `logica_design.md`). El resto (Mediciones, Contaminantes, Lugares, MovimientosPuntos, Insignias, UsuarioInsignia, Recompensas, Canjes, Campañas, ZonasSensibles) se añadirá en las tareas correspondientes.
+Sigue el diagrama de la BD en Figma (enlace en el README). Ahora están las tablas `Usuarios`, `Contaminantes`, `Sensores` y `Mediciones` (T015), más las columnas de la solicitud de vinculación en `Sensores` (T005). Las sesiones y los enlaces de recuperación de contraseña de T016 son tokens firmados por el servidor, así que no necesitan tablas (ver `logica_design.md`). El resto (Lugares, MovimientosPuntos, Insignias, UsuarioInsignia, Recompensas, Canjes, Campañas, ZonasSensibles) se añadirá en las tareas correspondientes.
 
 ## Tabla `Usuarios`
 
@@ -25,23 +25,52 @@ Personas registradas en la plataforma (app y web). Igual que en el diagrama de F
 | `premiumHasta` | DATETIME | NULL | Hasta cuándo es premium; NULL = no es premium |
 | `foto` | MEDIUMTEXT | NULL | Foto de perfil: JPEG de 256×256 en base64 (unos 30 KB); NULL = sin foto. Añadida en T010 |
 
-## Tabla `Sensores` (T005)
+## Tabla `Contaminantes` (T015)
+
+Contaminantes que puede medir AERIS y sus umbrales.
+
+| Columna | Tipo | Restricciones | Descripción |
+|---|---|---|---|
+| `idContaminante` | INT | PK, AUTO_INCREMENT | Identificador |
+| `nombre` | VARCHAR(100) | NOT NULL, UNIQUE | Nombre (p. ej. O3) |
+| `unidad` | VARCHAR(20) | NOT NULL | Unidad de medida |
+| `umbralModerado`, `umbralMalo`, `umbralMuyMalo` | DOUBLE | NULL | Límites de cada nivel |
+
+## Tabla `Sensores` (T015 + T005)
 
 Sensores fabricados. Cada uno está ligado al correo de quien lo compró. La solicitud de vinculación se guarda en la misma fila (no hace falta otra tabla).
 
 | Columna | Tipo | Restricciones | Descripción |
 |---|---|---|---|
 | `idSensor` | INT | PK, AUTO_INCREMENT | Identificador del sensor |
-| `numeroSerie` | VARCHAR(20) | NOT NULL, UNIQUE | Número de serie del código QR (12 cifras) |
-| `sensibilidad` | DOUBLE | NULL | Sensibilidad del QR (calibración) |
-| `correoCompra` | VARCHAR(255) | NOT NULL | Correo de quien lo compró; ahí se manda el correo de confirmación |
-| `idUsuario` | INT | FK → Usuarios, NULL, ON DELETE SET NULL | Dueño del sensor; NULL = sin vincular |
-| `nombre`, `estado`, `bateria`, `ultimaConexion`, `necesitaCalibracion`, `luzActiva` | | | Datos del sensor del diagrama (los usarán T011/T017) |
-| `idSolicitante` | INT | FK → Usuarios, NULL, ON DELETE SET NULL | Quién ha pedido vincularlo |
-| `estadoSolicitud` | VARCHAR(20) | NULL, CHECK | 'pendiente', 'confirmada' o 'rechazada' |
-| `fechaSolicitud` | DATETIME | NULL | Cuándo se pidió o se reenvió el correo (UTC) |
+| `numeroSerie` | VARCHAR(100) | NOT NULL, UNIQUE | Número de serie del código QR |
+| `sensibilidad` | DOUBLE | NOT NULL | Sensibilidad del QR (calibración) |
+| `correoCompra` | VARCHAR(255) | NOT NULL | Correo de quien lo compró; ahí se manda el correo de confirmación (T005) |
+| `idUsuario` | INT | FK → Usuarios, NULL, ON DELETE RESTRICT | Dueño del sensor; NULL = sin vincular |
+| `nombre` | VARCHAR(100) | NOT NULL, DEFAULT 'Sensor AERIS' | Nombre que ve el usuario |
+| `estado` | VARCHAR(20) | NOT NULL, DEFAULT 'inactivo' | Estado del sensor |
+| `bateria` | INT | NULL, CHECK 0–100 | Batería en % |
+| `ultimaConexion` | DATETIME | NULL | Última vez que envió datos |
+| `necesitaCalibracion`, `luzActiva` | BOOLEAN | NOT NULL, DEFAULT FALSE | Datos del sensor del diagrama |
+| `idSolicitante` | INT | FK → Usuarios, NULL, ON DELETE SET NULL | Quién ha pedido vincularlo (T005) |
+| `estadoSolicitud` | VARCHAR(20) | NULL, CHECK | 'pendiente', 'confirmada' o 'rechazada' (T005) |
+| `fechaSolicitud` | DATETIME | NULL | Cuándo se pidió o se reenvió el correo, UTC (T005) |
+
+`idUsuario` admite NULL porque un sensor recién fabricado todavía no tiene dueño: se rellena cuando el comprador confirma la vinculación.
 
 Como no hay compra en la app, el script mete un sensor de prueba: `092021010920`, comprado con `pkaynak@upv.edu.es`.
+
+## Tabla `Mediciones` (T015)
+
+| Columna | Tipo | Restricciones | Descripción |
+|---|---|---|---|
+| `idMedicion` | INT | PK, AUTO_INCREMENT | Identificador |
+| `idSensor` | INT | FK → Sensores, NOT NULL | Sensor que midió |
+| `idUsuario` | INT | FK → Usuarios, NOT NULL | Usuario que llevaba el sensor |
+| `idContaminante` | INT | FK → Contaminantes, NOT NULL | Qué se midió |
+| `valorMedicion` | DOUBLE | NOT NULL | Valor medido |
+| `ubicacion` | POINT | NOT NULL | Dónde se midió |
+| `fechaHora` | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Cuándo se midió |
 
 ## Aclaraciones
 
@@ -55,11 +84,11 @@ Como no hay compra en la app, el script mete un sensor de prueba: `092021010920`
 1. Abrir XAMPP Control Panel y pulsar **Start** en Apache y MySQL.
 2. Abrir `http://localhost/phpmyadmin`.
 3. Pestaña **Importar** → seleccionar `src/bd/usuarios.sql` → **Importar**.
-4. Debe aparecer la base de datos `aeris` con la tabla `Usuarios`.
+4. Debe aparecer la base de datos `aeris` con las tablas `Usuarios`, `Contaminantes`, `Sensores` y `Mediciones`.
 
 **Si la BD ya estaba creada antes de T010:** importar también `src/bd/actualizar_T010.sql`, que añade la columna `foto` sin borrar los usuarios.
 
-**Si la BD ya estaba creada antes de T005:** importar `src/bd/actualizar_T005.sql`, que crea la tabla `Sensores` con el sensor de prueba sin borrar nada.
+**Si la BD ya estaba creada** (con la tabla `Sensores` antigua de T005 o con la de T015 sin las columnas de vinculación): importar primero `src/bd/usuarios.sql` y después `src/bd/actualizar_T005.sql`. Añade las columnas que falten y el sensor de prueba sin borrar nada. Se puede importar más de una vez. Usa sintaxis de MariaDB (la de XAMPP y la del servidor de la UPV).
 
 ## Prueba del script
 

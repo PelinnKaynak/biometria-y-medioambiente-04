@@ -35,7 +35,7 @@ describe('Logica (vinculación del sensor por correo)', function () {
     beforeEach(async function () {
         correos = [];
         await vaciarTablas(logica.conexion);
-        await logica.conexion.execute('INSERT INTO Sensores (numeroSerie, correoCompra) VALUES (?, ?)', [SERIE, COMPRADOR]);
+        await logica.conexion.execute('INSERT INTO Sensores (numeroSerie, sensibilidad, correoCompra) VALUES (?, ?, ?)', [SERIE, -44.75, COMPRADOR]);
         pelin = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
         ana = await logica.registrarUsuario('Ana', 'García', 'ana@aeris.es', 'aire2026');
         correos = [];

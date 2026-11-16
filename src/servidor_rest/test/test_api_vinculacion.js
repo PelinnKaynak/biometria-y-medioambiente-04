@@ -58,8 +58,8 @@ describe('API REST de vinculación del sensor', function () {
     beforeEach(async function () {
         correos = [];
         await vaciarTablas(logica.conexion);
-        await logica.conexion.execute('INSERT INTO Sensores (numeroSerie, correoCompra) VALUES (?, ?)',
-            [SERIE, 'pkaynak@upv.edu.es']);
+        await logica.conexion.execute('INSERT INTO Sensores (numeroSerie, sensibilidad, correoCompra) VALUES (?, ?, ?)',
+            [SERIE, -44.75, 'pkaynak@upv.edu.es']);
         token = (await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026')).token;
     });
 
