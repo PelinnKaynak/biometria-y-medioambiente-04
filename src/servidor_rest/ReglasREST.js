@@ -2,14 +2,17 @@
 // Fichero:     ReglasREST.js
 // Descripción: Rutas REST de usuarios y autenticación. Cada ruta lee la
 //              petición, llama a la lógica y traduce el resultado a HTTP.
-//              Contrato completo en doc/servidor_rest_design.md. Tareas T016 y T010.
+//              Contrato completo en doc/servidor_rest_design.md. Tareas T016,
+//              T010 y T005 (vinculación del sensor confirmada por correo).
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
 // ---------------------------------------------------------------------------
 'use strict';
 
+const express = require('express');
 const { requiereSesion } = require('./Autorizacion');
+const { paginaConfirmar, paginaResultado, paginaEnlaceNoValido } = require('./PaginaVinculacion');
 
 // Código de ErrorLogica --> código HTTP
 const CODIGOS_HTTP = {
@@ -18,7 +21,10 @@ const CODIGOS_HTTP = {
     CREDENCIALES_INCORRECTAS: 401,
     CONTRASENA_INCORRECTA: 403,
     CORREO_NO_REGISTRADO: 404,
-    CORREO_YA_REGISTRADO: 409
+    SENSOR_NO_REGISTRADO: 404,
+    SIN_SOLICITUD: 404,
+    CORREO_YA_REGISTRADO: 409,
+    SENSOR_YA_VINCULADO: 409
 };
 
 // ---------------------------------------------------------------------------
@@ -94,6 +100,58 @@ function cargarReglasREST(servidor, logica) {
         await logica.restablecerContrasenya(token, contrasena);
         respuesta.status(204).end();
     }));
+
+    // ---- Vinculación del sensor confirmada por correo (T005) ----
+
+    // POST /solicitarVinculacion  { numeroSerie, sensibilidad }  🔒
+    //   201 { numeroSerie, correoComprador (oculto), estado: "pendiente", fecha } (correo enviado a quien lo compró)
+    //   200 { …, estado: "confirmada" } si ya era suyo · 400 · 404 sensor no registrado · 409 de otra cuenta · 401
+    servidor.post('/solicitarVinculacion', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const { numeroSerie, sensibilidad } = peticion.body;
+        const solicitud = await logica.solicitarVinculacion(peticion.usuario.idUsuario, numeroSerie, sensibilidad);
+        respuesta.status(solicitud.estado === 'pendiente' ? 201 : 200).json(solicitud);
+    }));
+
+    // GET /estadoVinculacion  🔒
+    //   200 { numeroSerie, correoComprador, estado: pendiente | confirmada | rechazada, fecha } · 404 sin solicitud · 401
+    servidor.get('/estadoVinculacion', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.estadoVinculacion(peticion.usuario.idUsuario));
+    }));
+
+    // POST /reenviarCorreoVinculacion  🔒
+    //   200 { mensaje } · 404 no hay ninguna pendiente · 401
+    servidor.post('/reenviarCorreoVinculacion', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        await logica.reenviarCorreoVinculacion(peticion.usuario.idUsuario);
+        respuesta.status(200).json({ mensaje: 'Correo reenviado' });
+    }));
+
+    // GET /responderVinculacion?token=…&respuesta=si|no      (enlaces del correo; abre el navegador)
+    //   200 HTML «¿Confirmas…?» con un botón que hace el POST · 400 HTML si falta algo
+    servidor.get('/responderVinculacion', (peticion, respuesta) => {
+        const { token, respuesta: valor } = peticion.query;
+        if (typeof token !== 'string' || !token || (valor !== 'si' && valor !== 'no')) {
+            return respuesta.status(400).type('html').send(paginaEnlaceNoValido());
+        }
+        respuesta.status(200).type('html').send(paginaConfirmar(token, valor === 'si'));
+    });
+
+    // POST /responderVinculacion  (formulario: token, respuesta = si | no)
+    //   200 HTML «Sensor vinculado» o «Vinculación rechazada» · 400 HTML «Enlace no válido»
+    servidor.post('/responderVinculacion', express.urlencoded({ extended: false }), async (peticion, respuesta) => {
+        const { token, respuesta: valor } = peticion.body;
+        try {
+            if (valor !== 'si' && valor !== 'no') {
+                throw Object.assign(new Error('respuesta'), { codigo: 'TOKEN_NO_VALIDO' });
+            }
+            const resultado = await logica.responderVinculacion(token, valor === 'si');
+            respuesta.status(200).type('html').send(paginaResultado(resultado));
+        } catch (error) {
+            if (error.codigo !== 'TOKEN_NO_VALIDO') {
+                console.error(error);
+            }
+            respuesta.status(error.codigo === 'TOKEN_NO_VALIDO' ? 400 : 500).type('html').send(paginaEnlaceNoValido());
+        }
+    });
 }
 
 // ---------------------------------------------------------------------------

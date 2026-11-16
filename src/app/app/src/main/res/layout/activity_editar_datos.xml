@@ -60,7 +60,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="sans-serif-medium"
+                android:textFontWeight="500"
                 android:text="@string/editar_seccion_datos"
                 android:textColor="@color/texto_principal"
                 android:textSize="18sp" />
@@ -168,8 +168,8 @@
 
             <TextView
                 android:id="@+id/botonGuardar"
-                android:layout_width="180dp"
-                android:layout_height="40dp"
+                android:layout_width="200dp"
+                android:layout_height="44dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
                 android:background="@drawable/fondo_boton_principal"
@@ -178,8 +178,8 @@
                 android:gravity="center"
                 android:text="@string/editar_guardar"
                 android:textColor="@color/blanco"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textSize="16sp"
+                android:textFontWeight="600" />
         </LinearLayout>
 
         <!-- Tarjeta 2: Contraseña -->
@@ -202,7 +202,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="500"
                     android:text="@string/editar_seccion_contrasena"
                     android:textColor="@color/texto_principal"
                     android:textSize="18sp" />
@@ -213,7 +213,7 @@
                     android:layout_height="wrap_content"
                     android:background="@drawable/fondo_aviso_ok"
                     android:drawablePadding="6dp"
-                    android:fontFamily="sans-serif-medium"
+                    android:textFontWeight="500"
                     android:gravity="center_vertical"
                     android:paddingStart="8dp"
                     android:paddingTop="4dp"
@@ -310,8 +310,8 @@
 
             <TextView
                 android:id="@+id/botonCambiarContrasena"
-                android:layout_width="180dp"
-                android:layout_height="40dp"
+                android:layout_width="200dp"
+                android:layout_height="44dp"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="20dp"
                 android:background="@drawable/fondo_boton_secundario"
@@ -320,8 +320,8 @@
                 android:gravity="center"
                 android:text="@string/editar_cambiar_contrasena"
                 android:textColor="@color/violeta"
-                android:textSize="15sp"
-                android:textStyle="bold" />
+                android:textSize="16sp"
+                android:textFontWeight="600" />
 
         </LinearLayout>
     </LinearLayout>

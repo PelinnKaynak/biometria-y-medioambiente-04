@@ -180,6 +180,7 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
 - **Tests automáticos (mocha):** `npm test` desde `src/logica`. Necesitan MySQL de XAMPP en marcha; crean y usan la BD `aeris_test` con el mismo script `src/bd/usuarios.sql` (nunca tocan `aeris`).
   - `test_seguridad_validador.js`: hash, tokens firmados y validación (sin BD).
   - `test_logica.js`: registro, inicio de sesión, tokens caducados o modificados, roles, recuperación de contraseña.
+  - `test_vinculacion.js`: vinculación del sensor por correo (T005).
 - **Foto de perfil (T010):** se guarda en la columna `foto` de `Usuarios` como texto base64 (la app la reduce antes a un JPEG de 256×256, unos 30 KB), para que se vea en cualquier teléfono. No hace falta otra tabla.
 - **Cambiar la contraseña (T010):** pide la contraseña actual. Como el token lleva una huella del hash, al cambiarla se cierran todas las sesiones; por eso se devuelve un token nuevo para el teléfono que la ha cambiado.
 - **Correo de bienvenida (T002/T016):** al registrarse, `registrarUsuario()` llama a `enviarBienvenida()` sin esperarla: el registro responde enseguida y, si el correo falla (por ejemplo, Gmail no responde), la cuenta se crea igual y el error solo se escribe en la consola del servidor. El correo lo monta `CorreoBienvenida.crearCorreoBienvenida(nombre)` en español: texto plano y HTML con los colores de la app, el logo de AERIS arriba, una presentación general de la app y algunas de sus funciones (mapa, alertas, historial, previsión de ozono, rutas limpias, lugares, puntos…) y el logo de SenseTech al pie. Los logos (`src/logica/img/`) van incrustados en el correo (`cid:`), así se ven aunque el servidor no esté en internet. El nombre se escapa (`escaparHTML()`) para que no pueda meter HTML.
@@ -190,4 +191,14 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
 ```
 - **Correo de recuperación (T003/T016):** `solicitarRecuperacion()` envía el correo de `CorreoRecuperacion.crearCorreoRecuperacion(nombre, enlace, minutos)`, con el mismo diseño que el de bienvenida: botón «Crear contraseña nueva» con el enlace y aviso de que caduca en 30 minutos y solo sirve una vez (el enlace escrito solo va en la versión de texto del correo, para las apps que no muestran HTML). Los dos correos usan el marco común `PlantillaCorreo.marcoCorreo()` (logo de AERIS arriba, pie con el logo de SenseTech).
 - **Contraseña nueva igual a la actual:** `restablecerContrasenya()` (enlace del correo) y `cambiarContrasenya()` (Editar mis datos) la rechazan con `DATOS_NO_VALIDOS` y el mensaje «La contraseña nueva tiene que ser distinta de la actual» (`campos: ["contrasena"]` / `["contrasenaNueva"]`). En el enlace se compara con el hash guardado; quien tiene el enlace ya puede cambiar la contraseña, así que decirle que es la misma no revela nada. La página `restablecer.html` muestra el mensaje debajo del campo y el enlace sigue valiendo para otro intento.
+- **Vinculación del sensor por correo (T005):** el sensor está ligado al correo de quien lo compró (`Sensores.correoCompra`). La solicitud se guarda en la misma fila (`idSolicitante`, `estadoSolicitud`, `fechaSolicitud`), sin tabla nueva. El correo lo monta `CorreoVinculacion.crearCorreoVinculacion()` con el marco común: quién lo pide (nombre y correo), el número de serie, la fecha, y dos botones, «Sí, vincular el sensor» y «No conozco a esta persona». Los enlaces llevan un token firmado de tipo `"vinculacion"` con el sensor, el usuario y la fecha de la solicitud, válido 48 horas. El token solo vale si la fila sigue pendiente con esa misma fecha y ese solicitante: si se reenvía el correo, otra persona pide el sensor o ya se ha respondido, el enlace viejo deja de valer. Una solicitud pendiente de más de 48 horas cuenta como rechazada. Si el correo falla, la solicitud se guarda igual y el error solo sale en la consola.
 
+```text
+  idUsuario: N, numeroSerie: Texto, sensibilidad: R
+                    --> solicitarVinculacion() --> Solicitud   | DATOS_NO_VALIDOS, SENSOR_NO_REGISTRADO, SENSOR_YA_VINCULADO
+  idUsuario: N      --> estadoVinculacion() --> Solicitud      | SIN_SOLICITUD
+  idUsuario: N      --> reenviarCorreoVinculacion() -->        | SIN_SOLICITUD
+  token: Texto, acepta: V/F
+                    --> responderVinculacion() --> ( estado, numeroSerie, nombreSolicitante )   | TOKEN_NO_VALIDO
+  Solicitud = ( numeroSerie, correoComprador (oculto: «p•••••@upv.edu.es»), estado, fecha )
+```

@@ -18,8 +18,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/texto_principal"
-        android:textSize="17sp"
-        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textFontWeight="600"
         tools:text="84" />
 
     <TextView

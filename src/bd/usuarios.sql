@@ -1,7 +1,8 @@
 -- ---------------------------------------------------------------
 -- usuarios.sql
 -- Proyecto AERIS - SenseTech (Equipo 04)
--- Crea la base de datos del proyecto y la tabla Usuarios.
+-- Crea la base de datos del proyecto y sus tablas: Usuarios,
+-- Contaminantes, Sensores y Mediciones.
 -- Sigue el diagrama de la BD en Figma. Diseño en doc/bd_design.md.
 -- Motor: MySQL / MariaDB (XAMPP)
 -- ---------------------------------------------------------------
@@ -57,35 +58,42 @@ CREATE TABLE IF NOT EXISTS Contaminantes (
 
 -- ---------------------------------------------------------------
 -- Tabla: Sensores
--- Cada sensor pertenece a un usuario.
+-- Cada sensor está ligado al correo de quien lo compró
+-- (correoCompra). No tiene dueño (idUsuario NULL) hasta que ese
+-- correo confirma la vinculación (T005). La solicitud se guarda en
+-- la misma fila: quién la pide, su estado y cuándo.
 -- ---------------------------------------------------------------
-
 CREATE TABLE IF NOT EXISTS Sensores (
     idSensor INT NOT NULL AUTO_INCREMENT,
     numeroSerie VARCHAR(100) NOT NULL,
     sensibilidad DOUBLE NOT NULL,
-    idUsuario INT NOT NULL,
-    nombre VARCHAR(100) NOT NULL,
+    correoCompra VARCHAR(255) NOT NULL,
+    idUsuario INT NULL,
+    nombre VARCHAR(100) NOT NULL DEFAULT 'Sensor AERIS',
     estado VARCHAR(20) NOT NULL DEFAULT 'inactivo',
     bateria INT NULL,
     ultimaConexion DATETIME NULL,
     necesitaCalibracion BOOLEAN NOT NULL DEFAULT FALSE,
     luzActiva BOOLEAN NOT NULL DEFAULT FALSE,
-
+    idSolicitante INT NULL,
+    estadoSolicitud VARCHAR(20) NULL,
+    fechaSolicitud DATETIME NULL,
     PRIMARY KEY (idSensor),
-
     CONSTRAINT uk_sensores_numero_serie
         UNIQUE (numeroSerie),
-
     CONSTRAINT fk_sensores_usuarios
         FOREIGN KEY (idUsuario)
         REFERENCES Usuarios(idUsuario)
         ON DELETE RESTRICT,
-
+    CONSTRAINT fk_sensores_solicitante
+        FOREIGN KEY (idSolicitante)
+        REFERENCES Usuarios(idUsuario)
+        ON DELETE SET NULL,
     CONSTRAINT ck_sensores_bateria
-        CHECK (bateria BETWEEN 0 AND 100)
+        CHECK (bateria BETWEEN 0 AND 100),
+    CONSTRAINT ck_sensores_estado_solicitud
+        CHECK (estadoSolicitud IN ('pendiente', 'confirmada', 'rechazada'))
 ) ENGINE = InnoDB;
-
 
 -- ---------------------------------------------------------------
 -- Tabla: Mediciones
@@ -119,4 +127,10 @@ CREATE TABLE IF NOT EXISTS Mediciones (
         ON DELETE RESTRICT
 ) ENGINE = InnoDB;
 
-
+-- ---------------------------------------------------------------
+-- Sensor de prueba (T005). En la app no hay compra: este sensor
+-- se da de alta como si lo hubiera comprado pkaynak@upv.edu.es.
+-- Número de serie y sensibilidad del código de su etiqueta.
+-- ---------------------------------------------------------------
+INSERT IGNORE INTO Sensores (numeroSerie, sensibilidad, correoCompra)
+VALUES ('092021010920', -44.75, 'pkaynak@upv.edu.es');

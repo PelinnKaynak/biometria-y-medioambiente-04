@@ -33,21 +33,11 @@ public class CodigoSensorTest {
     }
 
     @Test
-    public void escritoAMano_seLeeConComaOPunto() {
-        CodigoSensor c = CodigoSensor.desdeCampos(" 092021010920 ", "-44,75");
+    public void escritoAMano_conComa_seLee() {
+        CodigoSensor c = CodigoSensor.desdeTexto("092021010920 110406 03 2109 -44,75");
         assertNotNull(c);
-        assertEquals("092021010920", c.numeroSerie);
+        assertEquals("2109", c.fecha);
         assertEquals(-44.75, c.sensibilidad, 0.0001);
-        assertEquals("", c.fecha);
-        assertEquals(-44.75, CodigoSensor.desdeCampos("092021010920", "-44.75").sensibilidad, 0.0001);
-    }
-
-    @Test
-    public void escritoAMano_noValido_null() {
-        assertNull(CodigoSensor.desdeCampos("0920210109", "-44,75"));      // serie corta
-        assertNull(CodigoSensor.desdeCampos("09202101092A", "-44,75"));    // letra en la serie
-        assertNull(CodigoSensor.desdeCampos("092021010920", ""));          // sin sensibilidad
-        assertNull(CodigoSensor.desdeCampos("092021010920", "abc"));
     }
 
     @Test

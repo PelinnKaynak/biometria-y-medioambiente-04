@@ -25,6 +25,6 @@
         android:layout_marginTop="2dp"
         android:textColor="@color/texto_principal"
         android:textSize="14sp"
-        android:textStyle="bold"
+        android:textFontWeight="600"
         tools:text="180 µg/m³ en una hora" />
 </LinearLayout>
