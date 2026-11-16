@@ -135,22 +135,29 @@ class LogicaReal {
   //       r: ResultadoOperacion <--
   //
   // POST /restablecerContrasenya { token, contrasena }
-  //   204 · 400 { error } (enlace caducado, ya usado o
-  //   contraseña que no cumple el formato)
+  //   204 · 400 { error } enlace caducado o ya usado
+  //   400 { error, campos: ["contrasena"] } contraseña débil o
+  //   igual que la actual
+  //
+  // ResultadoRestablecer = ( correcto: B, error: Text, campos: [ Text ] )
   // --------------------------------------------------------
   async restablecerContrasena(token, contrasena) {
     const respuesta = await this.enviarPost("/restablecerContrasenya", { token, contrasena });
 
     if (respuesta === null) {
-      return { correcto: false, error: "No se puede conectar con el servidor" };
+      return { correcto: false, error: "No se puede conectar con el servidor", campos: [] };
     }
     if (respuesta.status === 400) {
-      return { correcto: false, error: "El enlace no es válido o ha caducado. Pide uno nuevo" };
+      const cuerpo = await respuesta.json().catch(() => ({}));
+      if (Array.isArray(cuerpo.campos) && cuerpo.campos.includes("contrasena")) {
+        return { correcto: false, error: cuerpo.error || "Revisa la contraseña", campos: ["contrasena"] };
+      }
+      return { correcto: false, error: "El enlace no es válido o ha caducado. Pide uno nuevo", campos: [] };
     }
     if (!respuesta.ok) {
-      return { correcto: false, error: "Ha habido un error. Inténtalo de nuevo" };
+      return { correcto: false, error: "Ha habido un error. Inténtalo de nuevo", campos: [] };
     }
-    return { correcto: true, error: "" };
+    return { correcto: true, error: "", campos: [] };
   }
 
   // --------------------------------------------------------

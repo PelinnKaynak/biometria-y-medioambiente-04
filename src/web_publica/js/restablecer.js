@@ -104,8 +104,11 @@ async function guardarContrasena(evento, logica, token) {
     boton.disabled = false;
 
     if (!resultado.correcto) {
-        mostrarErrorRestablecer(resultado.error, []);
-        document.getElementById("enlace-pedir-otro").classList.remove("oculto");
+        // Si el servidor rechaza la contraseña (débil o igual que la
+        // actual) se marca el campo; si no, el enlace ya no vale.
+        const campos = resultado.campos || [];
+        mostrarErrorRestablecer(resultado.error, campos);
+        if (campos.length === 0) document.getElementById("enlace-pedir-otro").classList.remove("oculto");
         return;
     }
     document.getElementById("paso-formulario").classList.add("oculto");

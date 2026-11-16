@@ -75,6 +75,13 @@ test("restablecerContrasena() con 400 dice que el enlace no vale", async () => {
     expect(r.error).toMatch(/enlace/);
 });
 
+test("restablecerContrasena() con 400 y campos marca la contraseña", async () => {
+    fetch.mockReturnValue(respuestaFalsa(400, { error: "La contraseña nueva no puede ser igual que la actual", campos: ["contrasena"] }));
+    const r = await new LogicaReal("").restablecerContrasena("tok", "nueva1234");
+
+    expect(r).toEqual({ correcto: false, error: "La contraseña nueva no puede ser igual que la actual", campos: ["contrasena"] });
+});
+
 describe("registrarUsuario()", () => {
     const datos = { nombre: "Marta", apellidos: "Ribes", correo: "Marta@Correo.es", contrasena: "aeris2026" };
 

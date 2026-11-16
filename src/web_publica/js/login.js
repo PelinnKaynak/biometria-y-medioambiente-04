@@ -8,16 +8,12 @@
 // En el navegador las funciones de validacion.js son globales;
 // en las pruebas (Node) se cargan con require.
 const reglas = typeof module !== "undefined" ? require("./validacion") : window;
+const rolesLogin = typeof module !== "undefined" ? require("./roles") : window;
 
 const MENSAJE_CREDENCIALES = "Correo o contraseña incorrectos";
 
-const PAGINA_SEGUN_ROL = {
-  ADMINISTRADOR: "../web_admin/panel_nodos.html",
-  TECNICO: "../web_admin/panel_nodos.html",
-  PORTADOR: "mi_cuenta.html",
-  PREMIUM: "mi_cuenta.html",
-  CIUDADANO: "mi_cuenta.html"
-};
+const PAGINA_PANEL = "../web_admin/panel_nodos.html";
+const PAGINA_USUARIO = "mi_cuenta.html";
 
 // --------------------------------------------------------
 // correo: Text, contrasena: Text --> validarFormulario()
@@ -42,18 +38,16 @@ function validarFormulario(correo, contrasena) {
 }
 
 // --------------------------------------------------------
-// rol: Rol --> paginaInicioSegunRol() --> url: Text
+// rol: Text --> paginaInicioSegunRol() --> url: Text
 //
-// Rol = { PORTADOR, PREMIUM, TECNICO, ADMINISTRADOR, CIUDADANO }
-// El servidor manda el rol en minúsculas ("administrador"),
-// así que se compara sin tener en cuenta mayúsculas.
+// ¿Es administrador o técnico? Va al panel de administración.
+// Si no, es un usuario (portador o ciudadano) y va a Mi cuenta.
+// Las consultas del rol están en roles.js.
 // --------------------------------------------------------
 function paginaInicioSegunRol(rol) {
-  const pagina = PAGINA_SEGUN_ROL[String(rol).toUpperCase()];
-  if (!pagina) {
-    throw new Error("Rol desconocido: " + rol);
-  }
-  return pagina;
+  const usuario = { rol };
+  if (rolesLogin.esAdministrador(usuario) || rolesLogin.esTecnico(usuario)) return PAGINA_PANEL;
+  return PAGINA_USUARIO;
 }
 
 // --------------------------------------------------------
