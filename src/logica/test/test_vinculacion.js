@@ -54,6 +54,11 @@ describe('Logica (vinculación del sensor por correo)', function () {
         return filas[0];
     }
 
+    it('sin urlVinculacion, los enlaces del correo van al mismo servidor que urlRestablecer', function () {
+        const l = new Logica(null, async () => {}, 'https://pfermar1.upv.edu.es/restablecer.html', CLAVE);
+        assert.strictEqual(l.urlVinculacion, 'https://pfermar1.upv.edu.es/responderVinculacion');
+    });
+
     it('ocultarCorreo() deja ver solo la primera letra y el dominio (como la app)', function () {
         assert.strictEqual(ocultarCorreo('pkaynak@upv.edu.es'), 'p•••••@upv.edu.es');
     });
