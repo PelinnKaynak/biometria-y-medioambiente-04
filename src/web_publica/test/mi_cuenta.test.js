@@ -245,6 +245,13 @@ describe("cabecera", () => {
         expect(sessionStorage.getItem("aeris_usuario")).toBeNull();
         expect(irA).toHaveBeenCalledWith("login.html");
     });
+
+    test.each([["administrador", false], ["portador", true], ["tecnico", true]])(
+        "con rol %s, el enlace al panel de administración oculto = %p", (rol, oculto) => {
+            sessionStorage.setItem("aeris_usuario", JSON.stringify({ ...SESION, rol }));
+            cuenta.conectarCabecera(new LogicaCuentaFake(0, AHORA), jest.fn());
+            expect(document.getElementById("enlace-panel").hidden).toBe(oculto);
+        });
 });
 
 test("sin datos el perfil ocupa la rejilla él solo", async () => {

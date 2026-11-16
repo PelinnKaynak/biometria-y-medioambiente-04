@@ -33,6 +33,8 @@
 }
 
 .menu-cuenta a:hover { color: var(--morado); }
+.menu-cuenta a[hidden] { display: none; }
+.menu-cuenta .enlace-panel { color: var(--morado); }
 
 .menu-cuenta .salir-movil { display: none; }
 

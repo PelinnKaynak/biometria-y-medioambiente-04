@@ -5,6 +5,7 @@
 // ------------------------------------------------------------
 
 const reglasCuenta = typeof module !== "undefined" ? require("./validacion") : window;
+const rolesCuenta = typeof module !== "undefined" ? require("./roles") : window;
 
 const UMBRAL_AVISO = 180;        // µg/m³, umbral de aviso por defecto
 const VALOR_GUIA_OMS = 100;      // µg/m³, valor guía de la OMS (8 h)
@@ -481,8 +482,14 @@ async function cargarCuenta(logica, irA) {
 
 // --------------------------------------------------------
 // logica: LogicaCuenta, irA: (url: Text) --> conectarCabecera()
+//
+// Un administrador también tiene su página Mi cuenta, como
+// cualquier usuario. A él se le enseña además el enlace para
+// volver al panel de administración.
 // --------------------------------------------------------
 function conectarCabecera(logica, irA) {
+    const enlacePanel = $("enlace-panel");
+    if (enlacePanel) enlacePanel.hidden = !rolesCuenta.esAdministrador(logica.usuarioActual());
     const botonMenu = $("boton-menu");
     botonMenu.addEventListener("click", () => {
         const abierto = $("menu-cuenta").classList.toggle("abierto");

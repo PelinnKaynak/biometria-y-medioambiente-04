@@ -5,6 +5,9 @@
 // y menú.
 // ------------------------------------------------------------
 
+// Consultas del rol (roles.js): globales en el navegador, require en Node
+const rolesInicio = typeof module !== "undefined" ? require("./roles") : window;
+
 // Límites de cada nivel (bueno, moderado, malo). Por encima del
 // último es «muy malo». Ozono: valor guía de la OMS, umbral de
 // información y umbral de alerta. El resto, bandas del índice
@@ -143,9 +146,9 @@ function textoActualizado(fechaISO, ahora = new Date()) {
 // Sin sesión, «Acceder». Con sesión, el acceso a su página.
 // --------------------------------------------------------
 function accesoCabecera(usuario) {
-    if (!usuario) return { texto: "Acceder", url: "login.html" };
-    const rol = String(usuario.rol).toUpperCase();
-    if (rol === "ADMINISTRADOR" || rol === "TECNICO") {
+    const tipo = rolesInicio.tipoDeUsuario(usuario);
+    if (tipo === "SIN_SESION") return { texto: "Acceder", url: "login.html" };
+    if (tipo === "ADMINISTRADOR" || tipo === "TECNICO") {
         return { texto: "Panel", url: "../web_admin/panel_nodos.html" };
     }
     return { texto: "Mi cuenta", url: "mi_cuenta.html" };

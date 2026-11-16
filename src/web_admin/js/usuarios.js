@@ -346,7 +346,8 @@ async function confirmarBaja(logica) {
 function iniciarPantallaUsuarios() {
     const logica = crearLogicaAdmin();
     const irA = url => window.location.assign(url);
-    if (!comunUsuarios.comprobarAcceso(logica, irA)) return;
+    // Solo el administrador gestiona cuentas: a un técnico lo manda a Nodos
+    if (!comunUsuarios.comprobarAcceso(logica, irA, true)) return;
     comunUsuarios.conectarMenu(logica, irA);
 
     let espera;

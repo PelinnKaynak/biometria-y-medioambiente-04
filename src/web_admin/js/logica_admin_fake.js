@@ -6,6 +6,9 @@
 // ------------------------------------------------------------
 
 const utilNodos = typeof module !== "undefined" ? require("./nodos") : window;
+const rolesFake = typeof module !== "undefined" ? require("../../web_publica/js/roles") : window;
+
+const MENSAJE_SOLO_ADMIN = "Solo un administrador puede gestionar usuarios";
 
 const CLAVE_SESION_ADMIN = "aeris_usuario";
 
@@ -216,6 +219,17 @@ class LogicaAdminFake {
     }
 
     // --------------------------------------------------------
+    // r: B <-- esAdministradorActual() <--
+    //
+    // Simula la comprobación del servidor: crear cuentas,
+    // cambiar el rol y dar de baja solo lo puede hacer un
+    // administrador (el servidor real responde 403).
+    // --------------------------------------------------------
+    esAdministradorActual() {
+        return rolesFake.esAdministrador(this.usuarioActual());
+    }
+
+    // --------------------------------------------------------
     // datos: NuevoUsuario --> crearUsuario() -->
     //       r: ResultadoCreacion <--
     //
@@ -228,6 +242,7 @@ class LogicaAdminFake {
     // --------------------------------------------------------
     async crearUsuario(datos) {
         await esperarAdmin(this.retardo_ms);
+        if (!this.esAdministradorActual()) return { correcto: false, error: MENSAJE_SOLO_ADMIN, campos: [] };
         const correo = datos.correo.trim().toLowerCase();
         if (this.usuarios.some(u => u.correo === correo)) {
             return { correcto: false, error: "Ya hay una cuenta con ese correo", campos: ["correo"] };
@@ -254,6 +269,7 @@ class LogicaAdminFake {
     // --------------------------------------------------------
     async cambiarRol(id_usuario, rol) {
         await esperarAdmin(this.retardo_ms);
+        if (!this.esAdministradorActual()) return { correcto: false, error: MENSAJE_SOLO_ADMIN };
         const actual = this.usuarioActual();
         if (actual && actual.id === id_usuario) {
             return { correcto: false, error: "No puedes cambiar tu propio rol" };
@@ -272,6 +288,7 @@ class LogicaAdminFake {
     // --------------------------------------------------------
     async darDeBaja(ids) {
         await esperarAdmin(this.retardo_ms);
+        if (!this.esAdministradorActual()) return { correcto: false, error: MENSAJE_SOLO_ADMIN };
         const actual = this.usuarioActual();
         if (actual && ids.includes(actual.id)) {
             return { correcto: false, error: "No puedes darte de baja a ti mismo" };

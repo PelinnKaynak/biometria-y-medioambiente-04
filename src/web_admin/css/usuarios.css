@@ -92,7 +92,7 @@
 .cabecera-usuarios {
     height: 40px;
     border-bottom: 1px solid var(--borde);
-    color: #8992B8;
+    color: var(--texto-gris);
     font-size: 14px;
     font-weight: 500;
 }
@@ -110,7 +110,7 @@
     border-bottom: 1px solid var(--borde);
     font-size: 14px;
 }
-.fila-usuario.de-baja { color: #8992B8; }
+.fila-usuario.de-baja { color: var(--texto-gris); }
 
 .casilla {
     width: 16px;
@@ -312,10 +312,10 @@
     .casilla { grid-area: casilla; align-self: start; margin-top: 2px; }
     .celda-persona { grid-area: persona; }
     .celda-persona strong { font-weight: 600; font-size: 15px; }
-    .celda-persona .correo { color: #8992B8; }
+    .celda-persona .correo { color: var(--texto-gris); }
     .celda-estado { grid-area: estado; align-self: start; }
     .celda-rol { grid-area: rol; }
-    .celda-nodo { grid-area: nodo; align-self: center; color: #8992B8; }
+    .celda-nodo { grid-area: nodo; align-self: center; color: var(--texto-gris); }
     .celda-alta { display: none; }
 
     .ver-mas { margin-bottom: 70px; }

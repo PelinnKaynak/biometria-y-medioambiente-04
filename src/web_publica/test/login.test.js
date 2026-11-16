@@ -71,8 +71,10 @@ describe("paginaInicioSegunRol()", () => {
     expect(login.paginaInicioSegunRol("portador")).toBe("mi_cuenta.html");
   });
 
-  test("lanza un error con un rol desconocido", () => {
-    expect(() => login.paginaInicioSegunRol("INVITADO")).toThrow();
+  test("si no es administrador ni técnico, es un usuario y va a Mi cuenta", () => {
+    for (const rol of ["ciudadano", "INVITADO", ""]) {
+      expect(login.paginaInicioSegunRol(rol)).toBe("mi_cuenta.html");
+    }
   });
 });
 
