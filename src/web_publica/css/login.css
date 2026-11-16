@@ -79,7 +79,7 @@
   font-size: 15px;
 }
 
-#formulario-login .campo::placeholder { color: #8992B8; }
+#formulario-login .campo::placeholder { color: var(--texto-gris); }
 
 #formulario-login .campo.error { border-width: 1.5px; }
 

@@ -1,0 +1,44 @@
+/* ------------------------------------------------------------
+   pie.css
+   Pie de página común a todas las páginas públicas de AERIS
+   (portada, mapa, contaminantes, normativa, consejos y Mi cuenta)
+   ------------------------------------------------------------ */
+
+.pie-web { background: #2A2138; color: #D6CFE3; }
+
+.pie-contenido {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 60px;
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 72px 42px 48px;
+}
+
+.pie-logo { width: 150px; filter: brightness(0) invert(1); opacity: 0.95; }
+.pie-marca p { max-width: 320px; margin: 18px 0 0; font-size: 16px; line-height: 1.6; }
+
+.pie-columnas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+.pie-columnas h2 { margin: 0 0 16px; color: var(--blanco); font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.pie-columnas ul { margin: 0; padding: 0; list-style: none; }
+.pie-columnas li { margin-bottom: 12px; }
+.pie-columnas a { color: #D6CFE3; font-size: 16px; text-decoration: none; transition: color 0.2s; }
+.pie-columnas a:hover, .pie-columnas a:focus-visible { color: var(--blanco); text-decoration: underline; }
+
+.pie-final {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 22px 42px 28px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 14px;
+}
+
+@media (max-width: 800px) {
+    .pie-contenido { grid-template-columns: 1fr; gap: 36px; padding: 48px 16px 32px; }
+    .pie-columnas { grid-template-columns: 1fr 1fr; gap: 24px; }
+    .pie-final { padding: 18px 16px 24px; flex-direction: column; }
+}

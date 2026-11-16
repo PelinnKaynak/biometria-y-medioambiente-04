@@ -1,13 +1,22 @@
-
 {
   "name": "aeris-despliegue",
   "version": "1.0.0",
   "private": true,
+  "description": "AERIS es una plataforma de crowdsensing para medir la calidad del aire. Cada portador lleva un pequeño nodo con un sensor de ozono que envía sus mediciones al móvil por Bluetooth. La app las sube a un servidor y con ellas se construye un mapa de la contaminación que cualquiera puede consultar en la web.",
   "scripts": {
     "build": "npm ci --omit=dev --prefix src/logica && npm ci --omit=dev --prefix src/servidor_rest",
-    "start": "node src/servidor_rest/mainServidorREST.js"
+    "start": "node src/servidor_rest/mainServidorREST.js",
+    "test": "jest"
   },
   "engines": {
     "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PelinnKaynak/biometria-y-medioambiente-04.git"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2",
+    "jest-environment-jsdom": "^30.5.2"
   }
 }

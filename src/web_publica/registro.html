@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Crear cuenta · AERIS</title>
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/acceso.css">
+</head>
+<body class="pagina-acceso">
+
+<a class="boton-volver" href="login.html">‹ Iniciar sesión</a>
+
+<main class="tarjeta-acceso">
+
+    <section class="panel-logo" aria-hidden="true">
+        <img src="img/logo-aeris.svg" alt="" class="logo-grande">
+    </section>
+
+    <section class="panel-formulario panel-registro">
+        <img src="img/logo-aeris.svg" alt="AERIS" class="logo-movil">
+
+        <h1>Crear cuenta</h1>
+        <p class="texto-explicacion texto-centrado">
+            Regístrate como portador para vincular tu sensor y consultar tus mediciones.
+        </p>
+
+        <form id="formulario-registro" class="formulario-acceso" novalidate>
+
+            <div class="fila-doble">
+                <div class="columna">
+                    <label for="nombre">Nombre</label>
+                    <input id="nombre" name="nombre" class="campo" placeholder="nombre"
+                           autocomplete="given-name" maxlength="50" required>
+                </div>
+                <div class="columna">
+                    <label for="apellidos">Apellidos</label>
+                    <input id="apellidos" name="apellidos" class="campo" placeholder="apellidos"
+                           autocomplete="family-name" maxlength="100" required>
+                </div>
+            </div>
+
+            <label for="correo">Correo electrónico</label>
+            <input id="correo" name="correo" type="email" class="campo" placeholder="correo electrónico"
+                   autocomplete="email" maxlength="255" required>
+
+            <label for="contrasena">Contraseña</label>
+            <div class="campo-con-icono">
+                <input id="contrasena" name="contrasena" type="password" class="campo" placeholder="contraseña"
+                       autocomplete="new-password" required aria-describedby="pista-contrasena">
+                <button type="button" class="boton-ojo" data-campo="contrasena"
+                        aria-label="Mostrar contraseña" aria-pressed="false">
+                    <img src="img/ojo-cerrado.svg" alt="">
+                </button>
+            </div>
+            <p id="pista-contrasena" class="pista">Al menos 8 caracteres, con una letra y un número</p>
+
+            <label for="repetida">Repite la contraseña</label>
+            <div class="campo-con-icono">
+                <input id="repetida" name="repetida" type="password" class="campo" placeholder="repite la contraseña"
+                       autocomplete="new-password" required>
+                <button type="button" class="boton-ojo" data-campo="repetida"
+                        aria-label="Mostrar contraseña" aria-pressed="false">
+                    <img src="img/ojo-cerrado.svg" alt="">
+                </button>
+            </div>
+
+            <p id="mensaje-error" class="mensaje-error oculto" role="alert">
+                <span aria-hidden="true">⚠</span>
+                <span id="texto-error"></span>
+            </p>
+            <p id="ayuda-correo-repetido" class="ayuda oculto">
+                ¿Es tu correo? <a href="login.html">Inicia sesión</a> o <a href="recuperar.html">recupera la contraseña</a>.
+            </p>
+
+            <button type="submit" class="boton boton-acceder boton-ancho">Crear cuenta</button>
+
+            <p class="enlace-cambio">¿Ya tienes cuenta? <a href="login.html">Inicia sesión</a></p>
+        </form>
+    </section>
+
+</main>
+
+<script src="js/logica_fake.js"></script>
+<script src="js/logica_real.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="js/validacion.js"></script>
+<script src="js/registro.js"></script>
+</body>
+</html>

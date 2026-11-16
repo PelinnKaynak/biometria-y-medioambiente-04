@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Usuarios · Panel de AERIS</title>
+    <link rel="icon" href="../web_publica/img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="../web_publica/img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="../web_publica/img/apple-touch-icon.png">
+    <link rel="stylesheet" href="../web_publica/css/estilos.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/usuarios.css">
+</head>
+<body class="pagina-admin">
+
+<!-- Menú lateral (en móvil se abre con ☰) -->
+<aside id="menu-lateral" class="menu-lateral">
+    <div class="menu-cabecera">
+        <img src="../web_publica/img/logo-aeris.svg" alt="AERIS" class="logo-menu">
+        <button id="boton-cerrar-menu" class="boton-icono solo-movil" type="button" aria-label="Cerrar el menú">
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+    <nav class="menu-opciones" aria-label="Panel de administración">
+        <a href="panel_nodos.html" class="opcion-menu"><span class="icono icono-nodos"></span>Nodos</a>
+        <a href="usuarios.html" class="opcion-menu activa" aria-current="page">
+            <span class="icono icono-usuarios"></span>Usuarios</a>
+        <a href="historico.html" class="opcion-menu"><span class="icono icono-historico"></span>Histórico</a>
+        <a href="campanas.html" class="opcion-menu"><span class="icono icono-campanas"></span>Campañas</a>
+        <a href="zonas_sensibles.html" class="opcion-menu"><span class="icono icono-zonas"></span>Zonas sensibles</a>
+    </nav>
+    <a id="boton-salir" class="boton-salir" href="../web_publica/login.html">
+        <span class="icono icono-salir"></span>Salir
+    </a>
+</aside>
+
+<main class="contenido">
+
+    <!-- Barra superior del móvil -->
+    <div class="barra-movil solo-movil">
+        <img src="../web_publica/img/logo-aeris.svg" alt="AERIS" class="logo-barra">
+        <button id="boton-menu" class="boton-icono" type="button" aria-label="Abrir el menú"
+                aria-controls="menu-lateral" aria-expanded="false">
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6H21M3 12H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+
+    <header class="cabecera-panel">
+        <h1>Usuarios</h1>
+        <div class="filtros">
+            <label class="buscador">
+                <span class="icono icono-buscar"></span>
+                <input id="buscador" type="search" placeholder="Buscar por nombre o correo"
+                       aria-label="Buscar por nombre o correo">
+            </label>
+            <select id="filtro-estado" class="desplegable" aria-label="Filtrar por estado">
+                <option value="todos">Estado: todos</option>
+                <option value="activo">Activos</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="baja">De baja</option>
+            </select>
+            <button id="boton-anadir" class="boton boton-anadir" type="button">+ Añadir técnico</button>
+        </div>
+    </header>
+
+    <nav class="grupos" aria-label="Filtrar por tipo de usuario">
+        <button class="grupo activo" data-grupo="todos" type="button">Todos <span id="conteo-todos"></span></button>
+        <button class="grupo" data-grupo="portadores" type="button">Portadores <span id="conteo-portadores"></span></button>
+        <button class="grupo" data-grupo="premium" type="button">Premium <span id="conteo-premium"></span></button>
+        <button class="grupo" data-grupo="administradores" type="button">Administradores <span id="conteo-administradores"></span></button>
+        <button class="grupo" data-grupo="tecnicos" type="button">Técnicos <span id="conteo-tecnicos"></span></button>
+    </nav>
+
+    <p id="aviso-error" class="aviso-panel oculto" role="alert"></p>
+    <p id="aviso-ok" class="aviso-ok-panel oculto" role="status"></p>
+
+    <div class="barra-seleccion">
+        <span id="texto-seleccion">Ningún usuario seleccionado</span>
+        <button id="boton-baja" class="boton-baja" type="button" disabled>Dar de baja</button>
+    </div>
+
+    <section class="caja-lista caja-usuarios">
+        <div class="cabecera-lista cabecera-usuarios" aria-hidden="true">
+            <span></span><span>Nombre/correo</span><span>Rol</span><span>Nodo</span><span>Estado</span><span>Alta</span>
+        </div>
+        <ul id="lista-usuarios" class="lista-usuarios"></ul>
+        <p id="sin-resultados" class="sin-resultados oculto">No hay usuarios que coincidan con la búsqueda.</p>
+
+        <div class="paginacion">
+            <span id="texto-paginacion"></span>
+            <div class="flechas">
+                <button id="boton-anterior" class="boton-icono" type="button" aria-label="Página anterior">‹</button>
+                <button id="boton-siguiente" class="boton-icono" type="button" aria-label="Página siguiente">›</button>
+            </div>
+        </div>
+        <button id="boton-ver-mas" class="ver-mas solo-movil oculto" type="button">Ver más</button>
+    </section>
+</main>
+
+<!-- Diálogo: añadir técnico o administrador -->
+<div id="dialogo-nuevo" class="fondo-dialogo oculto">
+    <form id="formulario-nuevo" class="dialogo" role="dialog" aria-modal="true"
+          aria-labelledby="titulo-nuevo" novalidate>
+        <h2 id="titulo-nuevo">Añadir técnico o administrador</h2>
+        <p class="texto-dialogo">Le enviaremos un correo para que elija su contraseña.</p>
+
+        <label for="nuevo-nombre">Nombre</label>
+        <input id="nuevo-nombre" class="campo" maxlength="50" autocomplete="off">
+
+        <label for="nuevo-apellidos">Apellidos</label>
+        <input id="nuevo-apellidos" class="campo" maxlength="100" autocomplete="off">
+
+        <label for="nuevo-correo">Correo electrónico</label>
+        <input id="nuevo-correo" class="campo" type="email" maxlength="255" autocomplete="off">
+
+        <label for="nuevo-rol">Rol</label>
+        <select id="nuevo-rol" class="campo">
+            <option value="tecnico">Técnico del ayuntamiento</option>
+            <option value="administrador">Administrador</option>
+        </select>
+
+        <p id="error-nuevo" class="aviso-error oculto" role="alert"></p>
+
+        <div class="botones-dialogo">
+            <button type="button" class="boton-secundario" data-cerrar="dialogo-nuevo">Cancelar</button>
+            <button type="submit" class="boton">Crear cuenta</button>
+        </div>
+    </form>
+</div>
+
+<!-- Diálogo: confirmar la baja -->
+<div id="dialogo-baja" class="fondo-dialogo oculto">
+    <div class="dialogo" role="alertdialog" aria-modal="true" aria-labelledby="titulo-baja">
+        <h2 id="titulo-baja">¿Dar de baja?</h2>
+        <p id="texto-baja" class="texto-dialogo"></p>
+        <div class="botones-dialogo">
+            <button type="button" class="boton-secundario" data-cerrar="dialogo-baja">Cancelar</button>
+            <button id="boton-confirmar-baja" type="button" class="boton boton-peligro">Dar de baja</button>
+        </div>
+    </div>
+</div>
+
+<script src="../web_publica/js/validacion.js"></script>
+<script src="js/nodos.js"></script>
+<script src="js/logica_admin_fake.js"></script>
+<script src="js/logica_admin_real.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="js/admin_comun.js"></script>
+<script src="js/usuarios.js"></script>
+</body>
+</html>
