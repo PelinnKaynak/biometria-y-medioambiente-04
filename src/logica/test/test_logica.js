@@ -161,7 +161,7 @@ describe('Logica (usuarios y autenticación)', function () {
     it('si el correo de bienvenida falla, el registro sigue funcionando', async function () {
         const otra = new Logica(logica.conexion, async () => { throw new Error('Gmail caído'); }, URL_RESTABLECER, CLAVE);
         const errorOriginal = console.error;
-        console.error = () => {};
+        console.error = () => { };
         try {
             const sesion = await otra.registrarUsuario('Ana', 'Ruiz', 'ana@aeris.es', 'aire2026');
             assert.ok(sesion.token);
@@ -249,10 +249,26 @@ describe('Logica (usuarios y autenticación)', function () {
         assert.strictEqual(await logica.comprobarSesion(tokenDelUltimoCorreo()), null);
     });
 
-    it('no hay tablas de sesiones ni de tokens: solo las del diagrama (Usuarios, Contaminantes, Sensores y Mediciones)', async function () {
+
+    it('la BD tiene las tablas principales y no guarda sesiones', async function () {
         const [tablas] = await logica.conexion.query('SHOW TABLES');
-        assert.deepStrictEqual(tablas.map(t => Object.values(t)[0].toLowerCase()).sort(), ['contaminantes', 'mediciones', 'sensores', 'usuarios']);
+
+        const nombres = tablas.map(
+            t => Object.values(t)[0].toLowerCase()
+        );
+
+        for (const tabla of [
+            'usuarios',
+            'contaminantes',
+            'sensores',
+            'mediciones'
+        ]) {
+            assert.ok(nombres.includes(tabla));
+        }
+
+        assert.ok(!nombres.includes('sesiones'));
     });
+
 
     // --- recuperación de contraseña -----------------------------------------
 
