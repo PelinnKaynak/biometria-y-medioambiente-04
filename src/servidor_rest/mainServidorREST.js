@@ -23,7 +23,7 @@ const { crearEnviadorCorreo } = require('./EnviadorCorreo');
 // ---------------------------------------------------------------------------
 async function main() {
     const entorno = process.env;
-    const puerto = Number(entorno.PUERTO || 8080);
+    const puerto = Number(entorno.PORT || entorno.PUERTO || 8080);
 
     const enviarCorreo = crearEnviadorCorreo({
         host: entorno.SMTP_HOST,
@@ -34,14 +34,17 @@ async function main() {
         remitente: entorno.SMTP_REMITENTE
             || (entorno.SMTP_USUARIO ? `AERIS <${entorno.SMTP_USUARIO}>` : 'AERIS <no-responder@aeris.es>')
     });
-
     // Clave secreta que firma los tokens de sesión y de recuperación.
     // En producción hay que poner una propia y larga en .env (CLAVE_TOKENS).
-    let claveTokens = entorno.CLAVE_TOKENS;
-    if (!claveTokens) {
-        claveTokens = 'clave-de-desarrollo-aeris-cambiar-en-produccion';
-        console.warn('Aviso: falta CLAVE_TOKENS en .env; se usa una clave de desarrollo.');
+    
+    const claveTokens = entorno.CLAVE_TOKENS;
+
+    if (!claveTokens || claveTokens.length < 32) {
+        throw new Error(
+            'CLAVE_TOKENS debe estar configurada y tener al menos 32 caracteres'
+        );
     }
+
 
     let logica;
     try {
@@ -59,7 +62,7 @@ async function main() {
     }
 
     const servidor = crearServidor(logica);
-    const conexion = servidor.listen(puerto, () => {
+    const conexion = servidor.listen(puerto, '0.0.0.0', () => {
         console.log(`Servidor REST de AERIS escuchando en http://localhost:${puerto}`);
     });
 

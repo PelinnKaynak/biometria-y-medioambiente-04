@@ -24,7 +24,7 @@ public class LogicaFakeRegistro {
     // Dirección del servidor REST:
     //   emulador       -> http://10.0.2.2:8080 (el ordenador que ejecuta el emulador)
     //   teléfono real  -> http://<IPv4 del ordenador en la misma Wi-Fi>:8080
-    static final String URL_SERVIDOR = "http://10.0.2.2:8080";
+    static final String URL_SERVIDOR = "https://pfermar1.upv.edu.es";
 
     static final int CODIGO_CREADO = 201;
     static final int CODIGO_CORREO_YA_REGISTRADO = 409;

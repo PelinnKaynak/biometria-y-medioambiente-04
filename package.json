@@ -1,0 +1,13 @@
+
+{
+  "name": "aeris-despliegue",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm ci --omit=dev --prefix src/logica && npm ci --omit=dev --prefix src/servidor_rest",
+    "start": "node src/servidor_rest/mainServidorREST.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
