@@ -21,11 +21,26 @@ const nodemailer = require('nodemailer');
 //               example the logos of the welcome email, with cid).
 // ---------------------------------------------------------------------------
 function crearEnviadorCorreo(config) {
+
     if (!config.host) {
+        if (process.env.NODE_ENV === 'production') {
+            return async () => {
+                throw new Error(
+                    'SMTP no configurado en producción'
+                );
+            };
+        }
+
+        // En desarrollo se mantiene el comportamiento original.
         return async (destinatario, asunto, texto, extra = {}) => {
-            console.log(`\n[correo NO enviado: falta SMTP_HOST en .env]\nPara: ${destinatario}\nAsunto: ${asunto}\n${texto}\n`);
+            console.log(
+                `\n[correo NO enviado: falta SMTP_HOST]\n` +
+                `Para: ${destinatario}\n` +
+                `Asunto: ${asunto}\n${texto}\n`
+            );
         };
     }
+
     const transporte = nodemailer.createTransport({
         host: config.host,
         port: Number(config.puerto) || 587,

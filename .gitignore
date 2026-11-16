@@ -31,3 +31,4 @@ src/prevision/datos/
 # Arduino
 *.hex
 *.elf
+aeris.zip
