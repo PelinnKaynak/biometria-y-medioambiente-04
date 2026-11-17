@@ -3,7 +3,8 @@
 // Descripción: Rutas REST de usuarios y autenticación. Cada ruta lee la
 //              petición, llama a la lógica y traduce el resultado a HTTP.
 //              Contrato completo en doc/servidor_rest_design.md. Tareas T016,
-//              T010 y T005 (vinculación del sensor confirmada por correo).
+//              T010, T005 (vinculación del sensor confirmada por correo) y
+//              T041 (incidencias).
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -14,6 +15,9 @@ const express = require('express');
 const { requiereSesion } = require('./Autorizacion');
 const { paginaConfirmar, paginaResultado, paginaEnlaceNoValido } = require('./PaginaVinculacion');
 
+// Roles que reciben y responden las incidencias (T041)
+const ROLES_GESTION_INCIDENCIAS = ['administrador', 'tecnico'];
+
 // Código de ErrorLogica --> código HTTP
 const CODIGOS_HTTP = {
     DATOS_NO_VALIDOS: 400,
@@ -23,6 +27,7 @@ const CODIGOS_HTTP = {
     CORREO_NO_REGISTRADO: 404,
     SENSOR_NO_REGISTRADO: 404,
     SIN_SOLICITUD: 404,
+    INCIDENCIA_NO_EXISTE: 404,
     CORREO_YA_REGISTRADO: 409,
     SENSOR_YA_VINCULADO: 409
 };
@@ -152,6 +157,63 @@ function cargarReglasREST(servidor, logica) {
             respuesta.status(error.codigo === 'TOKEN_NO_VALIDO' ? 400 : 500).type('html').send(paginaEnlaceNoValido());
         }
     });
+
+    // ---- Incidencias (T041) · la usan la app y la web ----
+
+    // POST /crearIncidencia  { tipo, descripcion, idSensor (opcional) }  🔒
+    //   tipo: sensor | datos | cuenta | otra. Sin idSensor, las de tipo sensor o datos llevan el sensor del usuario
+    //   201 Incidencia · 400 { error, campos } · 401
+    servidor.post('/crearIncidencia', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const { tipo, descripcion, idSensor } = peticion.body;
+        respuesta.status(201).json(
+            await logica.incidencias.crear(peticion.usuario.idUsuario, tipo, descripcion, idSensor));
+    }));
+
+    // GET /misIncidencias  🔒
+    //   200 [ Incidencia ] (las del usuario, con la respuesta; la más nueva primero) · 401
+    servidor.get('/misIncidencias', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.incidencias.listarDeUsuario(peticion.usuario.idUsuario));
+    }));
+
+    // GET /incidencias?estado=abierta|en curso|resuelta&tipo=sensor|datos|cuenta|otra  🔒 técnico o administrador
+    //   200 [ IncidenciaGestion ] · 400 filtro no válido · 401 · 403
+    servidor.get('/incidencias', requiereSesion(logica, ROLES_GESTION_INCIDENCIAS),
+        envolver(async (peticion, respuesta) => {
+            const { estado, tipo } = peticion.query;
+            respuesta.status(200).json(await logica.incidencias.listar({
+                estado: textoDeConsulta(estado), tipo: textoDeConsulta(tipo) }));
+        }));
+
+    // GET /numeroIncidenciasAbiertas  🔒 técnico o administrador
+    //   200 { abiertas: N } (el número del menú del panel) · 401 · 403
+    servidor.get('/numeroIncidenciasAbiertas', requiereSesion(logica, ROLES_GESTION_INCIDENCIAS),
+        envolver(async (peticion, respuesta) => {
+            respuesta.status(200).json({ abiertas: await logica.incidencias.contarAbiertas() });
+        }));
+
+    // GET /incidencia?id=N  🔒 técnico o administrador
+    //   200 IncidenciaGestion (con los datos del usuario y del sensor) · 404 · 401 · 403
+    servidor.get('/incidencia', requiereSesion(logica, ROLES_GESTION_INCIDENCIAS),
+        envolver(async (peticion, respuesta) => {
+            respuesta.status(200).json(await logica.incidencias.obtener(Number(peticion.query.id)));
+        }));
+
+    // POST /responderIncidencia  { idIncidencia, respuesta (opcional), estado (opcional) }  🔒 técnico o administrador
+    //   Con respuesta: se guarda con la fecha, se manda por correo al usuario y, si no se indica
+    //   estado, pasa a «resuelta». Sin respuesta: solo cambia el estado.
+    //   200 IncidenciaGestion · 400 { error, campos } · 404 · 401 · 403
+    servidor.post('/responderIncidencia', requiereSesion(logica, ROLES_GESTION_INCIDENCIAS),
+        envolver(async (peticion, respuesta) => {
+            const { idIncidencia, respuesta: texto, estado } = peticion.body;
+            respuesta.status(200).json(await logica.incidencias.responder(idIncidencia, { respuesta: texto, estado }));
+        }));
+}
+
+// valor: Texto | Lista | undefined --> textoDeConsulta() --> Texto | undefined
+// (un parámetro vacío o repetido en la URL cuenta como no enviado / no válido)
+function textoDeConsulta(valor) {
+    if (valor === undefined || valor === '') return undefined;
+    return typeof valor === 'string' ? valor : '';
 }
 
 // ---------------------------------------------------------------------------

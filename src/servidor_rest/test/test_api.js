@@ -246,7 +246,11 @@ describe('API REST de usuarios y autenticación', function () {
         const r = await fetch(url + '/restablecer.html');
         assert.strictEqual(r.status, 200);
         assert.match(r.headers.get('content-type'), /text\/html/);
-        assert.ok((await r.text()).includes('/restablecerContrasenya'));
+        assert.ok((await r.text()).includes('js/logica_real.js'));
+        // la llamada al servidor está en el JS de la web (web pública actualizada)
+        const js = await fetch(url + '/js/logica_real.js');
+        assert.strictEqual(js.status, 200);
+        assert.ok((await js.text()).includes('/restablecerContrasenya'));
     });
 
     // --- Autorizacion.extraerToken ------------------------------------------

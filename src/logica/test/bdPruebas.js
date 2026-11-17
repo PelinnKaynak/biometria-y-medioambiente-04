@@ -46,10 +46,11 @@ async function crearBDPruebas() {
 
 // ---------------------------------------------------------------------------
 // conexion: Pool --> vaciarTablas() -->
-// What it does: deletes all measurements, sensors, pollutants and users (sessions and recoveries go
+// What it does: deletes all incidences, measurements, sensors, pollutants and users (sessions and recoveries go
 //               with them).
 // ---------------------------------------------------------------------------
 async function vaciarTablas(conexion) {
+    await conexion.query('DELETE FROM Incidencias');
     await conexion.query('DELETE FROM Mediciones');
     await conexion.query('DELETE FROM Sensores');
     await conexion.query('DELETE FROM Contaminantes');

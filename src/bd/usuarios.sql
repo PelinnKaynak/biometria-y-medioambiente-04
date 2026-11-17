@@ -2,7 +2,7 @@
 -- usuarios.sql
 -- Proyecto AERIS - SenseTech (Equipo 04)
 -- Crea la base de datos del proyecto y sus tablas: Usuarios,
--- Contaminantes, Sensores y Mediciones.
+-- Contaminantes, Sensores, Mediciones e Incidencias.
 -- Sigue el diagrama de la BD en Figma. Diseño en doc/bd_design.md.
 -- Motor: MySQL / MariaDB (XAMPP)
 -- ---------------------------------------------------------------
@@ -125,6 +125,37 @@ CREATE TABLE IF NOT EXISTS Mediciones (
         FOREIGN KEY (idContaminante)
         REFERENCES Contaminantes(idContaminante)
         ON DELETE RESTRICT
+) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------
+-- Tabla: Incidencias (T036/T041)
+-- Las que el usuario envía desde Ayuda (app y web). Las reciben y
+-- las responden los técnicos y los administradores.
+-- idSensor puede ser NULL (por ejemplo, una incidencia de la cuenta).
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS Incidencias (
+    idIncidencia INT NOT NULL AUTO_INCREMENT,
+    idUsuario INT NOT NULL,
+    idSensor INT NULL,
+    tipo VARCHAR(10) NOT NULL,
+    descripcion TEXT NOT NULL,
+    estado VARCHAR(10) NOT NULL DEFAULT 'abierta',
+    respuesta TEXT NULL,
+    fechaCreacion DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
+    fechaRespuesta DATETIME NULL,
+    PRIMARY KEY (idIncidencia),
+    CONSTRAINT fk_incidencias_usuarios
+        FOREIGN KEY (idUsuario)
+        REFERENCES Usuarios(idUsuario)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_incidencias_sensores
+        FOREIGN KEY (idSensor)
+        REFERENCES Sensores(idSensor)
+        ON DELETE SET NULL,
+    CONSTRAINT ck_incidencias_tipo
+        CHECK (tipo IN ('sensor', 'datos', 'cuenta', 'otra')),
+    CONSTRAINT ck_incidencias_estado
+        CHECK (estado IN ('abierta', 'en curso', 'resuelta'))
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------

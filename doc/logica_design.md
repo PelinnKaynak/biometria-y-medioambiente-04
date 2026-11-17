@@ -181,6 +181,7 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   - `test_seguridad_validador.js`: hash, tokens firmados y validación (sin BD).
   - `test_logica.js`: registro, inicio de sesión, tokens caducados o modificados, roles, recuperación de contraseña.
   - `test_vinculacion.js`: vinculación del sensor por correo (T005).
+  - `test_incidencias.js`: incidencias (T041).
 - **Foto de perfil (T010):** se guarda en la columna `foto` de `Usuarios` como texto base64 (la app la reduce antes a un JPEG de 256×256, unos 30 KB), para que se vea en cualquier teléfono. No hace falta otra tabla.
 - **Cambiar la contraseña (T010):** pide la contraseña actual. Como el token lleva una huella del hash, al cambiarla se cierran todas las sesiones; por eso se devuelve un token nuevo para el teléfono que la ha cambiado.
 - **Correo de bienvenida (T002/T016):** al registrarse, `registrarUsuario()` llama a `enviarBienvenida()` sin esperarla: el registro responde enseguida y, si el correo falla (por ejemplo, Gmail no responde), la cuenta se crea igual y el error solo se escribe en la consola del servidor. El correo lo monta `CorreoBienvenida.crearCorreoBienvenida(nombre)` en español: texto plano y HTML con los colores de la app, el logo de AERIS arriba, una presentación general de la app y algunas de sus funciones (mapa, alertas, historial, previsión de ozono, rutas limpias, lugares, puntos…) y el logo de SenseTech al pie. Los logos (`src/logica/img/`) van incrustados en el correo (`cid:`), así se ven aunque el servidor no esté en internet. El nombre se escapa (`escaparHTML()`) para que no pueda meter HTML.
@@ -201,4 +202,19 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   token: Texto, acepta: V/F
                     --> responderVinculacion() --> ( estado, numeroSerie, nombreSolicitante )   | TOKEN_NO_VALIDO
   Solicitud = ( numeroSerie, correoComprador (oculto: «p•••••@upv.edu.es»), estado, fecha )
+```
+
+- **Incidencias (T041):** están en `Incidencias.js` (clase `Incidencias`), para no hacer más grande `Logica.js`. Se usan como `logica.incidencias.crear(…)`. Tabla `Incidencias` (ver `bd_design.md`). `tipo`: sensor, datos, cuenta, otra. `estado`: abierta, en curso, resuelta. Una incidencia nueva está «abierta». Si es de tipo sensor o datos y no se dice qué sensor, se pone el del usuario (o ninguno si no tiene). Al responder, si no se indica el estado pasa a «resuelta», se guarda `fechaRespuesta` y se manda al usuario el correo de `CorreoRespuestaIncidencia.crearCorreoRespuestaIncidencia()` (su mensaje, la respuesta y el estado, con el marco común). Si el correo falla, la respuesta se guarda igual. La descripción y la respuesta tienen como mucho 2000 caracteres.
+
+```text
+  idUsuario: N, tipo: Texto, descripcion: Texto, idSensor: N (opcional)
+                         --> incidencias.crear() --> Incidencia                  | DATOS_NO_VALIDOS
+  idUsuario: N           --> incidencias.listarDeUsuario() --> Lista<Incidencia>
+  { estado?, tipo? }     --> incidencias.listar() --> Lista<IncidenciaGestion>   | DATOS_NO_VALIDOS
+  idIncidencia: N        --> incidencias.obtener() --> IncidenciaGestion         | INCIDENCIA_NO_EXISTE
+                         --> incidencias.contarAbiertas() --> N
+  idIncidencia: N, { respuesta?, estado? }
+                         --> incidencias.responder() --> IncidenciaGestion       | DATOS_NO_VALIDOS, INCIDENCIA_NO_EXISTE
+  Incidencia = ( idIncidencia, tipo, descripcion, estado, respuesta, fechaCreacion, fechaRespuesta, sensor | null )
+  IncidenciaGestion = Incidencia + usuario ( idUsuario, nombre, apellidos, correo ) + datos del sensor
 ```
