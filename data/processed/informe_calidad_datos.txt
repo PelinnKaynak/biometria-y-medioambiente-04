@@ -1,0 +1,52 @@
+INFORME DE CALIDAD DE DATOS - PREVISIÓN DE OZONO
+Año analizado: 2025
+
+FUENTES
+Ozono: Red Valenciana, estación 46131002 (Gandia).
+Meteorología: Open-Meteo Archive; coordenadas 38.910366, -0.12313843.
+
+ZONA HORARIA
+Open-Meteo: el archivo indica GMT y utc_offset_seconds=0 (UTC).
+Ozono: el CSV no contiene información de zona horaria.
+No se ha aplicado conversión horaria. La unión compara las horas tal como aparecen.
+La equivalencia de instantes queda pendiente de confirmar con la documentación de la fuente de ozono.
+
+CONTROL DE OZONO
+filas_originales: 8436
+fechas_invalidas: 0
+duplicados_fecha: 0
+ozono_ausente_o_no_numerico: 47
+ozono_negativo: 0
+
+CONTROL DE METEOROLOGÍA
+Filas originales: 8760
+Fechas inválidas: 0
+Duplicados de fecha: 0
+Valores fuera del rango orientativo en temperatura: 0
+Valores fuera del rango orientativo en humedad_relativa: 0
+Valores fuera del rango orientativo en velocidad_viento: 0
+Valores fuera del rango orientativo en direccion_viento: 0
+Valores fuera del rango orientativo en radiacion_solar: 0
+Valores fuera del rango orientativo en presion: 0
+Valores fuera del rango orientativo en nubosidad: 0
+
+COBERTURA Y UNIÓN
+horas_esperadas_2025: 8760
+horas_con_ozono_valido: 8389
+horas_ozono_sin_fila: 324
+horas_sin_ninguna_variable_meteo: 0
+Filas finales tras la unión: 8389
+Valores ausentes en temperatura: 0
+Valores ausentes en humedad_relativa: 0
+Valores ausentes en velocidad_viento: 0
+Valores ausentes en direccion_viento: 0
+Valores ausentes en radiacion_solar: 0
+Valores ausentes en presion: 0
+Valores ausentes en nubosidad: 0
+
+TRATAMIENTO
+Se eliminan fechas inválidas, O3 ausente/no numérico, O3 negativo y duplicados horarios.
+No se rellenan automáticamente los valores ausentes.
+Los valores meteorológicos fuera de rangos orientativos se notifican, no se eliminan automáticamente.
+La unión es left desde ozono: se conservan las horas con ozono válido.
+La zona horaria pendiente impide afirmar todavía que cada pareja horaria represente el mismo instante.

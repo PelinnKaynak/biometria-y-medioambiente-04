@@ -1,0 +1,24 @@
+INFORME DE CALIDAD - GANDIA OCTUBRE 2026
+================================================
+Filas de ozono válidas: 312
+Duplicados eliminados en ozono: 0
+Filas meteorológicas: 312
+Duplicados eliminados en meteorología: 0
+Filas tras unión por fecha/hora: 312
+Periodo combinado: 2026-10-01 00:00:00 a 2026-10-13 23:00:00
+Horas esperadas en el periodo: 312
+Horas sin coincidencia: 0
+Horas fuera del periodo esperado: 0
+Filas con algún valor nulo: 0
+
+ADVERTENCIAS METODOLÓGICAS:
+- Ozono: estación GVA Gandia, código 46131002, unidad original µg/m³.
+- Meteorología: Open-Meteo, coordenadas 38.910366, -0.12313843.
+- Open-Meteo se solicitó en GMT/UTC.
+- La zona horaria de las marcas fecha/hora GVA no está confirmada.
+- La unión compara las etiquetas de fecha/hora tal como aparecen, sin conversión.
+- No interpretar la coincidencia como simultaneidad confirmada hasta verificar la zona horaria.
+- Los datos GVA son provisionales y pendientes de validación.
+- Este conjunto experimental no sustituye al histórico de 2025.
+
+CSV generado: C:\Users\itsbl\OneDrive\Documentos\GitHub\biometria-y-medioambiente-04\data\processed\datos_prevision_gandia_2026_10.csv

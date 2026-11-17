@@ -31,3 +31,12 @@ src/prevision/datos/
 # Arduino
 *.hex
 *.elf
+
+# Python: cachés y pruebas
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Archivos de configuración con posibles credenciales
+.env.*
+!.env.example

@@ -1,0 +1,32 @@
+{
+  "modelo": "HistGradientBoostingRegressor mediante MultiOutputRegressor",
+  "horas_historicas_entrada": 48,
+  "horas_predichas": 48,
+  "numero_ventanas_entrenamiento": 3575,
+  "variables_historicas": [
+    "O3",
+    "temperatura",
+    "humedad_relativa",
+    "velocidad_viento",
+    "direccion_viento",
+    "radiacion_solar",
+    "presion",
+    "nubosidad"
+  ],
+  "variables_calendario_futuro": [
+    "seno_hora",
+    "coseno_hora",
+    "seno_dia_semana",
+    "coseno_dia_semana"
+  ],
+  "fecha_ultimo_dato_historico": "2025-12-31 23:00:00",
+  "inicio_prediccion": "2026-01-01 00:00:00",
+  "fin_prediccion": "2026-01-02 23:00:00",
+  "validacion_externa": "En el experimento comparativo v2, HistGradientBoosting obtuvo MAE 17.136 y RMSE 21.082 frente a la referencia MAE 18.391 y RMSE 24.561. Este script vuelve a entrenar con todas las ventanas válidas; no calcula nuevas métricas de prueba.",
+  "limitaciones": [
+    "La zona horaria de las mediciones de ozono sigue pendiente de verificar.",
+    "No se utilizan previsiones meteorológicas futuras.",
+    "Los datos meteorológicos corresponden a un punto geográfico distinto de la estación de ozono.",
+    "La evaluación disponible procede de un único año de datos."
+  ]
+}
