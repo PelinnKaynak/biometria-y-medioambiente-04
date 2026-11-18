@@ -286,4 +286,27 @@
     <string name="info_limite_oms_valor">100 µg/m³ en 8 horas</string>
     <string name="info_limites_nota">Directiva 2008/50/CE y Real Decreto 102/2011. AERIS usa el valor de la OMS como límite de «Bueno».</string>
     <string name="info_fuentes">Fuentes: Directiva 2008/50/CE, Real Decreto 102/2011, OMS (2021) y SPEC Sensors.</string>
+
+    <!-- Mis lugares (T019 · H034) -->
+    <string name="mis_lugares_titulo">Mis lugares</string>
+    <string name="mis_lugares_subtitulo">Guarda tus ubicaciones habituales y gestiona sus avisos</string>
+    <string name="mis_lugares_contador">%1$d de %2$d lugares guardados</string>
+    <string name="mis_lugares_anadir_titulo">Añadir nuevo lugar</string>
+    <string name="mis_lugares_campo_nombre">Nombre (ej. Casa, Trabajo, Colegio)</string>
+    <string name="mis_lugares_campo_direccion">Dirección o municipio</string>
+    <string name="mis_lugares_boton_guardar">Guardar lugar</string>
+    <string name="mis_lugares_boton_anadir">Añadir lugar</string>
+    <string name="mis_lugares_error_nombre">Escribe un nombre para el lugar</string>
+    <string name="mis_lugares_error_direccion">Escribe una dirección para el lugar</string>
+    <string name="mis_lugares_error_limite">Has alcanzado el límite máximo de 5 lugares. Elimina uno para añadir otro.</string>
+    <string name="mis_lugares_sin_lugares">Aún no tienes lugares guardados</string>
+    <string name="mis_lugares_sin_lugares_desc">Guarda tus lugares habituales para consultar su nivel de ozono actual y activar alertas personalizadas.</string>
+    <string name="mis_lugares_avisos_activos">Avisos activados</string>
+    <string name="mis_lugares_avisos_inactivos">Avisos desactivados</string>
+    <string name="mis_lugares_eliminar_titulo">¿Eliminar lugar?</string>
+    <string name="mis_lugares_eliminar_mensaje">¿Seguro que deseas eliminar «%1$s» de tus lugares habituales?</string>
+    <string name="mis_lugares_eliminar_confirmar">Eliminar</string>
+    <string name="mis_lugares_eliminar_cancelar">Cancelar</string>
+    <string name="mis_lugares_icono_eliminar_desc">Eliminar lugar</string>
+    <string name="mis_lugares_nivel_formato">%1$.0f µg/m³ · %2$s</string>
 </resources>
