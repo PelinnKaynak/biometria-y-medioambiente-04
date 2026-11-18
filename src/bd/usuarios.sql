@@ -20,9 +20,16 @@ USE aeris;
 -- Quien se registra desde la app es 'portador'.
 -- ---------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS Usuarios (
-  idUsuario     INT           NOT NULL AUTO_INCREMENT,
-  role          VARCHAR(20)   NOT NULL DEFAULT 'portador',
-  nombre        VARCHAR(50)   NOT NULL,
+  
+  idUsuario       INT NOT NULL AUTO_INCREMENT,
+  role            VARCHAR(20) NOT NULL DEFAULT 'portador',
+
+  -- Roles múltiples (nuevo sistema)
+  esAdministrador BOOLEAN NOT NULL DEFAULT FALSE,
+  esTecnico       BOOLEAN NOT NULL DEFAULT FALSE,
+  esPortador      BOOLEAN NOT NULL DEFAULT TRUE,
+
+  nombre          VARCHAR(50) NOT NULL,
   apellidos     VARCHAR(100)  NOT NULL,
   email         VARCHAR(255)  NOT NULL,
   passwordHash  VARCHAR(255)  NOT NULL,

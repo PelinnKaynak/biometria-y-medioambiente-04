@@ -26,7 +26,16 @@ const { crearCorreoVinculacion } = require('./CorreoVinculacion');
 const { Incidencias } = require('./Incidencias');
 const { Mediciones } = require('./Mediciones');
 
-const ROL_PORTADOR = 'portador';        // rol de quien se registra desde la app
+const ROL_PORTADOR = 'portador';
+
+function obtenerRoles(usuario) {
+    return {
+        esAdministrador: Boolean(usuario.esAdministrador),
+        esTecnico: Boolean(usuario.esTecnico),
+        esPortador: Boolean(usuario.esPortador)
+    };
+}
+// rol de quien se registra desde la app
 const DURACION_SESION_SEGUNDOS = 30 * 24 * 60 * 60;      // 30 días
 const DURACION_RECUPERACION_SEGUNDOS = 30 * 60;          // 30 minutos (criterio de T003)
 const TIPO_SESION = 'sesion';
@@ -209,7 +218,13 @@ class Logica {
     // -----------------------------------------------------------------------
     async comprobarSesion(token) {
         const usuario = await this.leerTokenDeUsuario(token, TIPO_SESION);
-        return usuario ? { idUsuario: usuario.idUsuario, rol: usuario.role } : null;
+
+        return usuario ? {
+            idUsuario: usuario.idUsuario,
+            rol: usuario.role,
+            ...obtenerRoles(usuario)
+        } : null;
+
     }
 
     // -----------------------------------------------------------------------
@@ -221,8 +236,8 @@ class Logica {
     // -----------------------------------------------------------------------
     async obtenerUsuario(idUsuario) {
         const [filas] = await this.conexion.execute(
-            `SELECT idUsuario, nombre, apellidos, email, role, fechaAlta, alertas, premiumHasta, foto
-               FROM Usuarios WHERE idUsuario = ?`,
+            `SELECT idUsuario, nombre, apellidos, email, role, esAdministrador, esTecnico, esPortador, fechaAlta, alertas, premiumHasta, foto
+            FROM Usuarios WHERE idUsuario = ?`,
             [idUsuario]);
         if (filas.length !== 1) {
             return null;
@@ -233,7 +248,9 @@ class Logica {
         const sensor = sensores[0];
         return {
             idUsuario: f.idUsuario, nombre: f.nombre, apellidos: f.apellidos,
-            correo: f.email, rol: f.role, fechaAlta: f.fechaAlta,
+
+            correo: f.email, rol: f.role, ...obtenerRoles(f), fechaAlta: f.fechaAlta,
+
             alertas: Boolean(f.alertas), premiumHasta: f.premiumHasta, foto: f.foto,
             sensor: sensor ? sensor.nombre : null, numeroSerie: sensor ? sensor.numeroSerie : null
         };
@@ -409,8 +426,10 @@ class Logica {
         }
         const sensor = filas[0];
         if (sensor.idUsuario === idUsuario) {
-            return { numeroSerie: serie, correoComprador: ocultarCorreo(sensor.correoCompra),
-                estado: ESTADO_CONFIRMADA, fecha: new Date() };
+            return {
+                numeroSerie: serie, correoComprador: ocultarCorreo(sensor.correoCompra),
+                estado: ESTADO_CONFIRMADA, fecha: new Date()
+            };
         }
         if (sensor.idUsuario !== null) {
             throw new ErrorLogica('SENSOR_YA_VINCULADO', 'Este sensor ya está vinculado a otra cuenta');
@@ -421,8 +440,10 @@ class Logica {
                     estadoSolicitud = ?, fechaSolicitud = ? WHERE idSensor = ?`,
             [typeof sensibilidad === 'number' ? sensibilidad : null, idUsuario, ESTADO_PENDIENTE, fecha, sensor.idSensor]);
         await this.enviarCorreoVinculacion(sensor, idUsuario, fecha);
-        return { numeroSerie: serie, correoComprador: ocultarCorreo(sensor.correoCompra),
-            estado: ESTADO_PENDIENTE, fecha };
+        return {
+            numeroSerie: serie, correoComprador: ocultarCorreo(sensor.correoCompra),
+            estado: ESTADO_PENDIENTE, fecha
+        };
     }
 
     // -----------------------------------------------------------------------
@@ -440,8 +461,10 @@ class Logica {
         if (estado === ESTADO_PENDIENTE && this.haCaducado(sensor.fechaSolicitud)) {
             estado = ESTADO_RECHAZADA;
         }
-        return { numeroSerie: sensor.numeroSerie, correoComprador: ocultarCorreo(sensor.correoCompra),
-            estado, fecha: sensor.fechaSolicitud };
+        return {
+            numeroSerie: sensor.numeroSerie, correoComprador: ocultarCorreo(sensor.correoCompra),
+            estado, fecha: sensor.fechaSolicitud
+        };
     }
 
     // -----------------------------------------------------------------------
@@ -493,8 +516,10 @@ class Logica {
             await this.conexion.execute('UPDATE Sensores SET estadoSolicitud = ? WHERE idSensor = ?',
                 [ESTADO_RECHAZADA, sensor.idSensor]);
         }
-        return { estado: acepta ? ESTADO_CONFIRMADA : ESTADO_RECHAZADA,
-            numeroSerie: sensor.numeroSerie, nombreSolicitante: `${sensor.nombre} ${sensor.apellidos}` };
+        return {
+            estado: acepta ? ESTADO_CONFIRMADA : ESTADO_RECHAZADA,
+            numeroSerie: sensor.numeroSerie, nombreSolicitante: `${sensor.nombre} ${sensor.apellidos}`
+        };
     }
 
     // -----------------------------------------------------------------------
@@ -554,10 +579,14 @@ class Logica {
     // -----------------------------------------------------------------------
     async crearSesion(idUsuario) {
         const [filas] = await this.conexion.execute(
-            'SELECT idUsuario, nombre, role, passwordHash FROM Usuarios WHERE idUsuario = ?', [idUsuario]);
+
+            `SELECT idUsuario, nombre, role, esAdministrador, esTecnico, esPortador, passwordHash
+            FROM Usuarios WHERE idUsuario = ?`, [idUsuario]);
         const usuario = filas[0];
         const token = this.crearToken(usuario, TIPO_SESION, DURACION_SESION_SEGUNDOS);
-        return { idUsuario, token, rol: usuario.role, nombre: usuario.nombre };
+
+        return { idUsuario, token, rol: usuario.role, ...obtenerRoles(usuario), nombre: usuario.nombre };
+
     }
 
     // -----------------------------------------------------------------------
@@ -586,7 +615,8 @@ class Logica {
             return null;
         }
         const [filas] = await this.conexion.execute(
-            'SELECT idUsuario, role, passwordHash FROM Usuarios WHERE idUsuario = ?', [datos.u]);
+            `SELECT idUsuario, role, esAdministrador, esTecnico, esPortador, passwordHash
+            FROM Usuarios WHERE idUsuario = ?`, [datos.u]);
         if (filas.length !== 1 || Seguridad.huellaContrasenya(filas[0].passwordHash) !== datos.h) {
             return null;
         }
