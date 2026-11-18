@@ -215,8 +215,13 @@ describe('Logica (usuarios y autenticación)', function () {
         await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
         const sesion = await logica.iniciarSesion('PELIN@aeris.es', 'aire2026');
         assert.strictEqual(sesion.rol, 'portador');
-        assert.deepStrictEqual(await logica.comprobarSesion(sesion.token),
-            { idUsuario: sesion.idUsuario, rol: 'portador' });
+        assert.deepStrictEqual(await logica.comprobarSesion(sesion.token), {
+            idUsuario: sesion.idUsuario,
+            rol: 'portador',
+            esAdministrador: false,
+            esTecnico: false,
+            esPortador: true
+        });
     });
 
     it('iniciarSesion() con contraseña incorrecta o correo desconocido lanza CREDENCIALES_INCORRECTAS', async function () {
@@ -226,10 +231,23 @@ describe('Logica (usuarios y autenticación)', function () {
         await assert.rejects(logica.iniciarSesion('', ''), { codigo: 'CREDENCIALES_INCORRECTAS' });
     });
 
-    it('comprobarSesion() devuelve el rol actual del usuario', async function () {
+    it('comprobarSesion() devuelve los permisos actuales con el mismo token', async function () {
         const sesion = await logica.registrarUsuario('Ana', 'Admin', 'ana@aeris.es', 'admin2026');
-        await logica.conexion.query("UPDATE Usuarios SET role = 'administrador' WHERE idUsuario = ?", [sesion.idUsuario]);
-        assert.strictEqual((await logica.comprobarSesion(sesion.token)).rol, 'administrador');
+
+        await logica.conexion.query(
+            `UPDATE Usuarios
+         SET role = 'administrador', esAdministrador = TRUE, esTecnico = TRUE
+         WHERE idUsuario = ?`,
+            [sesion.idUsuario]
+        );
+
+        assert.deepStrictEqual(await logica.comprobarSesion(sesion.token), {
+            idUsuario: sesion.idUsuario,
+            rol: 'administrador',
+            esAdministrador: true,
+            esTecnico: true,
+            esPortador: true
+        });
     });
 
     it('comprobarSesion() devuelve null con un token inventado, vacío o caducado', async function () {

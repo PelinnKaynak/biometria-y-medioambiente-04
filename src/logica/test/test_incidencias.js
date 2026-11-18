@@ -158,7 +158,12 @@ describe('Logica (incidencias)', function () {
     });
 
     it('responder() guarda quién respondió y sale con su nombre y su rol', async function () {
-        await logica.conexion.execute("UPDATE Usuarios SET role = 'tecnico' WHERE idUsuario = ?", [ana.idUsuario]);
+        await logica.conexion.execute(
+            `UPDATE Usuarios
+            SET role = 'tecnico', esAdministrador = FALSE, esTecnico = TRUE, esPortador = FALSE
+            WHERE idUsuario = ?`,
+            [ana.idUsuario]
+        );
         const i = await incidencias.crear(pelin.idUsuario, 'sensor', 'No conecta', 'No lo encuentra por Bluetooth');
         const r = await incidencias.responder(i.idIncidencia, { respuesta: 'Reinícialo' }, ana.idUsuario);
         assert.deepStrictEqual(r.responsable, { nombre: 'Ana', rol: 'tecnico', idUsuario: ana.idUsuario });

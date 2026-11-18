@@ -36,6 +36,8 @@ describe('API REST de usuarios y autenticación', function () {
 
     const PELIN = { nombre: 'Pelin', apellidos: 'Kaynak', correo: 'pelin@aeris.es', contrasena: 'aire2026' };
 
+
+
     before(async function () {
         await crearBDPruebas();
         logica = await Logica.crear(CONFIG_BD_PRUEBAS,
@@ -46,7 +48,7 @@ describe('API REST de usuarios y autenticación', function () {
 
         // Rutas solo para probar los roles (no existen en el servidor real)
         const servidor = crearServidor(logica, (s) => {
-            s.get('/pruebaSoloAdmin', requiereSesion(logica, ['administrador', 'tecnico']),
+            s.get('/pruebaSoloAdmin', requiereSesion(logica, ['administrador']),
                 (p, r) => r.json({ ok: true, usuario: p.usuario }));
         });
         conexion = servidor.listen(0);
@@ -145,14 +147,27 @@ describe('API REST de usuarios y autenticación', function () {
         assert.strictEqual((await peticion('GET', '/pruebaSoloAdmin')).codigo, 401);
     });
 
-    it('rol sin permiso: 403 · rol con permiso: 200', async function () {
+    it('técnico sin permiso de administrador: 403 · con permiso: 200', async function () {
         const { cuerpo } = await peticion('POST', '/registrarUsuario', PELIN);
-        assert.strictEqual((await peticion('GET', '/pruebaSoloAdmin', undefined, cuerpo.token)).codigo, 403);
 
-        await logica.conexion.query("UPDATE Usuarios SET role = 'administrador' WHERE idUsuario = ?", [cuerpo.idUsuario]);
-        const r = await peticion('GET', '/pruebaSoloAdmin', undefined, cuerpo.token);
-        assert.strictEqual(r.codigo, 200);
-        assert.strictEqual(r.cuerpo.usuario.rol, 'administrador');
+        await logica.conexion.query(
+            'UPDATE Usuarios SET esTecnico = TRUE WHERE idUsuario = ?',
+            [cuerpo.idUsuario]
+        );
+
+        const sinPermiso = await peticion('GET', '/pruebaSoloAdmin', undefined, cuerpo.token);
+        assert.strictEqual(sinPermiso.codigo, 403);
+
+        await logica.conexion.query(
+            'UPDATE Usuarios SET esAdministrador = TRUE WHERE idUsuario = ?',
+            [cuerpo.idUsuario]
+        );
+
+        const conPermiso = await peticion('GET', '/pruebaSoloAdmin', undefined, cuerpo.token);
+        assert.strictEqual(conPermiso.codigo, 200);
+        assert.strictEqual(conPermiso.cuerpo.usuario.esAdministrador, true);
+        assert.strictEqual(conPermiso.cuerpo.usuario.esTecnico, true);
+        assert.strictEqual(conPermiso.cuerpo.usuario.esPortador, true);
     });
 
     // --- alertas del perfil (T010) -------------------------------------------

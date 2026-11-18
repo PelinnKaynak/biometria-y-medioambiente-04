@@ -32,7 +32,18 @@ describe('API REST de incidencias', function () {
 
     async function usuarioConRol(nombre, correo, rol) {
         const sesion = await logica.registrarUsuario(nombre, 'Prueba', correo, 'aire2026');
-        await logica.conexion.execute('UPDATE Usuarios SET role = ? WHERE idUsuario = ?', [rol, sesion.idUsuario]);
+        await logica.conexion.execute(
+            `UPDATE Usuarios
+            SET role = ?, esAdministrador = ?, esTecnico = ?, esPortador = ?
+            WHERE idUsuario = ?`,
+            [
+                rol,
+                rol === 'administrador',
+                rol === 'tecnico',
+                rol === 'portador' || rol === 'ciudadano',
+                sesion.idUsuario
+            ]
+        );
         return sesion.token;
     }
 
