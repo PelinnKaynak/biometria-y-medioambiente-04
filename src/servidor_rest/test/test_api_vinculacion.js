@@ -115,6 +115,9 @@ describe('API REST de vinculación del sensor', function () {
         assert.strictEqual(r.status, 200);
         assert.match(html, /¿Vinculamos el sensor\?/);
         assert.match(html, /<form method="post" action="\/responderVinculacion">/);
+        assert.match(html, /src="\/img\/logo-aeris\.svg"/);
+        assert.match(html, /<meta name="viewport"/);
+        assert.match(html, /@media \(max-width: 480px\)/);
         assert.strictEqual((await peticion('GET', '/estadoVinculacion')).cuerpo.estado, 'pendiente');
 
         assert.strictEqual((await fetch(url + '/responderVinculacion?respuesta=si')).status, 400);
@@ -126,6 +129,8 @@ describe('API REST de vinculación del sensor', function () {
         assert.strictEqual(r.codigo, 200);
         assert.match(r.html, /Sensor vinculado/);
         assert.match(r.html, /Pelin Kaynak/);
+        assert.match(r.html, /src="\/img\/logo-aeris\.svg"/);
+        assert.match(r.html, /@media \(max-width: 480px\)/);
         assert.strictEqual((await peticion('GET', '/estadoVinculacion')).cuerpo.estado, 'confirmada');
 
         const otraVez = await enviarFormulario(tokenDelCorreo(), 'si');
@@ -138,7 +143,11 @@ describe('API REST de vinculación del sensor', function () {
         const r = await enviarFormulario(tokenDelCorreo(), 'no');
         assert.strictEqual(r.codigo, 200);
         assert.match(r.html, /Vinculación rechazada/);
+        assert.match(r.html, /src="\/img\/logo-aeris\.svg"/);
         assert.strictEqual((await peticion('GET', '/estadoVinculacion')).cuerpo.estado, 'rechazada');
-        assert.strictEqual((await enviarFormulario('abc.def', 'si')).codigo, 400);
+        const invalido = await enviarFormulario('abc.def', 'si');
+        assert.strictEqual(invalido.codigo, 400);
+        assert.match(invalido.html, /Enlace no válido/);
+        assert.match(invalido.html, /src="\/img\/logo-aeris\.svg"/);
     });
 });
