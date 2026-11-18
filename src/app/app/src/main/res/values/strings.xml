@@ -30,10 +30,10 @@
     <string name="vincular_detalle">%1$s · fabricado en %2$s</string>
     <string name="vincular_escanear_otro">Escanear otro código</string>
     <string name="vincular_enlace_a_mano">¿No funciona la cámara? Escribe el código</string>
-    <string name="vincular_a_mano_texto">Escribe la línea de números que aparece en la etiqueta, debajo del código, con los espacios.</string>
+    <string name="vincular_a_mano_texto">Escribe el número de serie del sensor (las 12 primeras cifras de la etiqueta) o la línea entera, con los espacios.</string>
     <string name="vincular_codigo_etiqueta">Código de la etiqueta</string>
-    <string name="vincular_codigo_pista">092021010920 110406 03 2109 -44.75</string>
-    <string name="vincular_error_codigo_a_mano">Escribe los 5 grupos de números separados por espacios, como en el ejemplo.</string>
+    <string name="vincular_codigo_pista">092021010920</string>
+    <string name="vincular_error_codigo_a_mano">Escribe las 12 cifras del número de serie, o la línea entera de la etiqueta con los espacios.</string>
     <string name="vincular_continuar">Continuar</string>
     <string name="vincular_volver_escanear">Volver a escanear</string>
     <string name="vincular_error_codigo">Este código no es el de un sensor AERIS. Escanea el código de la etiqueta del sensor.</string>

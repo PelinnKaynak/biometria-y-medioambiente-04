@@ -10,6 +10,7 @@
 package com.example.aeris;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
@@ -108,6 +109,13 @@ public class VincularSensorTest {
         JSONObject cuerpo = new JSONObject(LogicaFakeVincular.cuerpoSolicitud(codigo));
         assertEquals("092021010920", cuerpo.getString("numeroSerie"));
         assertEquals(-44.75, cuerpo.getDouble("sensibilidad"), 1e-9);
+    }
+
+    @Test
+    public void cuerpoSolicitud_soloConElNumeroDeSerie_noLlevaSensibilidad() throws Exception {
+        JSONObject cuerpo = new JSONObject(LogicaFakeVincular.cuerpoSolicitud(CodigoSensor.desdeTexto("092021011003")));
+        assertEquals("092021011003", cuerpo.getString("numeroSerie"));
+        assertFalse(cuerpo.has("sensibilidad"));
     }
 
     @Test
