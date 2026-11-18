@@ -98,6 +98,21 @@
     font-weight: 600;
 }
 
+.contador-incidencias {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    margin-left: auto;
+    padding: 0 6px;
+    border-radius: 11px;
+    background: var(--morado);
+    color: var(--blanco);
+    font-size: 12px;
+    font-weight: 600;
+}
+
 .boton-salir {
     display: flex;
     align-items: center;

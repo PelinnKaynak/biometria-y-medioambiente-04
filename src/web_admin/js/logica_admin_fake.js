@@ -9,6 +9,7 @@ const utilNodos = typeof module !== "undefined" ? require("./nodos") : window;
 const rolesFake = typeof module !== "undefined" ? require("../../web_publica/js/roles") : window;
 
 const MENSAJE_SOLO_ADMIN = "Solo un administrador puede gestionar usuarios";
+const MENSAJE_SOLO_GESTION = "Solo técnicos y administradores pueden gestionar incidencias";
 
 const CLAVE_SESION_ADMIN = "aeris_usuario";
 
@@ -58,6 +59,7 @@ class LogicaAdminFake {
             });
         }
         this.usuarios = crearUsuariosPrueba(ahora, this.nodos);
+        this.incidencias = crearIncidenciasPrueba(ahora);
     }
 
     // --------------------------------------------------------
@@ -219,6 +221,78 @@ class LogicaAdminFake {
     }
 
     // --------------------------------------------------------
+    // filtros: { estado?, tipo? } --> obtenerIncidencias()
+    // --------------------------------------------------------
+    async obtenerIncidencias(filtros = {}) {
+        await esperarAdmin(this.retardo_ms);
+        if (!this.puedeGestionarIncidencias()) {
+            return { correcto: false, incidencias: [], error: MENSAJE_SOLO_GESTION };
+        }
+        const incidencias = this.incidencias.filter(incidencia =>
+            (!filtros.estado || filtros.estado === "todos" || incidencia.estado === filtros.estado) &&
+            (!filtros.tipo || filtros.tipo === "todos" || incidencia.tipo === filtros.tipo));
+        return { correcto: true, incidencias, error: "" };
+    }
+
+    // --------------------------------------------------------
+    // id_incidencia: N --> obtenerIncidencia()
+    // --------------------------------------------------------
+    async obtenerIncidencia(id_incidencia) {
+        await esperarAdmin(this.retardo_ms);
+        if (!this.puedeGestionarIncidencias()) {
+            return { correcto: false, incidencia: null, error: MENSAJE_SOLO_GESTION };
+        }
+        const incidencia = this.incidencias.find(i => i.idIncidencia === Number(id_incidencia));
+        return incidencia
+            ? { correcto: true, incidencia, error: "" }
+            : { correcto: false, incidencia: null, error: "Esa incidencia no existe" };
+    }
+
+    // --------------------------------------------------------
+    // --> obtenerNumeroIncidenciasAbiertas() --> { abiertas }
+    // --------------------------------------------------------
+    async obtenerNumeroIncidenciasAbiertas() {
+        await esperarAdmin(this.retardo_ms);
+        if (!this.puedeGestionarIncidencias()) {
+            return { correcto: false, abiertas: null, error: MENSAJE_SOLO_GESTION };
+        }
+        const abiertas = this.incidencias.filter(i => i.estado === "abierta").length;
+        return { correcto: true, abiertas, error: "" };
+    }
+
+    // --------------------------------------------------------
+    // datos: { idIncidencia, respuesta?, estado? } --> responderIncidencia()
+    // --------------------------------------------------------
+    async responderIncidencia(datos) {
+        await esperarAdmin(this.retardo_ms);
+        if (!this.puedeGestionarIncidencias()) {
+            return { correcto: false, incidencia: null, error: MENSAJE_SOLO_GESTION };
+        }
+        const incidencia = this.incidencias.find(i => i.idIncidencia === Number(datos.idIncidencia));
+        if (!incidencia) return { correcto: false, incidencia: null, error: "Esa incidencia no existe" };
+        if (datos.respuesta !== undefined && !datos.respuesta.trim()) {
+            return { correcto: false, incidencia: null, error: "La respuesta no puede estar vacía", campos: ["respuesta"] };
+        }
+        if (datos.estado !== undefined && !["abierta", "en curso", "resuelta"].includes(datos.estado)) {
+            return { correcto: false, incidencia: null, error: "El estado no es válido", campos: ["estado"] };
+        }
+        if (datos.respuesta !== undefined) {
+            incidencia.respuesta = datos.respuesta.trim();
+            incidencia.fechaRespuesta = this.ahora.toISOString();
+            const usuario = this.usuarioActual();
+            incidencia.responsable = { nombre: usuario && usuario.nombre || "Equipo AERIS", rol: usuario && usuario.rol || "tecnico" };
+        }
+        if (datos.estado !== undefined) incidencia.estado = datos.estado;
+        else if (datos.respuesta !== undefined) incidencia.estado = "resuelta";
+        return { correcto: true, incidencia, error: "", modoDemo: true };
+    }
+
+    puedeGestionarIncidencias() {
+        const usuario = this.usuarioActual();
+        return rolesFake.esAdministrador(usuario) || rolesFake.esTecnico(usuario);
+    }
+
+    // --------------------------------------------------------
     // r: B <-- esAdministradorActual() <--
     //
     // Simula la comprobación del servidor: crear cuentas,
@@ -346,6 +420,44 @@ function crearUsuariosPrueba(ahora, nodos) {
         estado: i > 1 && i % 11 === 7 ? "pendiente" : i > 1 && i % 19 === 10 ? "baja" : "activo",
         fechaAlta: new Date(ahora.getTime() - (i * 2 + 1) * 86400000).toISOString()
     }));
+}
+
+function crearIncidenciasPrueba(ahora) {
+    const crear = (id, tipo, asunto, descripcion, estado, nombre, apellidos, correo, sensor, dias) => ({
+        idIncidencia: id,
+        tipo,
+        asunto,
+        descripcion,
+        estado,
+        respuesta: estado === "resuelta" ? "Hemos revisado el caso y ya está solucionado." : null,
+        responsable: estado === "resuelta" ? { idUsuario: 1, nombre: "Administración", rol: "administrador" } : null,
+        fechaCreacion: new Date(ahora.getTime() - dias * 86400000).toISOString(),
+        fechaRespuesta: estado === "resuelta" ? new Date(ahora.getTime() - (dias - 0.5) * 86400000).toISOString() : null,
+        usuario: { idUsuario: id + 20, nombre, apellidos, correo },
+        sensor
+    });
+    const sensorLaura = {
+        idSensor: 1, numeroSerie: "AER-24001", nombre: "Sensor Laura",
+        estado: "activo", bateria: 72,
+        ultimaConexion: new Date(ahora.getTime() - 12 * 60000).toISOString(),
+        necesitaCalibracion: false
+    };
+    const sensorPau = {
+        idSensor: 2, numeroSerie: "AER-24002", nombre: "Sensor Pau",
+        estado: "inactivo", bateria: 18,
+        ultimaConexion: new Date(ahora.getTime() - 28 * 3600000).toISOString(),
+        necesitaCalibracion: true
+    };
+    return [
+        crear(101, "sensor", "El sensor no enciende", "El sensor dejó de encender después de cargarlo.", "abierta",
+            "Laura", "Martínez", "laura@correo.es", sensorLaura, 0.2),
+        crear(102, "datos", "Faltan mediciones", "No aparecen mediciones de esta mañana en la aplicación.", "en curso",
+            "Pau", "Ferrer", "pau@correo.es", sensorPau, 1),
+        crear(103, "cuenta", "No puedo cambiar mi correo", "Al guardar el correo nuevo aparece un error.", "abierta",
+            "Lucía", "Pastor", "lucia@correo.es", null, 2),
+        crear(104, "otra", "Consulta sobre el servicio", "Quería saber cuándo se publicarán los datos del último mes.", "resuelta",
+            "Andrés", "Gil", "andres@correo.es", null, 4)
+    ];
 }
 
 // --------------------------------------------------------

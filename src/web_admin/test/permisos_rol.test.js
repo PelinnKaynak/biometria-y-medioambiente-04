@@ -43,13 +43,14 @@ describe("acceso al panel", () => {
     });
 });
 
-describe.each(["panel_nodos.html", "usuarios.html"])("menú de %s", pagina => {
+describe.each(["panel_nodos.html", "usuarios.html", "incidencias.html"])("menú de %s", pagina => {
     test("el técnico no ve Usuarios ni «Ver como usuario»", () => {
         cargar(pagina);
         entrarComo("tecnico");
         comun.conectarMenu(new LogicaAdminFake(5, AHORA, 0), jest.fn());
         expect(opcion("Usuarios").hidden).toBe(true);
         expect(opcion("Ver como usuario").hidden).toBe(true);
+        expect(document.querySelector('a[href="incidencias.html"]')).not.toBeNull();
     });
 
     test("el administrador ve Usuarios y puede entrar como usuario en su Mi cuenta", () => {
@@ -59,6 +60,7 @@ describe.each(["panel_nodos.html", "usuarios.html"])("menú de %s", pagina => {
         expect(opcion("Usuarios").hidden).toBe(false);
         expect(opcion("Ver como usuario").hidden).toBe(false);
         expect(opcion("Ver como usuario").getAttribute("href")).toBe("../web_publica/mi_cuenta.html");
+        expect(document.querySelector('a[href="incidencias.html"]')).not.toBeNull();
     });
 });
 

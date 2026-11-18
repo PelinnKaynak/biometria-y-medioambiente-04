@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Incidencias · Panel de AERIS</title>
+    <link rel="icon" href="../web_publica/img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="../web_publica/img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="../web_publica/img/apple-touch-icon.png">
+    <link rel="stylesheet" href="../web_publica/css/estilos.css">
+    <link rel="stylesheet" href="css/admin.css">
+    <link rel="stylesheet" href="css/incidencias.css">
+</head>
+<body class="pagina-admin">
+
+<aside id="menu-lateral" class="menu-lateral">
+    <div class="menu-cabecera">
+        <img src="../web_publica/img/logo-aeris.svg" alt="AERIS" class="logo-menu">
+        <button id="boton-cerrar-menu" class="boton-icono solo-movil" type="button" aria-label="Cerrar el menú">
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+    <nav class="menu-opciones" aria-label="Panel de administración">
+        <a href="panel_nodos.html" class="opcion-menu"><span class="icono icono-nodos"></span>Nodos</a>
+        <a href="incidencias.html" class="opcion-menu activa" aria-current="page">
+            <span class="icono icono-historico"></span>Incidencias
+            <span id="contador-incidencias" class="contador-incidencias" aria-live="polite">0</span></a>
+        <a href="usuarios.html" data-solo-admin class="opcion-menu"><span class="icono icono-usuarios"></span>Usuarios</a>
+        <a href="historico.html" class="opcion-menu"><span class="icono icono-historico"></span>Histórico</a>
+        <a href="campanas.html" class="opcion-menu"><span class="icono icono-campanas"></span>Campañas</a>
+        <a href="zonas_sensibles.html" class="opcion-menu"><span class="icono icono-zonas"></span>Zonas sensibles</a>
+        <a href="../web_publica/mi_cuenta.html" class="opcion-menu opcion-vista-usuario" data-solo-admin hidden>
+            <span class="icono icono-cuenta"></span>Ver como usuario</a>
+    </nav>
+    <a id="boton-salir" class="boton-salir" href="../web_publica/login.html">
+        <span class="icono icono-salir"></span>Salir
+    </a>
+</aside>
+
+<main class="contenido">
+    <div class="barra-movil solo-movil">
+        <img src="../web_publica/img/logo-aeris.svg" alt="AERIS" class="logo-barra">
+        <button id="boton-menu" class="boton-icono" type="button" aria-label="Abrir el menú"
+                aria-controls="menu-lateral" aria-expanded="false">
+            <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 6H21M3 12H21M3 18H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+
+    <header class="cabecera-panel">
+        <h1>Incidencias</h1>
+        <div class="filtros" aria-label="Filtros de incidencias">
+            <select id="filtro-estado" class="desplegable" aria-label="Filtrar por estado">
+                <option value="todos">Estado: todos</option>
+                <option value="abierta">Abierta</option>
+                <option value="en curso">En curso</option>
+                <option value="resuelta">Resuelta</option>
+            </select>
+            <select id="filtro-tipo" class="desplegable" aria-label="Filtrar por tipo">
+                <option value="todos">Tipo: todos</option>
+                <option value="sensor">Sensor</option>
+                <option value="datos">Datos</option>
+                <option value="cuenta">Cuenta</option>
+                <option value="otra">Otra</option>
+            </select>
+        </div>
+    </header>
+
+    <p id="aviso-error" class="aviso-panel oculto" role="alert"></p>
+    <p id="aviso-ok" class="aviso-ok-panel oculto" role="status"></p>
+
+    <section class="zona-incidencias" aria-label="Gestión de incidencias">
+        <div class="caja-incidencias-lista">
+            <div class="cabecera-incidencias-lista">
+                <h2>Recibidas</h2>
+                <span id="total-incidencias">0</span>
+            </div>
+            <ul id="lista-incidencias" class="lista-incidencias" aria-label="Incidencias recibidas"></ul>
+            <p id="sin-incidencias" class="sin-resultados oculto">No hay incidencias que coincidan con los filtros.</p>
+        </div>
+
+        <section id="detalle-incidencia" class="detalle-incidencia" aria-labelledby="asunto-incidencia">
+            <p id="detalle-vacio" class="detalle-vacio">Selecciona una incidencia para ver los detalles.</p>
+            <div id="detalle-contenido" class="oculto">
+                <div class="detalle-cabecera">
+                    <span id="detalle-tipo" class="etiqueta-tipo"></span>
+                    <span id="detalle-estado" class="etiqueta-estado"></span>
+                </div>
+                <h2 id="asunto-incidencia"></h2>
+                <p id="descripcion-incidencia" class="descripcion-incidencia"></p>
+
+                <div class="datos-incidencia">
+                    <section>
+                        <h3>Usuario</h3>
+                        <p id="usuario-incidencia"></p>
+                        <p id="correo-incidencia" class="texto-secundario"></p>
+                    </section>
+                    <section>
+                        <h3>Sensor</h3>
+                        <p id="sensor-incidencia"></p>
+                        <p id="bateria-incidencia" class="texto-secundario"></p>
+                        <p id="conexion-incidencia" class="texto-secundario"></p>
+                    </section>
+                </div>
+
+                <section id="respuesta-actual-panel" class="respuesta-actual oculto">
+                    <h3>Respuesta enviada</h3>
+                    <p id="respuesta-actual"></p>
+                </section>
+
+                <form id="formulario-respuesta" class="formulario-respuesta" novalidate>
+                    <h3>Responder y actualizar estado</h3>
+                    <label for="nuevo-estado">Nuevo estado</label>
+                    <select id="nuevo-estado" class="campo">
+                        <option value="abierta">Abierta</option>
+                        <option value="en curso">En curso</option>
+                        <option value="resuelta">Resuelta</option>
+                    </select>
+                    <label for="texto-respuesta">Respuesta al usuario</label>
+                    <textarea id="texto-respuesta" class="campo" rows="4" maxlength="2000"
+                              placeholder="Escribe una respuesta para el usuario"></textarea>
+                    <p id="error-respuesta" class="aviso-error oculto" role="alert"></p>
+                    <p class="ayuda-respuesta">Al enviar una respuesta, se guardará en Ayuda y se enviará por correo.</p>
+                    <button id="boton-guardar-respuesta" class="boton" type="submit">Guardar cambios</button>
+                </form>
+            </div>
+        </section>
+    </section>
+</main>
+
+<script src="js/nodos.js"></script>
+<script src="js/logica_admin_fake.js"></script>
+<script src="js/logica_admin_real.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="../web_publica/js/roles.js"></script>
+<script src="js/admin_comun.js"></script>
+<script src="js/incidencias.js"></script>
+</body>
+</html>

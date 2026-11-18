@@ -1,0 +1,170 @@
+.zona-incidencias {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.4fr);
+    align-items: start;
+    gap: 20px;
+}
+
+.caja-incidencias-lista,
+.detalle-incidencia {
+    min-width: 0;
+    border: 1px solid var(--borde);
+    border-radius: 14px;
+    background: var(--blanco);
+}
+
+.cabecera-incidencias-lista {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--borde);
+}
+
+.cabecera-incidencias-lista h2,
+.detalle-incidencia h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.cabecera-incidencias-lista > span {
+    color: var(--texto-gris);
+    font-size: 14px;
+}
+
+.lista-incidencias {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.incidencia-lista-item { border-bottom: 1px solid var(--borde); }
+.incidencia-lista-item:last-child { border-bottom: 0; }
+
+.boton-incidencia {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    padding: 16px 20px;
+    border: 0;
+    background: transparent;
+    color: var(--texto);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+.boton-incidencia:hover,
+.boton-incidencia[aria-current="true"] { background: var(--morado-claro); }
+.boton-incidencia:focus-visible { outline: 2px solid var(--morado); outline-offset: -2px; }
+
+.fila-etiquetas {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+}
+
+.etiqueta-tipo,
+.etiqueta-estado {
+    display: inline-block;
+    padding: 4px 9px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+.etiqueta-tipo { background: var(--morado-claro); color: var(--morado-oscuro); }
+.etiqueta-estado.abierta { background: rgba(217, 99, 107, 0.14); color: var(--malo-texto); }
+.etiqueta-estado.en-curso { background: rgba(227, 179, 65, 0.2); color: var(--moderado-texto); }
+.etiqueta-estado.resuelta { background: rgba(78, 156, 131, 0.14); color: var(--bueno-texto); }
+
+.asunto-lista {
+    width: 100%;
+    overflow-wrap: anywhere;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.fecha-lista { color: var(--texto-gris); font-size: 13px; }
+
+.detalle-incidencia { padding: 24px; }
+.detalle-vacio { margin: 0; color: var(--texto-gris); font-size: 15px; }
+
+.detalle-cabecera {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.detalle-incidencia h2 { overflow-wrap: anywhere; }
+.descripcion-incidencia {
+    margin: 14px 0 22px;
+    color: var(--texto-suave);
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.datos-incidencia {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.datos-incidencia section,
+.respuesta-actual {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    background: #FAFAFC;
+}
+
+.datos-incidencia h3,
+.respuesta-actual h3,
+.formulario-respuesta h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+}
+
+.datos-incidencia p,
+.respuesta-actual p { margin: 3px 0; overflow-wrap: anywhere; }
+.texto-secundario { color: var(--texto-gris); font-size: 13px; }
+.respuesta-actual { margin-bottom: 20px; }
+.respuesta-actual p { line-height: 1.5; white-space: pre-wrap; }
+
+.formulario-respuesta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 18px;
+    border-top: 1px solid var(--borde);
+}
+
+.formulario-respuesta label { font-size: 14px; font-weight: 500; }
+.formulario-respuesta select.campo { height: 42px; padding: 0 12px; }
+.formulario-respuesta textarea.campo { resize: vertical; min-height: 100px; }
+.ayuda-respuesta { margin: 0 0 6px; color: var(--texto-gris); font-size: 13px; line-height: 1.4; }
+.formulario-respuesta .boton { align-self: flex-start; padding: 11px 20px; }
+.formulario-respuesta .boton:disabled { opacity: 0.6; cursor: wait; }
+
+@media (max-width: 900px) {
+    .zona-incidencias { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    .cabecera-panel { margin-bottom: 24px; }
+    .filtros { width: 100%; }
+    .filtros .desplegable { flex: 1; min-width: 0; }
+    .detalle-incidencia { padding: 18px; }
+}
+
+@media (max-width: 480px) {
+    .filtros { flex-direction: column; }
+    .datos-incidencia { grid-template-columns: minmax(0, 1fr); }
+    .cabecera-incidencias-lista { padding: 15px 16px; }
+    .boton-incidencia { padding: 14px 16px; }
+    .formulario-respuesta .boton { width: 100%; }
+}
