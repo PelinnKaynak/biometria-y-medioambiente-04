@@ -26,7 +26,7 @@ Comprobación con el polímetro (sensor alimentado, aire limpio): Vref ≈ 1,65 
 TramaIBeacon = ( beaconUUID: [N]_16, major: N, minor: Z, txPower: Z )   fabricante 0x004C (Apple)
 
    beaconUUID = "AERI" (4 bytes ASCII) + numeroSerie (12 bytes ASCII, las cifras de la etiqueta)
-                p. ej. "AERI032724010309"
+                p. ej. "AERI092021011003"
    major      = tipo * 256 + contador          (byte alto: tipo; byte bajo: contador 0..255)
    minor      = valor (int16, con signo)
 
@@ -55,7 +55,7 @@ T (°C) = 87 / V+ × Vtemp − 18                                          (±3 
 ozono  = max(0, µg/m³ × factor)
 ```
 
-- Sensibilidad: la de la etiqueta del sensor (−56,44 nA/ppm en el del nodo de Pelin, etiqueta «032724010309 110406 O3 2404 -56.44»). Ganancia TIA del módulo de ozono: 499 kV/A.
+- Sensibilidad: la de la etiqueta del sensor (−38,11 nA/ppm en el del nodo de Pelin, etiqueta «092021011003 110406 O3 2109 -38.11»). Ganancia TIA del módulo de ozono: 499 kV/A.
 - **ADC:** 1 ppm mueve Vgas solo unos 22 mV (100 µg/m³ ≈ 1,1 mV), así que se lee a 14 bits con referencia de 3,0 V (un paso ≈ 0,18 mV ≈ 16 µg/m³). Cada lectura es la media de 256 muestras, guardando los decimales.
 
 ```text

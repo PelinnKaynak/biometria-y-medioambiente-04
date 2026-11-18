@@ -58,7 +58,7 @@ Sensores fabricados. Cada uno está ligado al correo de quien lo compró. La sol
 
 `idUsuario` admite NULL porque un sensor recién fabricado todavía no tiene dueño: se rellena cuando el comprador confirma la vinculación.
 
-Como no hay compra en la app, el script mete dos sensores de prueba comprados con `pkaynak@upv.edu.es`: `092021010920` y `032724010309` (el del nodo montado, T004). Si la BD ya estaba creada, `src/bd/actualizar_T004.sql` añade el segundo.
+Como no hay compra en la app, el script mete dos sensores de prueba comprados con `pkaynak@upv.edu.es`: `092021010920` y `092021011003` (el del nodo montado, T004). Si la BD ya estaba creada, `src/bd/actualizar_T004.sql` añade el segundo.
 
 ## Tabla `Mediciones` (T015)
 

@@ -17,11 +17,11 @@
 namespace Configuracion {
 
   // --- Sensor de ozono de este nodo (SPEC Sensors ULPSM-O3 968-046) ---
-  // El primer y el último número de la etiqueta («032724010309 110406 O3 2404 -56.44»):
+  // El primer y el último número de la etiqueta («092021011003 110406 O3 2109 -38.11»):
   // número de serie (12 cifras) y sensibilidad (nA/ppm). Son los mismos que
   // lee la app al vincular el sensor.
-  const char NUMERO_SERIE[] = "032724010309";
-  const float SENSIBILIDAD = -56.44;     // nA/ppm (negativa en el ozono)
+  const char NUMERO_SERIE[] = "092021011003";
+  const float SENSIBILIDAD = -38.11;     // nA/ppm (negativa en el ozono)
 
   // Ganancia del amplificador del módulo para el ozono (datasheet ULPSM-O3)
   const float GANANCIA_TIA = 499.0;      // kV/A
