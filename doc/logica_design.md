@@ -204,17 +204,17 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   Solicitud = ( numeroSerie, correoComprador (oculto: «p•••••@upv.edu.es»), estado, fecha )
 ```
 
-- **Incidencias (T041):** están en `Incidencias.js` (clase `Incidencias`), para no hacer más grande `Logica.js`. Se usan como `logica.incidencias.crear(…)`. Tabla `Incidencias` (ver `bd_design.md`). `tipo`: sensor, datos, cuenta, otra. `estado`: abierta, en curso, resuelta. Una incidencia nueva está «abierta». Si es de tipo sensor o datos y no se dice qué sensor, se pone el del usuario (o ninguno si no tiene). Al responder, si no se indica el estado pasa a «resuelta», se guarda `fechaRespuesta` y se manda al usuario el correo de `CorreoRespuestaIncidencia.crearCorreoRespuestaIncidencia()` (su mensaje, la respuesta y el estado, con el marco común). Si el correo falla, la respuesta se guarda igual. La descripción y la respuesta tienen como mucho 2000 caracteres.
+- **Incidencias (T041):** están en `Incidencias.js` (clase `Incidencias`), para no hacer más grande `Logica.js`. Se usan como `logica.incidencias.crear(…)`. Tabla `Incidencias` (ver `bd_design.md`). `tipo`: sensor, datos, cuenta, otra. `estado`: abierta, en curso, resuelta. Una incidencia nueva está «abierta» y lleva un `asunto` (como mucho 120 caracteres). Si es de tipo sensor o datos y no se dice qué sensor, se pone el del usuario (o ninguno si no tiene). Al responder, si no se indica el estado pasa a «resuelta», se guardan `fechaRespuesta` e `idResponsable` (el técnico o administrador de la sesión, que sale como `responsable: { nombre, rol }`) y se manda al usuario el correo de `CorreoRespuestaIncidencia.crearCorreoRespuestaIncidencia()` (su mensaje, la respuesta y el estado, con el marco común). Si el correo falla, la respuesta se guarda igual. La descripción y la respuesta tienen como mucho 2000 caracteres.
 
 ```text
-  idUsuario: N, tipo: Texto, descripcion: Texto, idSensor: N (opcional)
+  idUsuario: N, tipo: Texto, asunto: Texto, descripcion: Texto, idSensor: N (opcional)
                          --> incidencias.crear() --> Incidencia                  | DATOS_NO_VALIDOS
   idUsuario: N           --> incidencias.listarDeUsuario() --> Lista<Incidencia>
   { estado?, tipo? }     --> incidencias.listar() --> Lista<IncidenciaGestion>   | DATOS_NO_VALIDOS
   idIncidencia: N        --> incidencias.obtener() --> IncidenciaGestion         | INCIDENCIA_NO_EXISTE
                          --> incidencias.contarAbiertas() --> N
-  idIncidencia: N, { respuesta?, estado? }
+  idIncidencia: N, { respuesta?, estado? }, idResponsable: N
                          --> incidencias.responder() --> IncidenciaGestion       | DATOS_NO_VALIDOS, INCIDENCIA_NO_EXISTE
-  Incidencia = ( idIncidencia, tipo, descripcion, estado, respuesta, fechaCreacion, fechaRespuesta, sensor | null )
+  Incidencia = ( idIncidencia, tipo, asunto, descripcion, estado, respuesta, responsable ( nombre, rol ) | null, fechaCreacion, fechaRespuesta, sensor | null )
   IncidenciaGestion = Incidencia + usuario ( idUsuario, nombre, apellidos, correo ) + datos del sensor
 ```

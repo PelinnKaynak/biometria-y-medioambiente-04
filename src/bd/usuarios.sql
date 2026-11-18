@@ -132,15 +132,19 @@ CREATE TABLE IF NOT EXISTS Mediciones (
 -- Las que el usuario envía desde Ayuda (app y web). Las reciben y
 -- las responden los técnicos y los administradores.
 -- idSensor puede ser NULL (por ejemplo, una incidencia de la cuenta).
+-- idResponsable es el técnico o administrador que respondió (sale
+-- su nombre junto a la respuesta); NULL mientras no hay respuesta.
 -- ---------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS Incidencias (
     idIncidencia INT NOT NULL AUTO_INCREMENT,
     idUsuario INT NOT NULL,
     idSensor INT NULL,
     tipo VARCHAR(10) NOT NULL,
+    asunto VARCHAR(120) NOT NULL,
     descripcion TEXT NOT NULL,
     estado VARCHAR(10) NOT NULL DEFAULT 'abierta',
     respuesta TEXT NULL,
+    idResponsable INT NULL,
     fechaCreacion DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
     fechaRespuesta DATETIME NULL,
     PRIMARY KEY (idIncidencia),
@@ -151,6 +155,10 @@ CREATE TABLE IF NOT EXISTS Incidencias (
     CONSTRAINT fk_incidencias_sensores
         FOREIGN KEY (idSensor)
         REFERENCES Sensores(idSensor)
+        ON DELETE SET NULL,
+    CONSTRAINT fk_incidencias_responsable
+        FOREIGN KEY (idResponsable)
+        REFERENCES Usuarios(idUsuario)
         ON DELETE SET NULL,
     CONSTRAINT ck_incidencias_tipo
         CHECK (tipo IN ('sensor', 'datos', 'cuenta', 'otra')),

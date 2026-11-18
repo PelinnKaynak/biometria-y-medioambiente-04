@@ -66,7 +66,7 @@ describe('API REST de incidencias', function () {
     });
 
     it('sin sesión todas las rutas dan 401', async function () {
-        assert.strictEqual((await peticion('POST', '/crearIncidencia', null, { tipo: 'otra', descripcion: 'x' })).codigo, 401);
+        assert.strictEqual((await peticion('POST', '/crearIncidencia', null, { tipo: 'otra', asunto: 'Asunto', descripcion: 'x' })).codigo, 401);
         assert.strictEqual((await peticion('GET', '/misIncidencias')).codigo, 401);
         assert.strictEqual((await peticion('GET', '/incidencias')).codigo, 401);
         assert.strictEqual((await peticion('GET', '/numeroIncidenciasAbiertas')).codigo, 401);
@@ -75,19 +75,20 @@ describe('API REST de incidencias', function () {
     });
 
     it('POST /crearIncidencia: 201 con el sensor del usuario; 400 con los campos que fallan', async function () {
-        const r = await peticion('POST', '/crearIncidencia', portador, { tipo: 'sensor', descripcion: 'No conecta' });
+        const r = await peticion('POST', '/crearIncidencia', portador, { tipo: 'sensor', asunto: 'Bluetooth', descripcion: 'No conecta' });
         assert.strictEqual(r.codigo, 201);
+        assert.strictEqual(r.cuerpo.asunto, 'Bluetooth');
         assert.strictEqual(r.cuerpo.estado, 'abierta');
         assert.strictEqual(r.cuerpo.sensor.numeroSerie, '092021010920');
 
         const mal = await peticion('POST', '/crearIncidencia', portador, { tipo: 'queja', descripcion: '' });
         assert.strictEqual(mal.codigo, 400);
-        assert.deepStrictEqual(mal.cuerpo.campos.sort(), ['descripcion', 'tipo']);
+        assert.deepStrictEqual(mal.cuerpo.campos.sort(), ['asunto', 'descripcion', 'tipo']);
     });
 
     it('GET /misIncidencias: el usuario ve las suyas con la respuesta', async function () {
-        const { cuerpo: i } = await peticion('POST', '/crearIncidencia', portador, { tipo: 'cuenta', descripcion: 'Foto' });
-        await peticion('POST', '/crearIncidencia', tecnico, { tipo: 'otra', descripcion: 'Del técnico' });
+        const { cuerpo: i } = await peticion('POST', '/crearIncidencia', portador, { tipo: 'cuenta', asunto: 'Asunto', descripcion: 'Foto' });
+        await peticion('POST', '/crearIncidencia', tecnico, { tipo: 'otra', asunto: 'Asunto', descripcion: 'Del técnico' });
         await peticion('POST', '/responderIncidencia', tecnico, { idIncidencia: i.idIncidencia, respuesta: 'Ya está' });
 
         const r = await peticion('GET', '/misIncidencias', portador);
@@ -95,6 +96,7 @@ describe('API REST de incidencias', function () {
         assert.strictEqual(r.cuerpo.length, 1);
         assert.strictEqual(r.cuerpo[0].respuesta, 'Ya está');
         assert.strictEqual(r.cuerpo[0].estado, 'resuelta');
+        assert.deepStrictEqual(r.cuerpo[0].responsable, { nombre: 'Tomás', rol: 'tecnico' });   // quien respondió
         assert.strictEqual(r.cuerpo[0].usuario, undefined);     // al usuario no le hace falta
     });
 
@@ -106,8 +108,8 @@ describe('API REST de incidencias', function () {
     });
 
     it('GET /incidencias: técnicos y administradores listan con filtros; 400 con un filtro no válido', async function () {
-        await peticion('POST', '/crearIncidencia', portador, { tipo: 'sensor', descripcion: 'No conecta' });
-        await peticion('POST', '/crearIncidencia', portador, { tipo: 'cuenta', descripcion: 'Correo' });
+        await peticion('POST', '/crearIncidencia', portador, { tipo: 'sensor', asunto: 'Asunto', descripcion: 'No conecta' });
+        await peticion('POST', '/crearIncidencia', portador, { tipo: 'cuenta', asunto: 'Asunto', descripcion: 'Correo' });
 
         for (const token of [tecnico, admin]) {
             const r = await peticion('GET', '/incidencias', token);
@@ -124,7 +126,7 @@ describe('API REST de incidencias', function () {
     });
 
     it('GET /numeroIncidenciasAbiertas y GET /incidencia?id=', async function () {
-        const { cuerpo: i } = await peticion('POST', '/crearIncidencia', portador, { tipo: 'otra', descripcion: 'Hola' });
+        const { cuerpo: i } = await peticion('POST', '/crearIncidencia', portador, { tipo: 'otra', asunto: 'Asunto', descripcion: 'Hola' });
         assert.deepStrictEqual((await peticion('GET', '/numeroIncidenciasAbiertas', admin)).cuerpo, { abiertas: 1 });
 
         const r = await peticion('GET', `/incidencia?id=${i.idIncidencia}`, tecnico);
@@ -136,16 +138,18 @@ describe('API REST de incidencias', function () {
     });
 
     it('POST /responderIncidencia: guarda, avisa por correo y cambia el estado; 400 y 404', async function () {
-        const { cuerpo: i } = await peticion('POST', '/crearIncidencia', portador, { tipo: 'datos', descripcion: 'Faltan datos' });
+        const { cuerpo: i } = await peticion('POST', '/crearIncidencia', portador, { tipo: 'datos', asunto: 'Asunto', descripcion: 'Faltan datos' });
 
         const enCurso = await peticion('POST', '/responderIncidencia', admin, { idIncidencia: i.idIncidencia, estado: 'en curso' });
         assert.strictEqual(enCurso.codigo, 200);
         assert.strictEqual(enCurso.cuerpo.estado, 'en curso');
+        assert.strictEqual(enCurso.cuerpo.responsable, null);     // solo cambia el estado
         assert.strictEqual(correos.length, 0);
 
         const r = await peticion('POST', '/responderIncidencia', tecnico, { idIncidencia: i.idIncidencia, respuesta: 'Arreglado' });
         assert.strictEqual(r.codigo, 200);
         assert.strictEqual(r.cuerpo.estado, 'resuelta');
+        assert.strictEqual(r.cuerpo.responsable.nombre, 'Tomás');
         assert.strictEqual(correos.length, 1);
         assert.strictEqual(correos[0].destinatario, 'pelin@aeris.es');
 

@@ -14,16 +14,29 @@ const { marcoCorreo, escaparHTML, LOGOS } = require('./PlantillaCorreo');
 
 const NOMBRES_TIPO = { sensor: 'Sensor', datos: 'Datos', cuenta: 'Cuenta', otra: 'Otra' };
 const NOMBRES_ESTADO = { 'abierta': 'Abierta', 'en curso': 'En curso', 'resuelta': 'Resuelta' };
+const NOMBRES_ROL = { tecnico: 'técnico', administrador: 'administrador' };
 
 // ---------------------------------------------------------------------------
-// datos: { nombre, tipo, descripcion, respuesta, estado, fecha: Date, idIncidencia }
+// responsable: { nombre, rol } | null --> firma() --> Texto
+// What it does: «Marc (técnico)», or «el equipo de AERIS» if nobody is known.
+// ---------------------------------------------------------------------------
+function firma(responsable) {
+    if (!responsable || !responsable.nombre) return 'el equipo de AERIS';
+    const rol = NOMBRES_ROL[responsable.rol];
+    return rol ? `${responsable.nombre} (${rol})` : responsable.nombre;
+}
+
+// ---------------------------------------------------------------------------
+// datos: { nombre, tipo, asunto, descripcion, respuesta, responsable: { nombre, rol } | null,
+//         estado, fecha: Date, idIncidencia }
 //     --> crearCorreoRespuestaIncidencia() --> Correo
 // Correo = ( asunto: Texto, texto: Texto, html: Texto, adjuntos: Lista<Adjunto> )
 // What it does: builds the e-mail with the answer to an incidence: plain
 //               text and HTML.
 // ---------------------------------------------------------------------------
 function crearCorreoRespuestaIncidencia(datos) {
-    const { nombre, tipo, descripcion, respuesta, estado, fecha, idIncidencia } = datos;
+    const { nombre, tipo, asunto: asuntoIncidencia, descripcion, respuesta, responsable, estado, fecha, idIncidencia } = datos;
+    const quien = firma(responsable);
     const asunto = `AERIS · Respuesta a tu incidencia nº ${idIncidencia}`;
     const nombreTipo = NOMBRES_TIPO[tipo] || tipo;
     const nombreEstado = NOMBRES_ESTADO[estado] || estado;
@@ -31,9 +44,9 @@ function crearCorreoRespuestaIncidencia(datos) {
 
     const texto =
         `Hola, ${nombre}:\n\n` +
-        `Hemos respondido a la incidencia que enviaste el ${dia} (${nombreTipo}).\n\n` +
+        `Hemos respondido a la incidencia que enviaste el ${dia} (${nombreTipo}): «${asuntoIncidencia}».\n\n` +
         `Tu mensaje:\n${descripcion}\n\n` +
-        `Respuesta:\n${respuesta}\n\n` +
+        `Respuesta de ${quien}:\n${respuesta}\n\n` +
         `Estado: ${nombreEstado}\n\n` +
         'Puedes verla también en Ayuda › Mis incidencias, en la app o en la web.\n\n' +
         'El equipo de AERIS';
@@ -47,10 +60,10 @@ function crearCorreoRespuestaIncidencia(datos) {
         </td></tr>
         <tr><td style="padding:22px 32px 0 32px;font-family:Arial,sans-serif;">
           <div style="font-size:12px;line-height:16px;color:#8992B8;text-transform:uppercase;letter-spacing:.5px;">Tu mensaje · ${escaparHTML(nombreTipo)}</div>
-          <div style="margin-top:6px;padding:12px 14px;border:1px solid #E3E5EF;border-radius:12px;font-size:14px;line-height:20px;color:#432E60;white-space:pre-line;">${escaparHTML(descripcion)}</div>
+          <div style="margin-top:6px;padding:12px 14px;border:1px solid #E3E5EF;border-radius:12px;font-size:14px;line-height:20px;color:#432E60;"><b>${escaparHTML(asuntoIncidencia)}</b><div style="margin-top:4px;white-space:pre-line;">${escaparHTML(descripcion)}</div></div>
         </td></tr>
         <tr><td style="padding:16px 32px 0 32px;font-family:Arial,sans-serif;">
-          <div style="font-size:12px;line-height:16px;color:#8992B8;text-transform:uppercase;letter-spacing:.5px;">Respuesta</div>
+          <div style="font-size:12px;line-height:16px;color:#8992B8;text-transform:uppercase;letter-spacing:.5px;">Respuesta de ${escaparHTML(quien)}</div>
           <div style="margin-top:6px;padding:12px 14px;border-radius:12px;background:#F1ECF8;font-size:14px;line-height:20px;color:#432E60;white-space:pre-line;">${escaparHTML(respuesta)}</div>
         </td></tr>
         <tr><td style="padding:16px 32px 0 32px;font-family:Arial,sans-serif;font-size:14px;line-height:20px;color:#8992B8;text-align:center;">

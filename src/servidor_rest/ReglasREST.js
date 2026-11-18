@@ -160,13 +160,13 @@ function cargarReglasREST(servidor, logica) {
 
     // ---- Incidencias (T041) · la usan la app y la web ----
 
-    // POST /crearIncidencia  { tipo, descripcion, idSensor (opcional) }  🔒
+    // POST /crearIncidencia  { tipo, asunto, descripcion, idSensor (opcional) }  🔒
     //   tipo: sensor | datos | cuenta | otra. Sin idSensor, las de tipo sensor o datos llevan el sensor del usuario
     //   201 Incidencia · 400 { error, campos } · 401
     servidor.post('/crearIncidencia', requiereSesion(logica), envolver(async (peticion, respuesta) => {
-        const { tipo, descripcion, idSensor } = peticion.body;
+        const { tipo, asunto, descripcion, idSensor } = peticion.body;
         respuesta.status(201).json(
-            await logica.incidencias.crear(peticion.usuario.idUsuario, tipo, descripcion, idSensor));
+            await logica.incidencias.crear(peticion.usuario.idUsuario, tipo, asunto, descripcion, idSensor));
     }));
 
     // GET /misIncidencias  🔒
@@ -199,13 +199,14 @@ function cargarReglasREST(servidor, logica) {
         }));
 
     // POST /responderIncidencia  { idIncidencia, respuesta (opcional), estado (opcional) }  🔒 técnico o administrador
-    //   Con respuesta: se guarda con la fecha, se manda por correo al usuario y, si no se indica
+    //   Con respuesta: se guarda con la fecha y con quién responde (el usuario de la sesión), se manda por correo al usuario y, si no se indica
     //   estado, pasa a «resuelta». Sin respuesta: solo cambia el estado.
     //   200 IncidenciaGestion · 400 { error, campos } · 404 · 401 · 403
     servidor.post('/responderIncidencia', requiereSesion(logica, ROLES_GESTION_INCIDENCIAS),
         envolver(async (peticion, respuesta) => {
             const { idIncidencia, respuesta: texto, estado } = peticion.body;
-            respuesta.status(200).json(await logica.incidencias.responder(idIncidencia, { respuesta: texto, estado }));
+            respuesta.status(200).json(await logica.incidencias.responder(idIncidencia, { respuesta: texto, estado },
+                peticion.usuario.idUsuario));
         }));
 }
 

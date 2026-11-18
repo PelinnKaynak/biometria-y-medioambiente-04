@@ -3,7 +3,8 @@
 // Descripción: Lógica de las incidencias (T041): el usuario las envía desde
 //              Ayuda (app y web) y ve sus respuestas; los técnicos y los
 //              administradores las listan con filtros, las responden y
-//              cambian su estado. Al responder se manda un correo al usuario.
+//              cambian su estado. Al responder se guarda quién respondió y se
+//              manda un correo al usuario.
 //              Usa la tabla Incidencias de src/bd/usuarios.sql.
 //              Diseño en doc/logica_design.md. Tarea T041 · H038, H039.
 // Autores:     Equipo 04 – SenseTech
@@ -20,45 +21,57 @@ const ESTADOS = ['abierta', 'en curso', 'resuelta'];
 const ESTADO_INICIAL = 'abierta';
 const TIPOS_CON_SENSOR = ['sensor', 'datos'];   // si no se indica, se pone el sensor del usuario
 const LARGO_MAXIMO_TEXTO = 2000;                 // descripción y respuesta
+const LARGO_MAXIMO_ASUNTO = 120;
 
-// Columnas que se devuelven (con el número de serie del sensor)
+// Columnas que se devuelven (con el número de serie del sensor y quién respondió)
 const SELECT_INCIDENCIA = `
-    SELECT i.idIncidencia, i.idUsuario, i.idSensor, i.tipo, i.descripcion, i.estado,
-           i.respuesta, i.fechaCreacion, i.fechaRespuesta, s.numeroSerie
-      FROM Incidencias i LEFT JOIN Sensores s ON s.idSensor = i.idSensor`;
+    SELECT i.idIncidencia, i.idUsuario, i.idSensor, i.tipo, i.asunto, i.descripcion, i.estado,
+           i.respuesta, i.idResponsable, i.fechaCreacion, i.fechaRespuesta, s.numeroSerie,
+           r.nombre AS nombreResponsable, r.role AS rolResponsable
+      FROM Incidencias i
+      LEFT JOIN Sensores s ON s.idSensor = i.idSensor
+      LEFT JOIN Usuarios r ON r.idUsuario = i.idResponsable`;
 
 // Para los técnicos: además, quién la envió y el estado del sensor
 const SELECT_INCIDENCIA_GESTION = `
-    SELECT i.idIncidencia, i.idUsuario, i.idSensor, i.tipo, i.descripcion, i.estado,
-           i.respuesta, i.fechaCreacion, i.fechaRespuesta,
+    SELECT i.idIncidencia, i.idUsuario, i.idSensor, i.tipo, i.asunto, i.descripcion, i.estado,
+           i.respuesta, i.idResponsable, i.fechaCreacion, i.fechaRespuesta,
            u.nombre, u.apellidos, u.email,
            s.numeroSerie, s.nombre AS nombreSensor, s.estado AS estadoSensor, s.bateria,
-           s.ultimaConexion, s.necesitaCalibracion
+           s.ultimaConexion, s.necesitaCalibracion,
+           r.nombre AS nombreResponsable, r.role AS rolResponsable
       FROM Incidencias i
       JOIN Usuarios u ON u.idUsuario = i.idUsuario
-      LEFT JOIN Sensores s ON s.idSensor = i.idSensor`;
+      LEFT JOIN Sensores s ON s.idSensor = i.idSensor
+      LEFT JOIN Usuarios r ON r.idUsuario = i.idResponsable`;
 
 // ---------------------------------------------------------------------------
-// texto: Texto --> esTextoValido() --> V/F
+// texto: Texto, largoMaximo: N (opcional) --> esTextoValido() --> V/F
 // What it does: true if it is text that is not empty (without the spaces at
-//               the ends) and not longer than LARGO_MAXIMO_TEXTO.
+//               the ends) and not longer than largoMaximo (LARGO_MAXIMO_TEXTO
+//               if not given).
 // ---------------------------------------------------------------------------
-function esTextoValido(texto) {
-    return typeof texto === 'string' && texto.trim().length > 0 && texto.trim().length <= LARGO_MAXIMO_TEXTO;
+function esTextoValido(texto, largoMaximo = LARGO_MAXIMO_TEXTO) {
+    return typeof texto === 'string' && texto.trim().length > 0 && texto.trim().length <= largoMaximo;
 }
 
 // ---------------------------------------------------------------------------
 // fila: FilaBD --> aIncidencia() --> Incidencia
-// Incidencia = { idIncidencia, tipo, descripcion, estado, respuesta,
-//                fechaCreacion, fechaRespuesta, sensor: { idSensor, numeroSerie } | null }
+// Incidencia = { idIncidencia, tipo, asunto, descripcion, estado, respuesta,
+//                responsable: { nombre, rol } | null, fechaCreacion, fechaRespuesta,
+//                sensor: { idSensor, numeroSerie } | null }
+// responsable es quien respondió (para «Respuesta de Marc (técnico)»).
 // ---------------------------------------------------------------------------
 function aIncidencia(fila) {
     return {
         idIncidencia: fila.idIncidencia,
         tipo: fila.tipo,
+        asunto: fila.asunto,
         descripcion: fila.descripcion,
         estado: fila.estado,
         respuesta: fila.respuesta,
+        responsable: fila.idResponsable === null ? null
+            : { nombre: fila.nombreResponsable, rol: fila.rolResponsable },
         fechaCreacion: fila.fechaCreacion,
         fechaRespuesta: fila.fechaRespuesta,
         sensor: fila.idSensor === null ? null : { idSensor: fila.idSensor, numeroSerie: fila.numeroSerie }
@@ -67,12 +80,15 @@ function aIncidencia(fila) {
 
 // ---------------------------------------------------------------------------
 // fila: FilaBD --> aIncidenciaGestion() --> IncidenciaGestion
-// IncidenciaGestion = Incidencia + usuario: { idUsuario, nombre, apellidos, correo }
-//                     y en sensor también { nombre, estado, bateria, ultimaConexion, necesitaCalibracion }
+// IncidenciaGestion = Incidencia + usuario: { idUsuario, nombre, apellidos, correo },
+//                     en responsable también idUsuario, y en sensor también { nombre, estado, bateria, ultimaConexion, necesitaCalibracion }
 // ---------------------------------------------------------------------------
 function aIncidenciaGestion(fila) {
     const incidencia = aIncidencia(fila);
     incidencia.usuario = { idUsuario: fila.idUsuario, nombre: fila.nombre, apellidos: fila.apellidos, correo: fila.email };
+    if (incidencia.responsable) {
+        incidencia.responsable.idUsuario = fila.idResponsable;
+    }
     if (incidencia.sensor) {
         Object.assign(incidencia.sensor, {
             nombre: fila.nombreSensor, estado: fila.estadoSensor, bateria: fila.bateria,
@@ -100,16 +116,17 @@ class Incidencias {
     }
 
     // -----------------------------------------------------------------------
-    // idUsuario: N, tipo: Texto, descripcion: Texto, idSensor: N (opcional)
+    // idUsuario: N, tipo: Texto, asunto: Texto, descripcion: Texto, idSensor: N (opcional)
     //     --> crear() --> Incidencia
     // What it does: saves a new incidence «abierta». idSensor has to be a
     //               sensor of the user; if it is not given and the tipo is
     //               «sensor» or «datos», the user's sensor is used (NULL if
     //               he has none). Throws DATOS_NO_VALIDOS with the wrong fields.
     // -----------------------------------------------------------------------
-    async crear(idUsuario, tipo, descripcion, idSensor) {
+    async crear(idUsuario, tipo, asunto, descripcion, idSensor) {
         const erroneos = [];
         if (!TIPOS.includes(tipo)) erroneos.push('tipo');
+        if (!esTextoValido(asunto, LARGO_MAXIMO_ASUNTO)) erroneos.push('asunto');
         if (!esTextoValido(descripcion)) erroneos.push('descripcion');
         const conSensor = idSensor !== undefined && idSensor !== null;
         if (conSensor && !Number.isInteger(idSensor)) erroneos.push('idSensor');
@@ -132,8 +149,8 @@ class Incidencias {
         }
 
         const [resultado] = await this.conexion.execute(
-            'INSERT INTO Incidencias (idUsuario, idSensor, tipo, descripcion, estado) VALUES (?, ?, ?, ?, ?)',
-            [idUsuario, sensor, tipo, descripcion.trim(), ESTADO_INICIAL]);
+            'INSERT INTO Incidencias (idUsuario, idSensor, tipo, asunto, descripcion, estado) VALUES (?, ?, ?, ?, ?, ?)',
+            [idUsuario, sensor, tipo, asunto.trim(), descripcion.trim(), ESTADO_INICIAL]);
         const [filas] = await this.conexion.execute(`${SELECT_INCIDENCIA} WHERE i.idIncidencia = ?`,
             [resultado.insertId]);
         return aIncidencia(filas[0]);
@@ -201,15 +218,16 @@ class Incidencias {
     }
 
     // -----------------------------------------------------------------------
-    // idIncidencia: N, cambios: { respuesta: Texto (opcional), estado: Texto (opcional) }
-    //     --> responder() --> IncidenciaGestion
-    // What it does: saves the answer (with its date) and/or the new estado.
+    // idIncidencia: N, cambios: { respuesta: Texto (opcional), estado: Texto (opcional) },
+    // idResponsable: N --> responder() --> IncidenciaGestion
+    // What it does: saves the answer (with its date and who answered, the
+    //               technician or administrator idResponsable) and/or the new estado.
     //               If there is an answer and no estado, it becomes «resuelta».
     //               When there is an answer, the user gets an e-mail with it
     //               (a failure is only written in the console). Throws
     //               DATOS_NO_VALIDOS or INCIDENCIA_NO_EXISTE.
     // -----------------------------------------------------------------------
-    async responder(idIncidencia, cambios = {}) {
+    async responder(idIncidencia, cambios = {}, idResponsable = null) {
         const { respuesta, estado } = cambios;
         const conRespuesta = respuesta !== undefined && respuesta !== null;
         const erroneos = [];
@@ -223,8 +241,8 @@ class Incidencias {
 
         if (conRespuesta) {
             await this.conexion.execute(
-                'UPDATE Incidencias SET respuesta = ?, fechaRespuesta = ?, estado = ? WHERE idIncidencia = ?',
-                [respuesta.trim(), this.logica.ahoraEnSegundos(), estado || 'resuelta', idIncidencia]);
+                'UPDATE Incidencias SET respuesta = ?, idResponsable = ?, fechaRespuesta = ?, estado = ? WHERE idIncidencia = ?',
+                [respuesta.trim(), idResponsable, this.logica.ahoraEnSegundos(), estado || 'resuelta', idIncidencia]);
         } else {
             await this.conexion.execute('UPDATE Incidencias SET estado = ? WHERE idIncidencia = ?',
                 [estado, idIncidencia]);
@@ -243,8 +261,9 @@ class Incidencias {
     // -----------------------------------------------------------------------
     async enviarRespuesta(incidencia, usuario) {
         const mensaje = crearCorreoRespuestaIncidencia({
-            nombre: usuario.nombre, tipo: incidencia.tipo, descripcion: incidencia.descripcion,
-            respuesta: incidencia.respuesta, estado: incidencia.estado,
+            nombre: usuario.nombre, tipo: incidencia.tipo, asunto: incidencia.asunto,
+            descripcion: incidencia.descripcion, respuesta: incidencia.respuesta,
+            responsable: incidencia.responsable, estado: incidencia.estado,
             fecha: incidencia.fechaCreacion, idIncidencia: incidencia.idIncidencia
         });
         try {

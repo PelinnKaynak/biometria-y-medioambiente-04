@@ -74,7 +74,7 @@ Como no hay compra en la app, el script mete un sensor de prueba: `092021010920`
 
 ## Tabla `Incidencias` (T041)
 
-Las que el usuario envía desde Ayuda (app y web). Las reciben y las responden los técnicos y los administradores. Igual que en el diagrama de Figma.
+Las que el usuario envía desde Ayuda (app y web). Las reciben y las responden los técnicos y los administradores. Sigue el diagrama de Figma y añade `asunto` e `idResponsable`, que pide el diseño de la pantalla Ayuda (título de cada incidencia y «Respuesta de Marc (técnico)»).
 
 | Columna | Tipo | Restricciones | Descripción |
 |---|---|---|---|
@@ -82,9 +82,11 @@ Las que el usuario envía desde Ayuda (app y web). Las reciben y las responden l
 | `idUsuario` | INT | FK → Usuarios, NOT NULL, ON DELETE CASCADE | Quién la envió |
 | `idSensor` | INT | FK → Sensores, NULL, ON DELETE SET NULL | Sensor del que se habla; NULL si no va de un sensor (p. ej. la cuenta) |
 | `tipo` | VARCHAR(10) | NOT NULL, CHECK | 'sensor', 'datos', 'cuenta' u 'otra' |
+| `asunto` | VARCHAR(120) | NOT NULL | Título corto que escribe el usuario (el de la tarjeta en «Mis incidencias») |
 | `descripcion` | TEXT | NOT NULL | Lo que escribe el usuario |
 | `estado` | VARCHAR(10) | NOT NULL, DEFAULT 'abierta', CHECK | 'abierta', 'en curso' o 'resuelta' |
 | `respuesta` | TEXT | NULL | Respuesta del técnico o administrador |
+| `idResponsable` | INT | FK → Usuarios, NULL, ON DELETE SET NULL | Técnico o administrador que respondió (su nombre sale junto a la respuesta) |
 | `fechaCreacion` | DATETIME | NOT NULL, DEFAULT UTC_TIMESTAMP | Cuándo se envió (UTC) |
 | `fechaRespuesta` | DATETIME | NULL | Cuándo se respondió (UTC) |
 
@@ -106,7 +108,7 @@ Las que el usuario envía desde Ayuda (app y web). Las reciben y las responden l
 
 **Si la BD ya estaba creada** (con la tabla `Sensores` antigua de T005 o con la de T015 sin las columnas de vinculación): importar primero `src/bd/usuarios.sql` y después `src/bd/actualizar_T005.sql`. Añade las columnas que falten y el sensor de prueba sin borrar nada. Se puede importar más de una vez. Usa sintaxis de MariaDB (la de XAMPP y la del servidor de la UPV).
 
-**Si la BD ya estaba creada antes de T041:** importar `src/bd/actualizar_T041.sql`, que crea la tabla `Incidencias` sin borrar nada.
+**Si la BD ya estaba creada antes de T041:** importar `src/bd/actualizar_T041.sql`, que crea la tabla `Incidencias` sin borrar nada. Si ya se había importado una versión anterior (sin `asunto` ni `idResponsable`), borrar antes la tabla con `DROP TABLE Incidencias;`.
 
 ## Prueba del script
 

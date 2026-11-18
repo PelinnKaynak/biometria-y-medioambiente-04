@@ -33,17 +33,17 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `POST /reenviarCorreoVinculacion` 🔒 | — | **200** `{ mensaje }` · **404** no hay ninguna pendiente · **401** (T005) |
 | `GET /responderVinculacion?token=…&respuesta=si\|no` | — | **200** HTML «¿Vinculamos el sensor?» con un botón · **400** HTML enlace no válido — lo abren los botones del correo (T005) |
 | `POST /responderVinculacion` | formulario `token`, `respuesta` | **200** HTML «Sensor vinculado» o «Vinculación rechazada» · **400** HTML «Enlace no válido» (T005) |
-| `POST /crearIncidencia` 🔒 | `{ tipo, descripcion, idSensor? }` | **201** `Incidencia` · **400** `{ error, campos }` · **401** — Ayuda de la app y de la web (T041). `tipo`: sensor, datos, cuenta, otra. Sin `idSensor`, las de tipo sensor o datos llevan el sensor del usuario |
+| `POST /crearIncidencia` 🔒 | `{ tipo, asunto, descripcion, idSensor? }` | **201** `Incidencia` · **400** `{ error, campos }` · **401** — Ayuda de la app y de la web (T041). `tipo`: sensor, datos, cuenta, otra. Sin `idSensor`, las de tipo sensor o datos llevan el sensor del usuario |
 | `GET /misIncidencias` 🔒 | — | **200** `[ Incidencia ]` del usuario, con la respuesta, la más nueva primero · **401** (T041) |
 | `GET /incidencias?estado=…&tipo=…` 🔒👷 | — | **200** `[ IncidenciaGestion ]` · **400** filtro no válido · **401** · **403** — pantalla Incidencias del panel (T041, T044) |
 | `GET /numeroIncidenciasAbiertas` 🔒👷 | — | **200** `{ abiertas: N }` (número del menú del panel) · **401** · **403** (T041) |
 | `GET /incidencia?id=N` 🔒👷 | — | **200** `IncidenciaGestion` · **404** no existe · **401** · **403** (T041) |
-| `POST /responderIncidencia` 🔒👷 | `{ idIncidencia, respuesta?, estado? }` | **200** `IncidenciaGestion` · **400** `{ error, campos }` · **404** · **401** · **403** — con respuesta se manda por correo al usuario y, si no se indica estado, pasa a «resuelta» (T041) |
+| `POST /responderIncidencia` 🔒👷 | `{ idIncidencia, respuesta?, estado? }` | **200** `IncidenciaGestion` · **400** `{ error, campos }` · **404** · **401** · **403** — con respuesta se guarda quién responde (el usuario de la sesión), se manda por correo al usuario y, si no se indica estado, pasa a «resuelta» (T041) |
 
 👷 = solo técnicos y administradores (rol `tecnico` o `administrador`).
 
-`Incidencia = { idIncidencia, tipo, descripcion, estado, respuesta, fechaCreacion, fechaRespuesta, sensor: { idSensor, numeroSerie } | null }`
-`IncidenciaGestion = Incidencia + usuario: { idUsuario, nombre, apellidos, correo }` y, en `sensor`, también `nombre, estado, bateria, ultimaConexion, necesitaCalibracion`.
+`Incidencia = { idIncidencia, tipo, asunto, descripcion, estado, respuesta, responsable: { nombre, rol } | null, fechaCreacion, fechaRespuesta, sensor: { idSensor, numeroSerie } | null }` — `responsable` es quien respondió (para «Respuesta de Marc (técnico)»).
+`IncidenciaGestion = Incidencia + usuario: { idUsuario, nombre, apellidos, correo }`, en `responsable` también `idUsuario` y, en `sensor`, también `nombre, estado, bateria, ultimaConexion, necesitaCalibracion`.
 
 Errores comunes: **400** JSON mal formado · **401** sin sesión · **403** el rol no tiene permiso · **404** ruta que no existe · **500** error del servidor (sin detalles).
 

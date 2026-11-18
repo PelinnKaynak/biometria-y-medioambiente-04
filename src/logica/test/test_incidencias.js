@@ -48,41 +48,45 @@ describe('Logica (incidencias)', function () {
 
     it('crear() guarda la incidencia «abierta», sin respuesta y con la fecha', async function () {
         const antes = Date.now() - 2000;
-        const i = await incidencias.crear(pelin.idUsuario, 'cuenta', '  No puedo cambiar la foto  ');
+        const i = await incidencias.crear(pelin.idUsuario, 'cuenta', '  Foto de perfil  ', '  No puedo cambiar la foto  ');
         assert.ok(Number.isInteger(i.idIncidencia));
         assert.strictEqual(i.tipo, 'cuenta');
+        assert.strictEqual(i.asunto, 'Foto de perfil');
         assert.strictEqual(i.descripcion, 'No puedo cambiar la foto');
         assert.strictEqual(i.estado, 'abierta');
         assert.strictEqual(i.respuesta, null);
+        assert.strictEqual(i.responsable, null);
         assert.strictEqual(i.fechaRespuesta, null);
         assert.strictEqual(i.sensor, null);
         assert.ok(i.fechaCreacion.getTime() >= antes && i.fechaCreacion.getTime() <= Date.now() + 2000);
     });
 
     it('crear() de tipo sensor o datos sin idSensor pone el sensor del usuario', async function () {
-        const i = await incidencias.crear(pelin.idUsuario, 'sensor', 'La luz no se enciende');
+        const i = await incidencias.crear(pelin.idUsuario, 'sensor', 'Asunto', 'La luz no se enciende');
         assert.deepStrictEqual(i.sensor, { idSensor: idSensorPelin, numeroSerie: '092021010920' });
-        const d = await incidencias.crear(pelin.idUsuario, 'datos', 'Valores raros por la noche');
+        const d = await incidencias.crear(pelin.idUsuario, 'datos', 'Asunto', 'Valores raros por la noche');
         assert.strictEqual(d.sensor.idSensor, idSensorPelin);
     });
 
     it('crear() de tipo sensor sin tener sensor la guarda sin sensor', async function () {
-        const i = await incidencias.crear(ana.idUsuario, 'sensor', 'No me llega el sensor');
+        const i = await incidencias.crear(ana.idUsuario, 'sensor', 'Asunto', 'No me llega el sensor');
         assert.strictEqual(i.sensor, null);
     });
 
     it('crear() con el idSensor de otro usuario da DATOS_NO_VALIDOS', async function () {
-        await assert.rejects(incidencias.crear(ana.idUsuario, 'sensor', 'Hola', idSensorPelin),
+        await assert.rejects(incidencias.crear(ana.idUsuario, 'sensor', 'Asunto', 'Hola', idSensorPelin),
             (e) => e.codigo === 'DATOS_NO_VALIDOS' && e.campos.includes('idSensor'));
-        const i = await incidencias.crear(pelin.idUsuario, 'otra', 'Hola', idSensorPelin);
+        const i = await incidencias.crear(pelin.idUsuario, 'otra', 'Asunto', 'Hola', idSensorPelin);
         assert.strictEqual(i.sensor.idSensor, idSensorPelin);
     });
 
-    it('crear() rechaza tipo, descripción o idSensor no válidos y dice qué campos', async function () {
-        await assert.rejects(incidencias.crear(pelin.idUsuario, 'queja', '   ', 'uno'),
+    it('crear() rechaza tipo, asunto, descripción o idSensor no válidos y dice qué campos', async function () {
+        await assert.rejects(incidencias.crear(pelin.idUsuario, 'queja', '  ', '   ', 'uno'),
             (e) => e.codigo === 'DATOS_NO_VALIDOS'
-                && ['tipo', 'descripcion', 'idSensor'].every((c) => e.campos.includes(c)));
-        await assert.rejects(incidencias.crear(pelin.idUsuario, 'otra', 'x'.repeat(2001)),
+                && ['tipo', 'asunto', 'descripcion', 'idSensor'].every((c) => e.campos.includes(c)));
+        await assert.rejects(incidencias.crear(pelin.idUsuario, 'otra', 'x'.repeat(121), 'Hola'),
+            (e) => e.codigo === 'DATOS_NO_VALIDOS' && e.campos.includes('asunto'));
+        await assert.rejects(incidencias.crear(pelin.idUsuario, 'otra', 'Asunto', 'x'.repeat(2001)),
             (e) => e.codigo === 'DATOS_NO_VALIDOS' && e.campos.includes('descripcion'));
         const [filas] = await logica.conexion.query('SELECT COUNT(*) AS n FROM Incidencias');
         assert.strictEqual(Number(filas[0].n), 0);
@@ -91,17 +95,17 @@ describe('Logica (incidencias)', function () {
     // --- listar ----------------------------------------------------------------
 
     it('listarDeUsuario() solo da las suyas, la más nueva primero', async function () {
-        const a = await incidencias.crear(pelin.idUsuario, 'cuenta', 'Primera');
-        await incidencias.crear(ana.idUsuario, 'otra', 'De Ana');
-        const b = await incidencias.crear(pelin.idUsuario, 'otra', 'Segunda');
+        const a = await incidencias.crear(pelin.idUsuario, 'cuenta', 'Asunto', 'Primera');
+        await incidencias.crear(ana.idUsuario, 'otra', 'Asunto', 'De Ana');
+        const b = await incidencias.crear(pelin.idUsuario, 'otra', 'Asunto', 'Segunda');
         const lista = await incidencias.listarDeUsuario(pelin.idUsuario);
         assert.deepStrictEqual(lista.map((i) => i.idIncidencia), [b.idIncidencia, a.idIncidencia]);
         assert.deepStrictEqual(await incidencias.listarDeUsuario(9999), []);
     });
 
     it('listar() da todas con los datos del usuario y del sensor, y filtra por estado y tipo', async function () {
-        const s = await incidencias.crear(pelin.idUsuario, 'sensor', 'No conecta');
-        const c = await incidencias.crear(ana.idUsuario, 'cuenta', 'Olvidé el correo');
+        const s = await incidencias.crear(pelin.idUsuario, 'sensor', 'Asunto', 'No conecta');
+        const c = await incidencias.crear(ana.idUsuario, 'cuenta', 'Asunto', 'Olvidé el correo');
         await incidencias.responder(c.idIncidencia, { estado: 'en curso' });
 
         const todas = await incidencias.listar();
@@ -121,8 +125,8 @@ describe('Logica (incidencias)', function () {
 
     it('contarAbiertas() cuenta solo las abiertas', async function () {
         assert.strictEqual(await incidencias.contarAbiertas(), 0);
-        await incidencias.crear(pelin.idUsuario, 'otra', 'Una');
-        const b = await incidencias.crear(ana.idUsuario, 'otra', 'Otra');
+        await incidencias.crear(pelin.idUsuario, 'otra', 'Asunto', 'Una');
+        const b = await incidencias.crear(ana.idUsuario, 'otra', 'Asunto', 'Otra');
         assert.strictEqual(await incidencias.contarAbiertas(), 2);
         await incidencias.responder(b.idIncidencia, { respuesta: 'Hecho' });
         assert.strictEqual(await incidencias.contarAbiertas(), 1);
@@ -136,7 +140,7 @@ describe('Logica (incidencias)', function () {
     // --- responder ---------------------------------------------------------------
 
     it('responder() con respuesta la guarda, la pone «resuelta» y manda el correo al usuario', async function () {
-        const i = await incidencias.crear(pelin.idUsuario, 'sensor', 'La batería dura poco');
+        const i = await incidencias.crear(pelin.idUsuario, 'sensor', 'Asunto', 'La batería dura poco');
         const r = await incidencias.responder(i.idIncidencia, { respuesta: '  Hay que recalibrarlo  ' });
         assert.strictEqual(r.respuesta, 'Hay que recalibrarlo');
         assert.strictEqual(r.estado, 'resuelta');
@@ -153,15 +157,32 @@ describe('Logica (incidencias)', function () {
         assert.strictEqual(deLaApp.respuesta, 'Hay que recalibrarlo');
     });
 
+    it('responder() guarda quién respondió y sale con su nombre y su rol', async function () {
+        await logica.conexion.execute("UPDATE Usuarios SET role = 'tecnico' WHERE idUsuario = ?", [ana.idUsuario]);
+        const i = await incidencias.crear(pelin.idUsuario, 'sensor', 'No conecta', 'No lo encuentra por Bluetooth');
+        const r = await incidencias.responder(i.idIncidencia, { respuesta: 'Reinícialo' }, ana.idUsuario);
+        assert.deepStrictEqual(r.responsable, { nombre: 'Ana', rol: 'tecnico', idUsuario: ana.idUsuario });
+        const [deLaApp] = await incidencias.listarDeUsuario(pelin.idUsuario);
+        assert.deepStrictEqual(deLaApp.responsable, { nombre: 'Ana', rol: 'tecnico' });
+        assert.ok(correos[0].texto.includes('Respuesta de Ana (técnico)'));
+        assert.ok(correos[0].texto.includes('«No conecta»'));
+
+        // si el técnico se borra, la respuesta se queda sin nombre
+        await logica.conexion.execute('DELETE FROM Usuarios WHERE idUsuario = ?', [ana.idUsuario]);
+        const [sinTecnico] = await incidencias.listarDeUsuario(pelin.idUsuario);
+        assert.strictEqual(sinTecnico.respuesta, 'Reinícialo');
+        assert.strictEqual(sinTecnico.responsable, null);
+    });
+
     it('responder() con respuesta y estado deja el estado que se indica', async function () {
-        const i = await incidencias.crear(pelin.idUsuario, 'datos', 'Faltan datos de ayer');
+        const i = await incidencias.crear(pelin.idUsuario, 'datos', 'Asunto', 'Faltan datos de ayer');
         const r = await incidencias.responder(i.idIncidencia, { respuesta: 'Lo estamos mirando', estado: 'en curso' });
         assert.strictEqual(r.estado, 'en curso');
         assert.strictEqual(correos.length, 1);
     });
 
     it('responder() solo con estado lo cambia sin enviar correo', async function () {
-        const i = await incidencias.crear(pelin.idUsuario, 'otra', 'Pregunta');
+        const i = await incidencias.crear(pelin.idUsuario, 'otra', 'Asunto', 'Pregunta');
         const r = await incidencias.responder(i.idIncidencia, { estado: 'en curso' });
         assert.strictEqual(r.estado, 'en curso');
         assert.strictEqual(r.respuesta, null);
@@ -169,7 +190,7 @@ describe('Logica (incidencias)', function () {
     });
 
     it('responder() sin nada, con estado o respuesta no válidos, o de una que no existe da error', async function () {
-        const i = await incidencias.crear(pelin.idUsuario, 'otra', 'Pregunta');
+        const i = await incidencias.crear(pelin.idUsuario, 'otra', 'Asunto', 'Pregunta');
         await assert.rejects(incidencias.responder(i.idIncidencia, {}), (e) => e.codigo === 'DATOS_NO_VALIDOS');
         await assert.rejects(incidencias.responder(i.idIncidencia, { estado: 'cerrada' }),
             (e) => e.codigo === 'DATOS_NO_VALIDOS' && e.campos.includes('estado'));
@@ -183,7 +204,7 @@ describe('Logica (incidencias)', function () {
     it('si el correo de la respuesta falla, la respuesta se guarda igual', async function () {
         const otra = new Logica(logica.conexion, async () => { throw new Error('Gmail caído'); },
             'http://localhost:8080/restablecer.html', 'clave-de-pruebas');
-        const i = await incidencias.crear(pelin.idUsuario, 'otra', 'Pregunta');
+        const i = await incidencias.crear(pelin.idUsuario, 'otra', 'Asunto', 'Pregunta');
         const errorOriginal = console.error;
         console.error = () => { };
         try {
@@ -195,7 +216,7 @@ describe('Logica (incidencias)', function () {
     });
 
     it('borrar el sensor deja la incidencia sin sensor; borrar el usuario borra sus incidencias', async function () {
-        const i = await incidencias.crear(pelin.idUsuario, 'sensor', 'Algo');
+        const i = await incidencias.crear(pelin.idUsuario, 'sensor', 'Asunto', 'Algo');
         await logica.conexion.execute('DELETE FROM Sensores WHERE idSensor = ?', [idSensorPelin]);
         assert.strictEqual((await incidencias.obtener(i.idIncidencia)).sensor, null);
         await logica.conexion.execute('DELETE FROM Usuarios WHERE idUsuario = ?', [pelin.idUsuario]);
@@ -204,12 +225,13 @@ describe('Logica (incidencias)', function () {
 
     it('el correo escapa el HTML de lo que escribe el usuario', function () {
         const correo = crearCorreoRespuestaIncidencia({
-            nombre: '<b>Pelin</b>', tipo: 'otra', descripcion: '<script>x</script>', respuesta: 'Vale & gracias',
-            estado: 'resuelta', fecha: new Date('2026-11-17T10:00:00Z'), idIncidencia: 7
+            nombre: '<b>Pelin</b>', tipo: 'otra', asunto: '<i>Hola</i>', descripcion: '<script>x</script>',
+            respuesta: 'Vale & gracias', responsable: { nombre: '<u>Marc</u>', rol: 'tecnico' }, estado: 'resuelta', fecha: new Date('2026-11-17T10:00:00Z'), idIncidencia: 7
         });
         assert.ok(!correo.html.includes('<script>'));
         assert.ok(correo.html.includes('&lt;script&gt;'));
         assert.ok(correo.html.includes('Vale &amp; gracias'));
+        assert.ok(!correo.html.includes('<i>') && !correo.html.includes('<u>'));
         assert.ok(correo.texto.includes('17 de noviembre de 2026'));
     });
 });
