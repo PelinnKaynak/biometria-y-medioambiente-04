@@ -228,7 +228,7 @@ public class VincularSensorActivity extends AppCompatActivity {
         if (codigo.fecha.isEmpty()) {
             return getString(R.string.vincular_sensor_ozono);
         }
-        String gas = "03".equals(codigo.gas)
+        String gas = "03".equals(codigo.gas) || "O3".equalsIgnoreCase(codigo.gas)
                 ? getString(R.string.vincular_sensor_ozono)
                 : getString(R.string.vincular_sensor_gas, codigo.gas);
         String fecha = codigo.fecha.substring(2) + "/20" + codigo.fecha.substring(0, 2);

@@ -127,14 +127,17 @@ public class LogicaFakeVincular {
     // -----------------------------------------------------------------------
     // codigo: CodigoSensor --> cuerpoSolicitud() --x
     // Text <--
-    // What it does: {"numeroSerie": "092021010920", "sensibilidad": -44.75}
+    // What it does: {"numeroSerie": "092021010920", "sensibilidad": -44.75}.
+    //               Without sensitivity (only the serial written by hand),
+    //               only {"numeroSerie": ...}: the server keeps its own.
     // -----------------------------------------------------------------------
     static String cuerpoSolicitud(CodigoSensor codigo) {
         try {
-            return new JSONObject()
-                    .put("numeroSerie", codigo.numeroSerie)
-                    .put("sensibilidad", codigo.sensibilidad)
-                    .toString();
+            JSONObject cuerpo = new JSONObject().put("numeroSerie", codigo.numeroSerie);
+            if (codigo.sensibilidad != null) {
+                cuerpo.put("sensibilidad", codigo.sensibilidad.doubleValue());
+            }
+            return cuerpo.toString();
         } catch (JSONException error) {
             return "{}";
         }

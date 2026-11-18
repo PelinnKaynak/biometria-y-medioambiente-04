@@ -151,7 +151,6 @@
                 android:id="@+id/campoCodigo"
                 style="@style/AERIS.Campo"
                 android:layout_width="match_parent"
-                android:digits="0123456789,.- "
                 android:fontFamily="monospace"
                 android:hint="@string/vincular_codigo_pista"
                 android:importantForAutofill="no"
