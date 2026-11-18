@@ -25,6 +25,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.mlkit.vision.barcode.common.Barcode;
@@ -61,6 +62,8 @@ public class VincularSensorActivity extends AppCompatActivity {
     private TextView textoReenviado;
     private final LogicaFakeVincular logica = new LogicaFakeVincular();
     private boolean desdePerfil;
+    // De dónde salió el código (escáner o escrito a mano): adónde vuelve la flecha
+    private View tarjetaEntrada;
     private CodigoSensor sensorLeido;   // null hasta que se escanea un código válido
 
     // -----------------------------------------------------------------------
@@ -109,7 +112,15 @@ public class VincularSensorActivity extends AppCompatActivity {
         findViewById(R.id.botonEscanearDeNuevo).setOnClickListener(vista -> escanear());
         findViewById(R.id.enlaceAyudaEsperando).setOnClickListener(vista -> abrirAyuda());
         findViewById(R.id.enlaceAyudaRechazada).setOnClickListener(vista -> abrirAyuda());
-        findViewById(R.id.botonVolver).setOnClickListener(vista -> salir());
+        tarjetaEntrada = tarjetaEscanear;
+        // La flecha y el botón «atrás» del teléfono vuelven al paso anterior
+        findViewById(R.id.botonVolver).setOnClickListener(vista -> volver());
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                volver();
+            }
+        });
         // Después del registro se puede seguir sin sensor y vincularlo luego
         // desde Inicio o Perfil (no está en Figma; para probar sin sensor)
         View enlaceMasTarde = findViewById(R.id.enlaceMasTarde);
@@ -165,6 +176,7 @@ public class VincularSensorActivity extends AppCompatActivity {
             mostrarErrorEscaneo(getString(R.string.vincular_error_codigo));
             return;
         }
+        tarjetaEntrada = tarjetaEscanear;
         mostrarSensor(codigo);
     }
 
@@ -179,6 +191,7 @@ public class VincularSensorActivity extends AppCompatActivity {
         CodigoSensor codigo = CodigoSensor.desdeTexto(campoCodigo.getText().toString());
         marcar(campoCodigo, errorCodigo, codigo != null ? null : getString(R.string.vincular_error_codigo_a_mano));
         if (codigo != null) {
+            tarjetaEntrada = tarjetaAMano;
             mostrarSensor(codigo);
         }
     }
@@ -362,6 +375,29 @@ public class VincularSensorActivity extends AppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
+    }
+
+    // -----------------------------------------------------------------------
+    // volver() -->
+    // What it does: the back arrow and the phone's back button go to the
+    //               previous step: from «by hand» to «scan»; from the sensor,
+    //               waiting or rejected card to where the code was entered
+    //               (scanner or written by hand, with the code still in the
+    //               field). From the first step it leaves the screen. Going
+    //               back does not cancel a pending request: scanning or
+    //               writing the code again asks for it again.
+    // -----------------------------------------------------------------------
+    private void volver() {
+        if (tarjetaAMano.getVisibility() == View.VISIBLE) {
+            mostrarSolo(tarjetaEscanear);
+        } else if (tarjetaSensor.getVisibility() == View.VISIBLE
+                || tarjetaEsperando.getVisibility() == View.VISIBLE
+                || tarjetaRechazada.getVisibility() == View.VISIBLE) {
+            textoReenviado.setVisibility(View.GONE);
+            mostrarSolo(tarjetaEntrada);
+        } else {
+            salir();
+        }
     }
 
     // -----------------------------------------------------------------------

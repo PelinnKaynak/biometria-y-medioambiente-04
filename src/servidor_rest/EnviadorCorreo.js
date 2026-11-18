@@ -3,6 +3,9 @@
 // Descripción: Crea la función que envía correos (recuperación de contraseña).
 //              Con SMTP configurado usa nodemailer; sin SMTP muestra el correo
 //              en la consola del servidor, para poder probar en local.
+//              Al arrancar comprueba la conexión con el servidor de correo y
+//              apunta en el log cada correo enviado o el motivo si falla,
+//              para saber qué pasa en el servidor de la UPV.
 //              Diseño en doc/servidor_rest_design.md. Tarea T016.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
@@ -23,6 +26,7 @@ const nodemailer = require('nodemailer');
 function crearEnviadorCorreo(config) {
 
     if (!config.host) {
+        console.warn('Correo sin configurar: falta SMTP_HOST');
         if (process.env.NODE_ENV === 'production') {
             return async () => {
                 throw new Error(
@@ -41,17 +45,26 @@ function crearEnviadorCorreo(config) {
         };
     }
 
+    const puerto = Number(config.puerto) || 587;
     const transporte = nodemailer.createTransport({
         host: config.host,
-        port: Number(config.puerto) || 587,
-        secure: Number(config.puerto) === 465,
-        auth: config.usuario ? { user: config.usuario, pass: config.contrasenya } : undefined
+        port: puerto,
+        secure: puerto === 465,
+        auth: config.usuario ? { user: config.usuario, pass: config.contrasenya } : undefined,
+        connectionTimeout: 15000
     });
+    // Comprobación al arrancar (no para el servidor si falla: solo lo apunta)
+    const donde = `${config.host}:${puerto}${config.usuario ? ` como ${config.usuario}` : ''}`;
+    transporte.verify()
+        .then(() => console.log(`Correo listo (${donde})`))
+        .catch((error) => console.error(`El correo NO funciona (${donde}): ${error.message}`));
+
     return async (destinatario, asunto, texto, extra = {}) => {
         await transporte.sendMail({
             from: config.remitente, to: destinatario, subject: asunto, text: texto,
             html: extra.html, attachments: extra.adjuntos
         });
+        console.log(`Correo enviado a ${destinatario}: ${asunto}`);
     };
 }
 
