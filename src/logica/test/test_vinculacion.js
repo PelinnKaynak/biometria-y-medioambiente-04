@@ -10,6 +10,7 @@
 
 const assert = require('assert');
 const { Logica, ocultarCorreo } = require('../Logica');
+const { crearCorreoVinculacion } = require('../CorreoVinculacion');
 const Seguridad = require('../Seguridad');
 const { CONFIG_BD_PRUEBAS, crearBDPruebas, vaciarTablas } = require('./bdPruebas');
 
@@ -61,6 +62,44 @@ describe('Logica (vinculación del sensor por correo)', function () {
 
     it('ocultarCorreo() deja ver solo la primera letra y el dominio (como la app)', function () {
         assert.strictEqual(ocultarCorreo('pkaynak@upv.edu.es'), 'p•••••@upv.edu.es');
+    });
+
+    it('crearCorreoVinculacion() muestra al solicitante y ofrece las dos respuestas en un diseño adaptable', function () {
+        const correo = crearCorreoVinculacion({
+            nombreSolicitante: 'Laura Martín',
+            correoSolicitante: 'laura@example.es',
+            numeroSerie: SERIE,
+            fecha: new Date('2026-11-18T16:40:00Z'),
+            enlaceSi: 'https://aeris.test/responder?token=token-prueba&respuesta=si',
+            enlaceNo: 'https://aeris.test/responder?token=token-prueba&respuesta=no',
+            horas: 48
+        });
+
+        assert.match(correo.html, /Laura Martín/);
+        assert.match(correo.html, /laura@example\.es/);
+        assert.match(correo.html, new RegExp(SERIE));
+        assert.match(correo.html, /Fecha de solicitud/);
+        assert.match(correo.html, /Sí, vincular el sensor/);
+        assert.match(correo.html, /No conozco a esta persona/);
+        assert.match(correo.html, /href="https:\/\/aeris\.test\/responder\?token=token-prueba&amp;respuesta=si"/);
+        assert.match(correo.html, /href="https:\/\/aeris\.test\/responder\?token=token-prueba&amp;respuesta=no"/);
+        assert.match(correo.html, /<meta name="viewport"/);
+        assert.match(correo.html, /width="100%"/);
+    });
+
+    it('crearCorreoVinculacion() escapa los datos del solicitante en el HTML', function () {
+        const correo = crearCorreoVinculacion({
+            nombreSolicitante: '<img src=x>',
+            correoSolicitante: 'persona@example.es',
+            numeroSerie: SERIE,
+            fecha: new Date('2026-11-18T16:40:00Z'),
+            enlaceSi: 'https://aeris.test/si',
+            enlaceNo: 'https://aeris.test/no',
+            horas: 48
+        });
+
+        assert.match(correo.html, /&lt;img src=x&gt;/);
+        assert.doesNotMatch(correo.html, /<img src=x>/);
     });
 
     it('solicitarVinculacion() deja la solicitud pendiente y manda el correo a quien compró el sensor', async function () {
