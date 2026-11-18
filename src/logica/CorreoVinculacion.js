@@ -1,12 +1,11 @@
 // ---------------------------------------------------------------------------
 // Fichero:     CorreoVinculacion.js
 // Descripción: Correo que recibe quien compró un sensor cuando alguien lo
-//              escanea y quiere vincularlo a su cuenta: «¿Vinculamos tu sensor
-//              a la cuenta de Laura?», con los datos de la petición y dos
-//              botones (sí / no conozco a esta persona). Mismo marco que los
-//              correos de bienvenida y de recuperación. Diseño de Figma
+//              escanea y quiere vincularlo a su cuenta, con los datos de la
+//              petición y los botones (sí / no conozco a esta persona).
+//              Mismo marco que los correos de bienvenida y recuperación. Diseño de Figma
 //              «Correo · confirmar la vinculación» (web).
-//              Diseño en doc/logica_design.md. Tarea T005.
+//              Diseño en doc/logica_design.md. Tareas T005, T038.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       14/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -52,38 +51,50 @@ function crearCorreoVinculacion(datos) {
         'El equipo de AERIS';
 
     const nombre = escaparHTML(nombreSolicitante);
+    const horasSeguras = escaparHTML(horas);
     const fila = (etiqueta, valor) => `
               <tr>
-                <td style="padding:4px 0;width:130px;font-size:14px;line-height:20px;color:#8992B8;">${etiqueta}</td>
-                <td style="padding:4px 0;font-size:14px;line-height:20px;color:#432E60;">${valor}</td>
+                <td style="padding:7px 8px 7px 0;width:38%;vertical-align:top;font-size:14px;line-height:20px;color:#6A6585;">${escaparHTML(etiqueta)}</td>
+                <td style="padding:7px 0;vertical-align:top;word-break:break-word;font-size:14px;line-height:20px;color:#432E60;">${escaparHTML(valor)}</td>
               </tr>`;
-    const html = marcoCorreo(asunto, `
-        <tr><td style="padding:16px 32px 0 32px;font-family:Arial,sans-serif;">
-          <h1 style="margin:0;font-size:24px;line-height:30px;color:#432E60;text-align:center;">¿Vinculamos tu sensor a la cuenta de ${nombre}?</h1>
-          <p style="margin:14px 0 0 0;font-size:15px;line-height:22px;color:#432E60;">
-            Hola. El sensor AERIS ${escaparHTML(numeroSerie)} se compró con este correo. ${nombre}
-            (${escaparHTML(correoSolicitante)}) lo ha escaneado y quiere vincularlo a su cuenta.
+    const html = marcoCorreo(escaparHTML(asunto), `
+        <tr><td style="padding:20px 24px 0 24px;font-family:Arial,sans-serif;">
+          <div style="font-size:12px;line-height:18px;font-weight:bold;letter-spacing:1px;color:#7958A7;text-align:center;">SOLICITUD DE VINCULACIÓN</div>
+          <h1 style="margin:8px 0 0;font-size:23px;line-height:29px;color:#432E60;text-align:center;">¿Vinculamos tu sensor?</h1>
+          <p style="margin:14px 0 0;font-size:15px;line-height:23px;color:#5C5478;word-break:break-word;">
+            Hola. <b style="color:#432E60;">${nombre}</b> (${escaparHTML(correoSolicitante)}) ha escaneado el sensor AERIS y quiere vincularlo a su cuenta.
           </p>
-          <p style="margin:12px 0 0 0;font-size:15px;line-height:22px;color:#432E60;">
-            Si se lo has regalado tú o lo va a usar esa persona, confírmalo. Desde ese momento sus mediciones aparecerán en su cuenta.
+          <p style="margin:10px 0 0;font-size:15px;line-height:23px;color:#5C5478;">
+            Si reconoces a esta persona y quieres autorizar la vinculación, confirma la solicitud. Sus mediciones aparecerán en su cuenta.
           </p>
         </td></tr>
-        <tr><td style="padding:18px 32px 0 32px;font-family:Arial,sans-serif;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F6FA;border-radius:12px;">
-            <tr><td style="padding:12px 16px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${fila('Sensor', escaparHTML(numeroSerie))}${fila('Quiere vincularlo', `${nombre} · ${escaparHTML(correoSolicitante)}`)}${fila('Solicitado', escaparHTML(cuando))}
+        <tr><td style="padding:18px 24px 0;font-family:Arial,sans-serif;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F5F6FA;border:1px solid #E3E5EF;border-radius:12px;">
+            <tr><td style="padding:10px 14px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              ${fila('Sensor AERIS', numeroSerie)}
+              ${fila('Solicitante', `${nombreSolicitante} · ${correoSolicitante}`)}
+              ${fila('Fecha de solicitud', cuando)}
             </table>
             </td></tr>
           </table>
         </td></tr>
-        <tr><td align="center" style="padding:24px 32px 0 32px;">
-          <a href="${escaparHTML(enlaceSi)}" style="display:block;padding:13px 20px;border-radius:12px;background:#7958A7;background:linear-gradient(90deg,#8A68BA,#7958A7);color:#FFFFFF;font:bold 15px/18px Arial,sans-serif;text-decoration:none;text-align:center;">Sí, vincular el sensor</a>
+        <tr><td style="padding:22px 24px 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#7958A7;background:linear-gradient(90deg,#8A68BA,#7958A7);border-radius:12px;">
+            <tr><td align="center" style="border-radius:12px;">
+              <a href="${escaparHTML(enlaceSi)}" style="display:block;padding:14px 12px;border-radius:12px;color:#FFFFFF;font:bold 15px/20px Arial,sans-serif;text-decoration:none;text-align:center;">Sí, vincular el sensor</a>
+            </td></tr>
+          </table>
         </td></tr>
-        <tr><td align="center" style="padding:12px 32px 0 32px;">
-          <a href="${escaparHTML(enlaceNo)}" style="display:block;padding:12px 20px;border-radius:12px;border:1px solid #7958A7;background:#FFFFFF;color:#7958A7;font:bold 15px/18px Arial,sans-serif;text-decoration:none;text-align:center;">No conozco a esta persona</a>
+        <tr><td style="padding:10px 24px 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #7958A7;border-radius:12px;">
+            <tr><td align="center" style="border-radius:12px;">
+              <a href="${escaparHTML(enlaceNo)}" style="display:block;padding:13px 12px;border-radius:12px;color:#7958A7;font:bold 15px/20px Arial,sans-serif;text-decoration:none;text-align:center;">No conozco a esta persona</a>
+            </td></tr>
+          </table>
         </td></tr>
-        <tr><td style="padding:16px 32px 0 32px;font-family:Arial,sans-serif;font-size:13px;line-height:19px;color:#8992B8;text-align:center;">
-          El enlace caduca en <b style="color:#432E60;">${horas} horas</b>. Si no haces nada, el sensor no se vinculará. Si no esperabas este correo, puedes ignorarlo.
+        <tr><td style="padding:16px 24px 0;font-family:Arial,sans-serif;font-size:13px;line-height:20px;color:#6A6585;text-align:center;">
+          El enlace caduca en <b style="color:#432E60;">${horasSeguras} horas</b>. Si no haces nada, el sensor no se vinculará. Si no esperabas este correo, puedes ignorarlo.
         </td></tr>`);
 
     return { asunto, texto, html, adjuntos: LOGOS };

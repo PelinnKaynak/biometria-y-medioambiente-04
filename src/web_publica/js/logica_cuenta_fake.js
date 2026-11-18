@@ -1,6 +1,7 @@
 // ------------------------------------------------------------
 // logica_cuenta_fake.js
-// Datos de prueba de la página Mi cuenta (T018 · H035).
+// Datos de prueba de la página Mi cuenta (T018 · H035) y del
+// estado de la vinculación del sensor (T040 · H037).
 // Tiene la misma interfaz que LogicaCuentaReal
 // (logica_cuenta_real.js), así la página se puede desarrollar
 // sin las rutas del servidor de T024.
@@ -10,6 +11,30 @@ var CLAVE_SESION_CUENTA = "aeris_usuario";
 
 var DIAS_POR_PERIODO = { semana: 7, mes: 30, "3meses": 90 };
 
+// Estado de la vinculación que guarda la lógica fake. Lo usará
+// también la página Vincular sensor (T045).
+var CLAVE_VINCULACION_FAKE = "aeris_vinculacion_fake";
+var ESTADOS_VINCULACION = ["sin_sensor", "pendiente", "rechazada", "caducada", "confirmada"];
+
+// Cuentas de prueba que ya tienen el sensor vinculado. Las
+// cuentas nuevas empiezan sin sensor.
+var CUENTAS_CON_SENSOR = ["laura@correo.es", "admin@aeris.es"];
+var CORREO_COMPRADOR_FAKE = "maria.lopez@gmail.com";
+var NODO_FAKE = "N-0412";
+var HORAS_PARA_CONFIRMAR = 48;
+
+// --------------------------------------------------------
+// --> estadoDeLaUrl() --> Text | null
+//
+// Solo para enseñar la página con la lógica fake: con
+// mi_cuenta.html?vinculacion=pendiente se ve ese estado.
+// --------------------------------------------------------
+function estadoDeLaUrl() {
+    if (typeof window === "undefined" || !window.location) return null;
+    const estado = new URLSearchParams(window.location.search).get("vinculacion");
+    return ESTADOS_VINCULACION.includes(estado) ? estado : null;
+}
+
 class LogicaCuentaFake {
 
     // --------------------------------------------------------
@@ -18,9 +43,10 @@ class LogicaCuentaFake {
     // ahora se puede fijar en las pruebas para que las fechas
     // de los datos de ejemplo no dependan del día.
     // --------------------------------------------------------
-    constructor(retardo_ms = 250, ahora = new Date()) {
+    constructor(retardo_ms = 250, ahora = new Date(), estadoForzado = estadoDeLaUrl()) {
         this.retardo_ms = retardo_ms;
         this.ahora = ahora;
+        this.estadoForzado = estadoForzado;
         this.correosOcupados = ["admin@aeris.es"];
         this.datosEditados = null;
     }
@@ -141,6 +167,58 @@ class LogicaCuentaFake {
     }
 
     // --------------------------------------------------------
+    // obtenerVinculacion() --> r: ResultadoVinculacion <--
+    //
+    // ResultadoVinculacion = ( correcto: B, vinculacion: Vinculacion | null, error: Text )
+    // Vinculacion = ( estado: Text, nodo: Text | null, emailConfirmacion: Text | null,
+    //                 fechaSolicitud: Text (ISO) | null, caducaEn: Text (ISO) | null )
+    // estado = "sin_sensor" | "pendiente" | "rechazada" | "caducada" | "confirmada"
+    // --------------------------------------------------------
+    async obtenerVinculacion() {
+        await esperarCuenta(this.retardo_ms);
+        const usuario = this.usuarioActual();
+        if (!usuario) return { correcto: false, vinculacion: null, error: "Inicia sesión para ver tu cuenta" };
+
+        const guardada = leerVinculacionFake();
+        const estado = this.estadoForzado || (guardada && guardada.estado) ||
+            (CUENTAS_CON_SENSOR.includes(String(usuario.correo).toLowerCase()) ? "confirmada" : "sin_sensor");
+
+        if (estado === "sin_sensor") {
+            return { correcto: true, error: "",
+                vinculacion: { estado, nodo: null, emailConfirmacion: null, fechaSolicitud: null, caducaEn: null } };
+        }
+        const fechaSolicitud = (guardada && guardada.fechaSolicitud) ||
+            new Date(this.ahora.getTime() - 20 * 60000).toISOString();
+        return {
+            correcto: true,
+            error: "",
+            vinculacion: {
+                estado,
+                nodo: (guardada && guardada.nodo) || NODO_FAKE,
+                emailConfirmacion: (guardada && guardada.emailConfirmacion) || CORREO_COMPRADOR_FAKE,
+                fechaSolicitud,
+                caducaEn: new Date(new Date(fechaSolicitud).getTime() + HORAS_PARA_CONFIRMAR * 3600000).toISOString()
+            }
+        };
+    }
+
+    // --------------------------------------------------------
+    // reenviarCorreo() --> r: ResultadoReenvio <--
+    //
+    // ResultadoReenvio = ( correcto: B, emailConfirmacion: Text | null, error: Text )
+    // Solo se puede reenviar si hay una vinculación pendiente.
+    // --------------------------------------------------------
+    async reenviarCorreo() {
+        const r = await this.obtenerVinculacion();
+        if (!r.correcto) return { correcto: false, emailConfirmacion: null, error: r.error };
+        if (r.vinculacion.estado !== "pendiente") {
+            return { correcto: false, emailConfirmacion: null, error: "No hay ninguna vinculación pendiente" };
+        }
+        guardarVinculacionFake({ ...r.vinculacion, fechaSolicitud: this.ahora.toISOString() });
+        return { correcto: true, emailConfirmacion: r.vinculacion.emailConfirmacion, error: "" };
+    }
+
+    // --------------------------------------------------------
     // datos: DatosPerfil --> actualizarDatos() --> r: ResultadoEdicion <--
     //
     // DatosPerfil = ( nombre: Text, apellidos: Text, correo: Text )
@@ -173,10 +251,22 @@ function guardarEnSesion(cambios) {
     sessionStorage.setItem(CLAVE_SESION_CUENTA, JSON.stringify({ ...JSON.parse(guardado), ...cambios }));
 }
 
+function leerVinculacionFake() {
+    const guardada = sessionStorage.getItem(CLAVE_VINCULACION_FAKE);
+    return guardada ? JSON.parse(guardada) : null;
+}
+
+function guardarVinculacionFake(vinculacion) {
+    sessionStorage.setItem(CLAVE_VINCULACION_FAKE, JSON.stringify(vinculacion));
+}
+
 function esperarCuenta(ms) {
     return new Promise(resolver => setTimeout(resolver, ms));
 }
 
 if (typeof module !== "undefined") {
-    module.exports = { LogicaCuentaFake, CLAVE_SESION_CUENTA, guardarEnSesion };
+    module.exports = {
+        LogicaCuentaFake, CLAVE_SESION_CUENTA, CLAVE_VINCULACION_FAKE, ESTADOS_VINCULACION,
+        guardarEnSesion, guardarVinculacionFake
+    };
 }

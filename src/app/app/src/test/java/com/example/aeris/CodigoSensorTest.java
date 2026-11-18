@@ -38,6 +38,19 @@ public class CodigoSensorTest {
     }
 
     @Test
+    public void soloElNumeroDeSerie_seLeeSinSensibilidad() {
+        // A mano basta con el número de serie: la sensibilidad ya está en el servidor
+        CodigoSensor c = CodigoSensor.desdeTexto("  092021011003 ");
+        assertNotNull(c);
+        assertEquals("092021011003", c.numeroSerie);
+        assertEquals("", c.fecha);
+        assertNull(c.sensibilidad);
+        assertNull(CodigoSensor.desdeTexto("09202101100"));      // 11 cifras
+        assertNull(CodigoSensor.desdeTexto("0920210110033"));    // 13 cifras
+        assertNull(CodigoSensor.desdeTexto("09202101100A"));
+    }
+
+    @Test
     public void espaciosDeMas_seIgnoran() {
         assertNotNull(CodigoSensor.desdeTexto("  092021010920  110406 03   2109 -44.75 \n"));
     }

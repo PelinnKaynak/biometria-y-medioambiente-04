@@ -1,7 +1,9 @@
 // ------------------------------------------------------------
 // mi_cuenta.js
 // Controlador de la página Mi cuenta del portador
-// (mi_cuenta.html, T018 · H035).
+// (mi_cuenta.html, T018 · H035). Si el sensor todavía no está
+// vinculado, enseña los pasos o el estado de la vinculación
+// (T040 · H037).
 // ------------------------------------------------------------
 
 const reglasCuenta = typeof module !== "undefined" ? require("./validacion") : window;
@@ -139,6 +141,64 @@ function calcularGrafica(puntos, umbral = UMBRAL_AVISO) {
     };
 }
 
+// --------------------------------------------------------
+// correo: Text --> enmascararCorreo() --> Text
+//
+// "maria.lopez@gmail.com" → "m•••••@gmail.com". El correo del
+// comprador puede ser de otra persona, así que no se enseña
+// entero.
+// --------------------------------------------------------
+function enmascararCorreo(correo) {
+    const texto = String(correo || "");
+    const arroba = texto.indexOf("@");
+    if (arroba < 1) return texto;
+    return texto.charAt(0) + "•••••" + texto.slice(arroba);
+}
+
+// --------------------------------------------------------
+// vinculacion: Vinculacion --> textosVinculacion() --> TextosVinculacion
+//
+// TextosVinculacion = ( subtitulo: Text, titulo: Text, texto: Text,
+//                       estadoCorreo: Text, tipo: "pendiente" | "rechazada" )
+// Textos de la página según el estado de la vinculación.
+// Para "sin_sensor" solo hace falta el subtítulo.
+// --------------------------------------------------------
+function textosVinculacion(vinculacion) {
+    const correo = enmascararCorreo(vinculacion.emailConfirmacion);
+    const nodo = vinculacion.nodo || "";
+    switch (vinculacion.estado) {
+        case "sin_sensor":
+            return { subtitulo: "Ya tienes cuenta. Solo te falta vincular tu sensor para ver tus datos. Puedes hacerlo aquí mismo o desde la app." };
+        case "pendiente":
+            return {
+                tipo: "pendiente",
+                subtitulo: "Ya has escaneado tu sensor. Falta que se confirme la vinculación por correo.",
+                titulo: "Esperando la confirmación por correo",
+                texto: "Hemos enviado un correo a " + correo + ", el correo con el que se compró el sensor " + nodo +
+                    ". Cuando lo confirme, tu sensor empezará a funcionar. El enlace caduca en 48 horas.",
+                estadoCorreo: "Pendiente · " + correo
+            };
+        case "rechazada":
+            return {
+                tipo: "rechazada",
+                subtitulo: "No se ha podido vincular el sensor " + nodo + ".",
+                titulo: "Vinculación rechazada",
+                texto: "Quien compró el sensor ha pulsado «No conozco a esta persona», o han pasado 48 horas sin respuesta. Puedes volver a intentarlo.",
+                estadoCorreo: "Rechazada"
+            };
+        case "caducada":
+            return {
+                tipo: "rechazada",
+                subtitulo: "No se ha podido vincular el sensor " + nodo + ".",
+                titulo: "La vinculación ha caducado",
+                texto: "Han pasado 48 horas sin que se confirmara el correo. Puedes volver a intentarlo.",
+                estadoCorreo: "Caducada"
+            };
+        default:
+            return null;
+    }
+}
+
 // ============================================================
 // Pintar la página
 // ============================================================
@@ -226,6 +286,66 @@ function pintarResumen(resumen, ahora = new Date()) {
     pintarLugares(resumen.lugares);
     pintarRecompensas(resumen);
     pintarUltimasMediciones(resumen.ultimasMediciones);
+}
+
+// --------------------------------------------------------
+// vinculacion: Vinculacion | null --> pintarVinculacion() --> B
+//
+// Si el sensor no está vinculado todavía, oculta los datos y
+// enseña los pasos o el estado de la vinculación, y devuelve
+// true. Si está confirmada, o el servidor aún no tiene la ruta
+// (vinculacion null), no toca nada y devuelve false.
+// --------------------------------------------------------
+function pintarVinculacion(vinculacion) {
+    const textos = vinculacion ? textosVinculacion(vinculacion) : null;
+    const sinVincular = Boolean(textos);
+
+    mostrar("accesos", sinVincular);
+    mostrar("vista-sin-sensor", sinVincular && vinculacion.estado === "sin_sensor");
+    const conSolicitud = sinVincular && vinculacion.estado !== "sin_sensor";
+    mostrar("aviso-vinculacion", conSolicitud);
+    mostrar("tarjeta-estado", conSolicitud);
+    if (!sinVincular) return false;
+
+    for (const id of ["sin-datos", "indicadores", "rejilla-cuenta"]) mostrar(id, false);
+    $("estado-nodo").textContent = textos.subtitulo;
+    if (!conSolicitud) return true;
+
+    const pendiente = textos.tipo === "pendiente";
+    const aviso = $("aviso-vinculacion");
+    aviso.className = "aviso-vinculacion aviso-" + textos.tipo;
+    $("icono-aviso").textContent = pendiente ? "!" : "×";
+    $("titulo-aviso").textContent = textos.titulo;
+    $("texto-aviso").textContent = textos.texto;
+    mostrar("resultado-reenvio", false);
+    mostrar("boton-reenviar", pendiente);
+    mostrar("boton-vincular-de-nuevo", !pendiente);
+
+    $("fecha-escaneo").textContent = vinculacion.fechaSolicitud ? formatearFecha(vinculacion.fechaSolicitud, true) : "";
+    $("estado-correo").textContent = textos.estadoCorreo;
+    return true;
+}
+
+// --------------------------------------------------------
+// logica: LogicaCuenta, correoActual: Text | null --> reenviarCorreo() --> B
+//
+// Vuelve a mandar el correo de confirmación al comprador y
+// dice si ha ido bien.
+// --------------------------------------------------------
+async function reenviarCorreo(logica, correoActual = null) {
+    const boton = $("boton-reenviar");
+    const resultado = $("resultado-reenvio");
+    boton.disabled = true;
+    const r = await logica.reenviarCorreo();
+    boton.disabled = false;
+
+    const correo = r.emailConfirmacion || correoActual;
+    resultado.textContent = !r.correcto ? r.error
+        : correo ? "Te lo hemos vuelto a enviar a " + enmascararCorreo(correo) + "."
+            : "Te lo hemos vuelto a enviar.";
+    resultado.classList.toggle("error", !r.correcto);
+    mostrar("resultado-reenvio");
+    return r.correcto;
 }
 
 // --------------------------------------------------------
@@ -455,7 +575,13 @@ async function cargarCuenta(logica, irA) {
         return null;
     }
 
-    const [rPerfil, rResumen] = await Promise.all([logica.obtenerPerfil(), logica.obtenerResumen()]);
+    const [rPerfil, rResumen, rVinculacion] = await Promise.all([
+        logica.obtenerPerfil(),
+        logica.obtenerResumen(),
+        typeof logica.obtenerVinculacion === "function"
+            ? logica.obtenerVinculacion()
+            : { correcto: true, vinculacion: null, error: "" }
+    ]);
     mostrar("cargando", false);
 
     if (!rPerfil.correcto) {
@@ -469,10 +595,13 @@ async function cargarCuenta(logica, irA) {
         return null;
     }
 
-    const estado = { perfil: rPerfil.perfil };
+    const vinculacion = rVinculacion.correcto ? rVinculacion.vinculacion : null;
+    const estado = { perfil: rPerfil.perfil, vinculacion };
     pintarPerfil(estado.perfil);
-    pintarResumen(rResumen.correcto ? rResumen.resumen : null);
     mostrar("cuenta");
+    if (pintarVinculacion(vinculacion)) return estado;
+
+    pintarResumen(rResumen.correcto ? rResumen.resumen : null);
 
     if (rResumen.correcto && rResumen.resumen) {
         await cambiarPeriodo(logica, "mes");
@@ -517,6 +646,8 @@ async function iniciarMiCuenta() {
         boton.addEventListener("click", () => cambiarPeriodo(logica, boton.dataset.periodo));
     }
     $("boton-editar").addEventListener("click", () => abrirEdicion(estado.perfil));
+    $("boton-reenviar").addEventListener("click", () =>
+        reenviarCorreo(logica, estado.vinculacion && estado.vinculacion.emailConfirmacion));
     $("cancelar-perfil").addEventListener("click", cerrarEdicion);
     $("formulario-perfil").addEventListener("submit", evento => guardarPerfil(evento, logica, estado));
 }
@@ -525,7 +656,7 @@ if (typeof module !== "undefined") {
     module.exports = {
         nivelOzono, formatearNumero, formatearFecha, textoHace, textoVariacion, nombreCorto, textoPlan,
         calcularGrafica, validarPerfil, cargarCuenta, guardarPerfil, cambiarPeriodo, conectarCabecera,
-        abrirEdicion, UMBRAL_AVISO
+        abrirEdicion, enmascararCorreo, textosVinculacion, pintarVinculacion, reenviarCorreo, UMBRAL_AVISO
     };
 } else {
     document.addEventListener("DOMContentLoaded", iniciarMiCuenta);
