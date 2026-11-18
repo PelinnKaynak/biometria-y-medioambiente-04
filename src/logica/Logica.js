@@ -4,7 +4,8 @@
 //              inicio de sesión, comprobación de la sesión y del rol, y
 //              recuperación de la contraseña, y el aviso de alertas del
 //              perfil, la edición de los datos y la foto (T010), y la
-//              vinculación de sensores confirmada por correo (T005). Es la
+//              vinculación de sensores confirmada por correo (T005). Las
+//              incidencias (T041) están en Incidencias.js. Es la
 //              única parte que habla con la base de datos (MySQL, tablas
 //              Usuarios y Sensores). Las sesiones y los enlaces de
 //              recuperación y de vinculación son tokens firmados: no usan tablas.
@@ -21,6 +22,7 @@ const Validador = require('./ValidadorUsuario');
 const { crearCorreoBienvenida } = require('./CorreoBienvenida');
 const { crearCorreoRecuperacion } = require('./CorreoRecuperacion');
 const { crearCorreoVinculacion } = require('./CorreoVinculacion');
+const { Incidencias } = require('./Incidencias');
 
 const ROL_PORTADOR = 'portador';        // rol de quien se registra desde la app
 const DURACION_SESION_SEGUNDOS = 30 * 24 * 60 * 60;      // 30 días
@@ -37,7 +39,8 @@ const ESTADO_RECHAZADA = 'rechazada';
 // ErrorLogica: error con un código que el servidor REST traduce a HTTP.
 //   codigo ∈ { DATOS_NO_VALIDOS, CORREO_YA_REGISTRADO, CORREO_NO_REGISTRADO,
 //              CREDENCIALES_INCORRECTAS, TOKEN_NO_VALIDO,
-//              SENSOR_NO_REGISTRADO, SENSOR_YA_VINCULADO, SIN_SOLICITUD }
+//              SENSOR_NO_REGISTRADO, SENSOR_YA_VINCULADO, SIN_SOLICITUD,
+//              INCIDENCIA_NO_EXISTE }
 // ---------------------------------------------------------------------------
 class ErrorLogica extends Error {
     constructor(codigo, mensaje, campos = []) {
@@ -96,6 +99,7 @@ class Logica {
         this.urlRestablecer = urlRestablecer;
         this.claveTokens = claveTokens;
         this.urlVinculacion = urlVinculacion || `${new URL(urlRestablecer).origin}/responderVinculacion`;
+        this.incidencias = new Incidencias(this);     // T041: logica.incidencias.crear(…), …
     }
 
     // -----------------------------------------------------------------------
