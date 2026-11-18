@@ -3,8 +3,8 @@
 // Descripción: Rutas REST de usuarios y autenticación. Cada ruta lee la
 //              petición, llama a la lógica y traduce el resultado a HTTP.
 //              Contrato completo en doc/servidor_rest_design.md. Tareas T016,
-//              T010, T005 (vinculación del sensor confirmada por correo) y
-//              T041 (incidencias).
+//              T010, T005 (vinculación del sensor confirmada por correo),
+//              T041 (incidencias) y T017 (mediciones).
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -28,6 +28,8 @@ const CODIGOS_HTTP = {
     SENSOR_NO_REGISTRADO: 404,
     SIN_SOLICITUD: 404,
     INCIDENCIA_NO_EXISTE: 404,
+    SIN_MEDICIONES: 404,
+    SENSOR_NO_ES_TUYO: 403,
     CORREO_YA_REGISTRADO: 409,
     SENSOR_YA_VINCULADO: 409
 };
@@ -54,7 +56,8 @@ function cargarReglasREST(servidor, logica) {
     }));
 
     // GET /usuarioActual  (Authorization: Bearer <token>)
-    //   200 { idUsuario, nombre, apellidos, correo, rol, fechaAlta, alertas, premiumHasta, foto } · 401
+    //   200 { idUsuario, nombre, apellidos, correo, rol, fechaAlta, alertas, premiumHasta, foto,
+    //         sensor, numeroSerie } · 401        (sensor y numeroSerie: null si no tiene sensor, T017)
     servidor.get('/usuarioActual', requiereSesion(logica), envolver(async (peticion, respuesta) => {
         respuesta.status(200).json(await logica.obtenerUsuario(peticion.usuario.idUsuario));
     }));
@@ -208,6 +211,33 @@ function cargarReglasREST(servidor, logica) {
             respuesta.status(200).json(await logica.incidencias.responder(idIncidencia, { respuesta: texto, estado },
                 peticion.usuario.idUsuario));
         }));
+
+    // ---- Mediciones (T017) · la app las recibe del nodo por Bluetooth ----
+
+    // POST /guardarMedicion  { numeroSerie, contaminante?, valor, latitud, longitud, fecha }  🔒
+    //   numeroSerie: el del UUID de la trama ("AERI" + 12 cifras); contaminante: "O3" si no se dice;
+    //   valor en µg/m³ (0..2000); fecha ISO o milisegundos (como mucho 7 días atrás).
+    //   201 { medicion, nueva: true } · 200 { medicion, nueva: false } (ya estaba guardada: no reenviar)
+    //   400 { error, campos } · 401 · 403 el sensor no es suyo · 404 sensor no registrado
+    servidor.post('/guardarMedicion', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const resultado = await logica.mediciones.guardar(peticion.usuario.idUsuario, peticion.body);
+        respuesta.status(resultado.nueva ? 201 : 200).json(resultado);
+    }));
+
+    // GET /ultimasMediciones?cantidad=5  🔒
+    //   200 [ Medicion ] del usuario, la más nueva primero (cantidad: 5 si no se dice, como mucho 100)
+    //   400 cantidad no válida · 401
+    servidor.get('/ultimasMediciones', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const cantidad = textoDeConsulta(peticion.query.cantidad);
+        respuesta.status(200).json(await logica.mediciones.ultimasDeUsuario(peticion.usuario.idUsuario,
+            cantidad === undefined ? undefined : Number(cantidad)));
+    }));
+
+    // GET /ultimaMedicion  (pública, sin sesión: H006)
+    //   200 Medicion (la más nueva de todos los sensores, sin datos de quién la tomó) · 404 aún no hay
+    servidor.get('/ultimaMedicion', envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.mediciones.ultima());
+    }));
 }
 
 // valor: Texto | Lista | undefined --> textoDeConsulta() --> Texto | undefined

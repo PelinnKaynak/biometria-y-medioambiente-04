@@ -124,7 +124,11 @@ CREATE TABLE IF NOT EXISTS Mediciones (
     CONSTRAINT fk_mediciones_contaminantes
         FOREIGN KEY (idContaminante)
         REFERENCES Contaminantes(idContaminante)
-        ON DELETE RESTRICT
+        ON DELETE RESTRICT,
+
+    -- Una medición se guarda una sola vez aunque la app la reenvíe (T017)
+    CONSTRAINT uk_mediciones_unica
+        UNIQUE (idSensor, idContaminante, fechaHora)
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------
@@ -165,6 +169,14 @@ CREATE TABLE IF NOT EXISTS Incidencias (
     CONSTRAINT ck_incidencias_estado
         CHECK (estado IN ('abierta', 'en curso', 'resuelta'))
 ) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------
+-- Contaminantes (T017). Los nodos AERIS miden ozono. Umbrales en
+-- µg/m³: valor guía de la OMS (100), umbral de información (180) y
+-- umbral de alerta (240), los mismos que el mapa y la app.
+-- ---------------------------------------------------------------
+INSERT IGNORE INTO Contaminantes (nombre, unidad, umbralModerado, umbralMalo, umbralMuyMalo)
+VALUES ('O3', 'µg/m³', 100, 180, 240);
 
 -- ---------------------------------------------------------------
 -- Sensores de prueba (T005, T004). En la app no hay compra: se dan

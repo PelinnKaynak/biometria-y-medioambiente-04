@@ -20,7 +20,7 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 |---|---|---|
 | `POST /registrarUsuario` | `{ nombre, apellidos, correo, contrasena }` | **201** `{ idUsuario, token, rol, nombre }` · **400** `{ error, campos }` · **409** correo ya registrado |
 | `POST /iniciarSesion` | `{ correo, contrasena }` | **200** `{ idUsuario, token, rol, nombre }` · **401** correo o contraseña incorrectos |
-| `GET /usuarioActual` 🔒 | — | **200** `{ idUsuario, nombre, apellidos, correo, rol, fechaAlta, alertas, premiumHasta, foto }` · **401** |
+| `GET /usuarioActual` 🔒 | — | **200** `{ idUsuario, nombre, apellidos, correo, rol, fechaAlta, alertas, premiumHasta, foto, sensor, numeroSerie }` · **401** — `sensor` (nombre) y `numeroSerie` del sensor vinculado, o `null` (T017) |
 | `POST /cambiarAlertas` 🔒 | `{ alertas: true \| false }` | **204** guardado · **400** valor no válido · **401** — interruptor «Notificaciones» del perfil (T010) |
 | `POST /actualizarDatos` 🔒 | `{ nombre, apellidos, correo }` | **200** `{ nombre, apellidos, correo }` · **400** `{ error, campos }` · **409** el correo es de otra cuenta · **401** — «Editar mis datos» (T010) |
 | `POST /cambiarContrasenya` 🔒 | `{ contrasenaActual, contrasenaNueva }` | **200** `{ idUsuario, token, rol, nombre }` (sesión nueva) · **400** contraseña débil · **403** la contraseña actual no es correcta · **401** (T010) |
@@ -38,12 +38,16 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `GET /incidencias?estado=…&tipo=…` 🔒👷 | — | **200** `[ IncidenciaGestion ]` · **400** filtro no válido · **401** · **403** — pantalla Incidencias del panel (T041, T044) |
 | `GET /numeroIncidenciasAbiertas` 🔒👷 | — | **200** `{ abiertas: N }` (número del menú del panel) · **401** · **403** (T041) |
 | `GET /incidencia?id=N` 🔒👷 | — | **200** `IncidenciaGestion` · **404** no existe · **401** · **403** (T041) |
+| `POST /guardarMedicion` 🔒 | `{ numeroSerie, contaminante?, valor, latitud, longitud, fecha }` | **201** `{ medicion: Medicion, nueva: true }` · **200** `{ medicion, nueva: false }` ya estaba guardada · **400** `{ error, campos }` · **403** el sensor no es suyo · **404** sensor no registrado · **401** — la app, con lo que recibe del nodo por Bluetooth (T017) |
+| `GET /ultimasMediciones?cantidad=N` 🔒 | — | **200** `[ Medicion ]` del usuario, la más nueva primero (5 si no se dice, como mucho 100) · **400** cantidad no válida · **401** — pantalla de inicio de la app (T017) |
+| `GET /ultimaMedicion` | — | **200** `Medicion` (la más nueva de todos los sensores) · **404** aún no hay — pública (T017, H006) |
 | `POST /responderIncidencia` 🔒👷 | `{ idIncidencia, respuesta?, estado? }` | **200** `IncidenciaGestion` · **400** `{ error, campos }` · **404** · **401** · **403** — con respuesta se guarda quién responde (el usuario de la sesión), se manda por correo al usuario y, si no se indica estado, pasa a «resuelta» (T041) |
 
 👷 = solo técnicos y administradores (rol `tecnico` o `administrador`).
 
 `Incidencia = { idIncidencia, tipo, asunto, descripcion, estado, respuesta, responsable: { nombre, rol } | null, fechaCreacion, fechaRespuesta, sensor: { idSensor, numeroSerie } | null }` — `responsable` es quien respondió (para «Respuesta de Marc (técnico)»).
 `IncidenciaGestion = Incidencia + usuario: { idUsuario, nombre, apellidos, correo }`, en `responsable` también `idUsuario` y, en `sensor`, también `nombre, estado, bateria, ultimaConexion, necesitaCalibracion`.
+`Medicion = { idMedicion, contaminante, valor, unidad, fecha, latitud, longitud }` — `fecha` en ISO (UTC); nunca dice quién la tomó.
 
 Errores comunes: **400** JSON mal formado · **401** sin sesión · **403** el rol no tiene permiso · **404** ruta que no existe · **500** error del servidor (sin detalles).
 
@@ -111,6 +115,7 @@ servidor.get('/usuarios', requiereSesion(logica, ['administrador', 'tecnico']), 
 - **Sin SMTP** (`SMTP_HOST` vacío) el correo de recuperación se muestra en la consola del servidor en lugar de enviarse. Así se puede probar en local sin una cuenta de correo.
 - **Vinculación por correo (T005):** el GET del enlace del correo **no cambia nada**: solo enseña la pregunta con un botón, y el botón hace el POST. Así, si el programa de correo (por ejemplo, Outlook de la UPV) abre los enlaces solo para revisarlos, no se vincula ni se rechaza nada sin que la persona pulse. Las páginas las monta `PaginaVinculacion.js`, con los colores de AERIS.
 - **`URL_VINCULACION`** (en `.env`, opcional): dirección que llevan los botones del correo. Si no se pone, se usa el mismo servidor que `URL_RESTABLECER` + `/responderVinculacion`. En local es `http://localhost:8080/…` (el correo hay que abrirlo en el ordenador del servidor); en el servidor de la UPV es `https://pfermar1.upv.edu.es/responderVinculacion`, así que el correo se puede abrir desde cualquier sitio, también desde el móvil.
+- **Mediciones (T017):** la app recibe las tramas del nodo (`doc/arduino_design.md`), se queda con las de `numeroSerie` de `/usuarioActual`, les pone la hora y la ubicación del móvil y las envía con `POST /guardarMedicion`. `numeroSerie` son las 12 cifras que van detrás de «AERI» en el UUID. Si no hay conexión, las guarda y las reenvía después: el servidor no duplica una medición del mismo sensor, contaminante y segundo, y responde **200** con `nueva: false` para que la app la borre igualmente. Se rechazan (y se apuntan en la consola) las que tienen datos que faltan o fuera de rango: valor de 0 a 2000 µg/m³, latitud y longitud válidas y fecha de los últimos 7 días (con 5 min de margen hacia el futuro).
 - **Incidencias (T041):** la misma API sirve a la app (pantalla Ayuda, T043) y a la web (página Ayuda, T042, y pantalla Incidencias del panel, T044). Los técnicos y los administradores ven todas; cada usuario solo las suyas (`/misIncidencias`). En `/incidencias` un parámetro vacío cuenta como no enviado y uno repetido da 400. Con la palabra «en curso» hay que codificar el espacio (`estado=en%20curso`).
 - **Puerto 8080:** la app lo usa en el emulador como `http://10.0.2.2:8080` (`LogicaFakeRegistro.URL_SERVIDOR`).
 - **El registro abre sesión:** `POST /registrarUsuario` ya devuelve el token, para que la app no tenga que iniciar sesión justo después de registrarse.
@@ -122,4 +127,4 @@ servidor.get('/usuarios', requiereSesion(logica, ['administrador', 'tecnico']), 
 
 - **Lenguaje:** JavaScript (Node.js 18 o superior), Express 4.
 - **Cabecera de fichero** y **cabecera de cada función** con su diseño lógico y una línea `What it does:`.
-- **Tests automáticos (mocha):** `npm test` desde `src/servidor_rest`. Arrancan el servidor en un puerto libre con la BD de pruebas `aeris_test` y hacen peticiones HTTP reales a cada ruta (códigos 200/201/204/400/401/403/404/409). La vinculación y las incidencias tienen sus propios ficheros, `test_api_vinculacion.js` y `test_api_incidencias.js`.
+- **Tests automáticos (mocha):** `npm test` desde `src/servidor_rest`. Arrancan el servidor en un puerto libre con la BD de pruebas `aeris_test` y hacen peticiones HTTP reales a cada ruta (códigos 200/201/204/400/401/403/404/409). La vinculación, las incidencias y las mediciones tienen sus propios ficheros: `test_api_vinculacion.js`, `test_api_incidencias.js` y `test_api_mediciones.js`.

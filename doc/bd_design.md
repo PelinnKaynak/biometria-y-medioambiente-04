@@ -70,7 +70,11 @@ Como no hay compra en la app, el script mete dos sensores de prueba comprados co
 | `idContaminante` | INT | FK → Contaminantes, NOT NULL | Qué se midió |
 | `valorMedicion` | DOUBLE | NOT NULL | Valor medido |
 | `ubicacion` | POINT | NOT NULL | Dónde se midió |
-| `fechaHora` | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Cuándo se midió |
+| `fechaHora` | TIMESTAMP | NOT NULL, DEFAULT CURRENT_TIMESTAMP | Cuándo se midió (la hora del móvil al recibir la trama) |
+
+Clave única `uk_mediciones_unica (idSensor, idContaminante, fechaHora)`: una medición reenviada por la app (sin conexión) no se guarda dos veces (T017). `ubicacion` es `POINT(longitud, latitud)`.
+
+El script mete en `Contaminantes` el ozono: `O3`, en µg/m³, con los umbrales 100 (valor guía de la OMS), 180 (información) y 240 (alerta).
 
 ## Tabla `Incidencias` (T041)
 
@@ -107,6 +111,8 @@ Las que el usuario envía desde Ayuda (app y web). Las reciben y las responden l
 **Si la BD ya estaba creada antes de T010:** importar también `src/bd/actualizar_T010.sql`, que añade la columna `foto` sin borrar los usuarios.
 
 **Si la BD ya estaba creada** (con la tabla `Sensores` antigua de T005 o con la de T015 sin las columnas de vinculación): importar primero `src/bd/usuarios.sql` y después `src/bd/actualizar_T005.sql`. Añade las columnas que falten y el sensor de prueba sin borrar nada. Se puede importar más de una vez. Usa sintaxis de MariaDB (la de XAMPP y la del servidor de la UPV).
+
+**Si la BD ya estaba creada antes de T017:** importar `src/bd/actualizar_T017.sql`, que añade el ozono a `Contaminantes` y la clave única de `Mediciones`. Se puede importar más de una vez.
 
 **Si la BD ya estaba creada antes de T041:** importar `src/bd/actualizar_T041.sql`, que crea la tabla `Incidencias` sin borrar nada. Si ya se había importado una versión anterior (sin `asunto` ni `idResponsable`), borrar antes la tabla con `DROP TABLE Incidencias;`.
 

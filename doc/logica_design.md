@@ -182,6 +182,7 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   - `test_logica.js`: registro, inicio de sesión, tokens caducados o modificados, roles, recuperación de contraseña.
   - `test_vinculacion.js`: vinculación del sensor por correo (T005).
   - `test_incidencias.js`: incidencias (T041).
+  - `test_mediciones.js`: mediciones (T017).
 - **Foto de perfil (T010):** se guarda en la columna `foto` de `Usuarios` como texto base64 (la app la reduce antes a un JPEG de 256×256, unos 30 KB), para que se vea en cualquier teléfono. No hace falta otra tabla.
 - **Cambiar la contraseña (T010):** pide la contraseña actual. Como el token lleva una huella del hash, al cambiarla se cierran todas las sesiones; por eso se devuelve un token nuevo para el teléfono que la ha cambiado.
 - **Correo de bienvenida (T002/T016):** al registrarse, `registrarUsuario()` llama a `enviarBienvenida()` sin esperarla: el registro responde enseguida y, si el correo falla (por ejemplo, Gmail no responde), la cuenta se crea igual y el error solo se escribe en la consola del servidor. El correo lo monta `CorreoBienvenida.crearCorreoBienvenida(nombre)` en español: texto plano y HTML con los colores de la app, el logo de AERIS arriba, una presentación general de la app y algunas de sus funciones (mapa, alertas, historial, previsión de ozono, rutas limpias, lugares, puntos…) y el logo de SenseTech al pie. Los logos (`src/logica/img/`) van incrustados en el correo (`cid:`), así se ven aunque el servidor no esté en internet. El nombre se escapa (`escaparHTML()`) para que no pueda meter HTML.
@@ -217,4 +218,18 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
                          --> incidencias.responder() --> IncidenciaGestion       | DATOS_NO_VALIDOS, INCIDENCIA_NO_EXISTE
   Incidencia = ( idIncidencia, tipo, asunto, descripcion, estado, respuesta, responsable ( nombre, rol ) | null, fechaCreacion, fechaRespuesta, sensor | null )
   IncidenciaGestion = Incidencia + usuario ( idUsuario, nombre, apellidos, correo ) + datos del sensor
+```
+
+- **Mediciones (T017):** están en `Mediciones.js` (clase `Mediciones`), como las incidencias. Se usan como `logica.mediciones.guardar(…)`. Tablas `Mediciones`, `Sensores` y `Contaminantes`. Solo se guarda la medición del sensor vinculado al usuario (el `numeroSerie` de la trama iBeacon). `contaminante` es `O3` si no se indica y tiene que existir en `Contaminantes`. Se comprueba que no falte nada y que esté en rango: valor de 0 a 2000 µg/m³, latitud −90..90, longitud −180..180 y fecha (ISO o milisegundos) de los últimos 7 días, con 5 minutos de margen hacia el futuro; si no, `DATOS_NO_VALIDOS` con los campos y un aviso en la consola. La clave única `(idSensor, idContaminante, fechaHora)` hace que una medición reenviada por la app no se guarde dos veces: `nueva` = false. Al guardar, el sensor pasa a `activo` y `ultimaConexion` es la fecha más reciente recibida. `obtenerUsuario()` devuelve también `sensor` (nombre) y `numeroSerie` del sensor vinculado, o `null`.
+
+```text
+  idUsuario: N, { numeroSerie, contaminante?, valor, latitud, longitud, fecha }
+                         --> mediciones.guardar() --> ( medicion: Medicion, nueva: V/F )
+                                                   | DATOS_NO_VALIDOS, SENSOR_NO_REGISTRADO, SENSOR_NO_ES_TUYO
+  idUsuario: N, cantidad: N (5, máx. 100), contaminante: Texto ("O3")
+                         --> mediciones.ultimasDeUsuario() --> Lista<Medicion> | DATOS_NO_VALIDOS
+  contaminante: Texto ("O3")
+                         --> mediciones.ultima() --> Medicion                 | SIN_MEDICIONES
+  fecha: Texto | N       --> leerFecha() --> Date | null                       (sin milisegundos)
+  Medicion = ( idMedicion, contaminante, valor, unidad, fecha, latitud, longitud )
 ```

@@ -5,7 +5,8 @@
 //              recuperación de la contraseña, y el aviso de alertas del
 //              perfil, la edición de los datos y la foto (T010), y la
 //              vinculación de sensores confirmada por correo (T005). Las
-//              incidencias (T041) están en Incidencias.js. Es la
+//              incidencias (T041) están en Incidencias.js y las mediciones
+//              (T017) en Mediciones.js. Es la
 //              única parte que habla con la base de datos (MySQL, tablas
 //              Usuarios y Sensores). Las sesiones y los enlaces de
 //              recuperación y de vinculación son tokens firmados: no usan tablas.
@@ -23,6 +24,7 @@ const { crearCorreoBienvenida } = require('./CorreoBienvenida');
 const { crearCorreoRecuperacion } = require('./CorreoRecuperacion');
 const { crearCorreoVinculacion } = require('./CorreoVinculacion');
 const { Incidencias } = require('./Incidencias');
+const { Mediciones } = require('./Mediciones');
 
 const ROL_PORTADOR = 'portador';        // rol de quien se registra desde la app
 const DURACION_SESION_SEGUNDOS = 30 * 24 * 60 * 60;      // 30 días
@@ -40,7 +42,7 @@ const ESTADO_RECHAZADA = 'rechazada';
 //   codigo ∈ { DATOS_NO_VALIDOS, CORREO_YA_REGISTRADO, CORREO_NO_REGISTRADO,
 //              CREDENCIALES_INCORRECTAS, TOKEN_NO_VALIDO,
 //              SENSOR_NO_REGISTRADO, SENSOR_YA_VINCULADO, SIN_SOLICITUD,
-//              INCIDENCIA_NO_EXISTE }
+//              INCIDENCIA_NO_EXISTE, SENSOR_NO_ES_TUYO, SIN_MEDICIONES }
 // ---------------------------------------------------------------------------
 class ErrorLogica extends Error {
     constructor(codigo, mensaje, campos = []) {
@@ -100,6 +102,7 @@ class Logica {
         this.claveTokens = claveTokens;
         this.urlVinculacion = urlVinculacion || `${new URL(urlRestablecer).origin}/responderVinculacion`;
         this.incidencias = new Incidencias(this);     // T041: logica.incidencias.crear(…), …
+        this.mediciones = new Mediciones(this);       // T017: logica.mediciones.guardar(…), …
     }
 
     // -----------------------------------------------------------------------
@@ -211,7 +214,10 @@ class Logica {
 
     // -----------------------------------------------------------------------
     // idUsuario: N --> obtenerUsuario() --> DatosUsuario | null
-    // What it does: returns the user's data (never the password hash).
+    // What it does: returns the user's data (never the password hash) and
+    //               his linked sensor: sensor (its name) and numeroSerie,
+    //               that the app needs to keep only the Bluetooth packets of
+    //               that sensor (T017). Both null if he has no sensor.
     // -----------------------------------------------------------------------
     async obtenerUsuario(idUsuario) {
         const [filas] = await this.conexion.execute(
@@ -222,10 +228,14 @@ class Logica {
             return null;
         }
         const f = filas[0];
+        const [sensores] = await this.conexion.execute(
+            'SELECT nombre, numeroSerie FROM Sensores WHERE idUsuario = ? ORDER BY idSensor LIMIT 1', [idUsuario]);
+        const sensor = sensores[0];
         return {
             idUsuario: f.idUsuario, nombre: f.nombre, apellidos: f.apellidos,
             correo: f.email, rol: f.role, fechaAlta: f.fechaAlta,
-            alertas: Boolean(f.alertas), premiumHasta: f.premiumHasta, foto: f.foto
+            alertas: Boolean(f.alertas), premiumHasta: f.premiumHasta, foto: f.foto,
+            sensor: sensor ? sensor.nombre : null, numeroSerie: sensor ? sensor.numeroSerie : null
         };
     }
 
