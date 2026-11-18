@@ -416,6 +416,46 @@ Páginas públicas `contaminantes.html`, `normativa.html` y `consejos.html`, seg
 - Las páginas de acceso (login, registro, recuperar y restablecer) no llevan pie, porque son una tarjeta centrada sin menú.
 - Los textos secundarios usan colores con un contraste de al menos 4,5:1 sobre blanco y sobre el fondo `#F5F6FA` (nivel AA de la WCAG 2.1). En `css/estilos.css` hay cuatro variables para texto: `--texto-gris` (#6A6585, sustituye al antiguo #8992B8), `--bueno-texto` (#2B735B), `--moderado-texto` (#85600F) y `--malo-texto` (#B5414A). Los colores de nivel de siempre (`--bueno`, `--moderado`, `--malo`) se siguen usando para puntos, barras y manchas del mapa, pero no para texto.
 
+### 11. Página Ayuda (T042 · H038)
+
+Pantalla `ayuda.html`. Diseños «Ayuda» y «Ayuda · móvil» de Figma. Ofrece soporte integral al usuario con tres secciones principales:
+
+1. **Preguntas frecuentes (FAQ):** Acordeones interactivos (`<details class="faq-item">`) con dudas habituales (vinculación del sensor, calibración, niveles de ozono, resolución de problemas Bluetooth y cuenta).
+2. **Formulario para enviar una incidencia:** Permite elegir el tipo de incidencia (`sensor`, `datos`, `cuenta` u `otra`), redactar un asunto y describir el problema detalladamente. **Regla de validación:** Con el mensaje vacío no se envía (se resalta el campo y se avisa con mensaje de error accesible).
+3. **Mis incidencias:** Lista las incidencias enviadas por el usuario actual (obtenidas mediante `GET /misIncidencias`), mostrando para cada una su asunto, tipo, fecha, su **estado** (`abierta`, `en curso`, `resuelta`) y la **respuesta** del técnico/administrador cuando esté disponible (indicando quién respondió y cuándo). Si no hay sesión iniciada, muestra el aviso para iniciar sesión.
+
+#### Lógica del navegador (`logica_ayuda_fake.js` y `logica_ayuda_real.js`)
+
+```text
+ --------- LogicaAyudaFake / LogicaAyudaReal -----------------------
+ |
+ |                                 obtenerMisIncidencias() -->
+ |  { correcto: B, incidencias: [ Incidencia ], error: Text, sinSesion: B } <--
+ |
+ |  datos: { tipo, asunto, descripcion } --> crearIncidencia() -->
+ |  { correcto: B, incidencia: Incidencia | null, error: Text, campos: [ Text ] } <--
+ |
+ -------------------------------------------------------------------
+```
+
+#### Controlador de la pantalla (`ayuda.js`)
+
+```text
+isoString: Text, conHora: B --> formatearFecha() --> Text
+
+estado: Text --> textoEstado() --> { texto: Text, clase: Text }
+
+tipo: Text --> textoTipo() --> Text
+
+datos: { asunto, descripcion } --> validarIncidencia() --> { valido: B, error: Text, campo: Text }
+
+contenedor: HTMLElement, lista: [ Incidencia ] --> pintarIncidencias()
+
+logica: LogicaAyuda --> cargarMisIncidencias()
+
+evento: Event, logica: LogicaAyuda --> enviarIncidenciaFormulario()
+```
+
 ## Reglas generales
 
 - Lenguaje de programación: HTML, CSS y JavaScript sin frameworks.

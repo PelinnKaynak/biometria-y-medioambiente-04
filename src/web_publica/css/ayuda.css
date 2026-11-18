@@ -1,0 +1,345 @@
+/* ------------------------------------------------------------
+   ayuda.css · Estilos de la página Ayuda (T042 · H038)
+   Diseños «Ayuda» y «Ayuda · móvil» de Figma
+   ------------------------------------------------------------ */
+
+.contenido-ayuda {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+}
+
+.cabecera-seccion-ayuda {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.cabecera-seccion-ayuda h1 {
+    margin: 0 0 12px;
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--texto);
+    letter-spacing: -0.02em;
+}
+
+.cabecera-seccion-ayuda .entradilla {
+    max-width: 680px;
+    margin: 0 auto;
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--texto-suave);
+}
+
+/* ---------- Sección FAQ ---------- */
+
+.seccion-faq {
+    margin-bottom: 48px;
+}
+
+.seccion-faq h2,
+.tarjeta-soporte h2 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--texto);
+}
+
+.subtitulo-soporte {
+    margin: 0 0 20px;
+    font-size: 14px;
+    color: var(--texto-suave);
+}
+
+.lista-faq {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.faq-item {
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    background: var(--blanco);
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.faq-item[open] {
+    border-color: #D8CDE8;
+    box-shadow: var(--sombra);
+}
+
+.faq-item summary {
+    position: relative;
+    padding: 16px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--texto);
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.faq-item summary::-webkit-details-marker {
+    display: none;
+}
+
+.faq-item summary::after {
+    content: "↓";
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--morado);
+    transition: transform 0.2s;
+}
+
+.faq-item[open] summary::after {
+    transform: rotate(180deg);
+}
+
+.faq-item .faq-respuesta {
+    padding: 0 20px 18px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--texto-suave);
+    margin: 0;
+}
+
+/* ---------- Rejilla Soporte (Formulario + Mis incidencias) ---------- */
+
+.rejilla-soporte {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr;
+    gap: 32px;
+    align-items: start;
+}
+
+.tarjeta-soporte {
+    padding: 28px;
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+    background: var(--blanco);
+    box-shadow: var(--sombra);
+}
+
+/* ---------- Formulario ---------- */
+
+.formulario-incidencia {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.grupo-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.grupo-campo label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texto);
+}
+
+.campo-texto {
+    resize: vertical;
+    min-height: 110px;
+    font-family: inherit;
+    line-height: 1.5;
+}
+
+.boton-enviar {
+    margin-top: 8px;
+    width: 100%;
+}
+
+.aviso-alerta {
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    border: 1px solid var(--moderado);
+    border-radius: var(--radio);
+    background: #FFFDF5;
+    font-size: 14px;
+    color: var(--moderado-texto);
+    line-height: 1.5;
+}
+
+.aviso-alerta a {
+    color: var(--morado);
+    text-decoration: underline;
+}
+
+.aviso-exito {
+    padding: 12px 16px;
+    border: 1px solid #C2E4D4;
+    border-radius: var(--radio);
+    background: #EAF5EF;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2B735B;
+}
+
+/* ---------- Lista de Mis Incidencias ---------- */
+
+.lista-incidencias {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.tarjeta-incidencia {
+    padding: 18px 20px;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    background: #FAFAFD;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.tarjeta-incidencia:hover {
+    border-color: #D8CDE8;
+    box-shadow: 0 4px 12px rgba(67, 46, 96, 0.06);
+}
+
+.cabecera-incidencia {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.tipo-y-fecha {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+    color: var(--texto-gris);
+}
+
+.etiqueta-tipo {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: #EDE8F5;
+    color: var(--morado-oscuro);
+}
+
+.etiqueta-estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.etiqueta-estado.abierta {
+    background: #FFF8E6;
+    color: var(--moderado-texto);
+    border: 1px solid #F0DCA6;
+}
+
+.etiqueta-estado.en-curso {
+    background: #E8EEFB;
+    color: #2A56A8;
+    border: 1px solid #C6D8F8;
+}
+
+.etiqueta-estado.resuelta {
+    background: #EAF5EF;
+    color: #2B735B;
+    border: 1px solid #C2E4D4;
+}
+
+.asunto-incidencia {
+    margin: 4px 0 6px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--texto);
+}
+
+.descripcion-incidencia {
+    margin: 0 0 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--texto-suave);
+}
+
+.bloque-respuesta {
+    padding: 14px 16px;
+    border-left: 4px solid var(--morado);
+    border-radius: 0 8px 8px 0;
+    background: #F3EFF9;
+}
+
+.cabecera-respuesta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--morado-oscuro);
+}
+
+.texto-respuesta {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--texto);
+}
+
+.pendiente-respuesta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--texto-gris);
+}
+
+.sin-incidencias {
+    padding: 32px 20px;
+    text-align: center;
+    color: var(--texto-suave);
+    font-size: 15px;
+}
+
+/* ---------- Adaptación móvil (Figma: «Ayuda · móvil») ---------- */
+
+@media (max-width: 900px) {
+    .contenido-ayuda {
+        padding: 20px 16px 48px;
+    }
+
+    .cabecera-seccion-ayuda {
+        margin-bottom: 28px;
+        text-align: left;
+    }
+
+    .cabecera-seccion-ayuda h1 {
+        font-size: 28px;
+    }
+
+    .cabecera-seccion-ayuda .entradilla {
+        font-size: 15px;
+    }
+
+    .rejilla-soporte {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+
+    .tarjeta-soporte {
+        padding: 20px;
+    }
+}

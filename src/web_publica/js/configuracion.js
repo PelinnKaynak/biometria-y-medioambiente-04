@@ -40,3 +40,23 @@ function crearLogicaCuenta() {
 function crearLogicaMapa() {
   return USAR_LOGICA_FAKE ? new LogicaMapaFake() : new LogicaMapaReal(URL_SERVIDOR);
 }
+
+// --------------------------------------------------------
+// crearLogicaAyuda() --> LogicaAyudaFake | LogicaAyudaReal
+//
+// Lógica de la página Ayuda (T042 · H038).
+// --------------------------------------------------------
+function crearLogicaAyuda() {
+  return USAR_LOGICA_FAKE ? new LogicaAyudaFake() : new LogicaAyudaReal(URL_SERVIDOR);
+}
+
+if (typeof module !== "undefined") {
+  module.exports = {
+    USAR_LOGICA_FAKE,
+    URL_SERVIDOR,
+    crearLogica,
+    crearLogicaCuenta,
+    crearLogicaMapa,
+    crearLogicaAyuda
+  };
+}
