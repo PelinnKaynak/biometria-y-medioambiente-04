@@ -73,6 +73,7 @@ void escribirLectura( const Lectura & l ) {
   using namespace Globales;
   elPuerto.escribir( "Vgas=" );     elPuerto.escribir( l.vGas, 4 );
   elPuerto.escribir( " V  Vref=" ); elPuerto.escribir( l.vRef, 4 );
+  elPuerto.escribir( " V  Vtemp=" ); elPuerto.escribir( l.vTemp, 4 );
   elPuerto.escribir( " V  T=" );    elPuerto.escribir( l.temperatura, 1 );
   elPuerto.escribir( " C  O3=" );   elPuerto.escribir( l.ozono, 1 );
   elPuerto.escribir( " ug/m3 (sin ajustar " ); elPuerto.escribir( l.ozonoSinAjustar, 1 );
