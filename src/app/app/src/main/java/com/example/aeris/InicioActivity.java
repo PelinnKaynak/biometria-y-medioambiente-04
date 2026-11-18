@@ -144,7 +144,8 @@ public class InicioActivity extends AppCompatActivity {
         findViewById(R.id.botonVerSensor).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.MI_SENSOR));
         findViewById(R.id.botonVerMas).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.MIS_DATOS));
         findViewById(R.id.filaPrevision).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.PREVISION));
-        findViewById(R.id.filaLugares).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.MIS_LUGARES));
+        findViewById(R.id.filaLugares).setOnClickListener(vista ->
+                startActivity(new Intent(this, MisLugaresActivity.class)));
         findViewById(R.id.botonReintentar).setOnClickListener(vista -> cargarMediciones());
         findViewById(R.id.botonCampana).setOnClickListener(vista -> abrirAvisos());
         botonAhora.setOnClickListener(vista -> elegir(0, true));

@@ -105,14 +105,16 @@ public class PerfilActivity extends AppCompatActivity {
         // El interruptor sale ya en su posición guardada, sin animación
         ponerInterruptor(Sesion.alertas(this));
 
-        // Opciones de otras tareas (T019 Mis lugares…): aún no
+        // Opciones de otras tareas (Umbral, Puntos, Premium): aún no
         int[] opcionesProximamente = {
                 R.id.opcionUmbral,
-                R.id.opcionPuntos, R.id.opcionMisLugares, R.id.opcionPremium
+                R.id.opcionPuntos, R.id.opcionPremium
         };
         for (int id : opcionesProximamente) {
             findViewById(id).setClickable(false);   // aún no hacen nada
         }
+        findViewById(R.id.opcionMisLugares).setOnClickListener(vista ->
+                startActivity(new Intent(this, MisLugaresActivity.class)));
         findViewById(R.id.opcionNotificaciones).setOnClickListener(vista -> {
             if (interruptorNotificaciones.isClickable()) {
                 interruptorNotificaciones.toggle();     // aquí sí se anima: lo ha tocado el usuario

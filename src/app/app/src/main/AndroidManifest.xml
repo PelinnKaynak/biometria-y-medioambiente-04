@@ -59,10 +59,16 @@
             android:name=".InicioActivity"
             android:exported="false" />
 
-        <!-- Secciones aún no hechas: Mapa, Mis datos, Previsión, Mis lugares (T006) -->
+        <!-- Secciones aún no hechas: Mapa, Mis datos, Previsión (T006) -->
         <activity
             android:name=".ProximamenteActivity"
             android:exported="false" />
+
+        <!-- Mis lugares (T019 · H034): gestión de lugares habituales y alertas -->
+        <activity
+            android:name=".MisLugaresActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".VincularSensorActivity"

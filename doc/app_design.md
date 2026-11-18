@@ -642,6 +642,100 @@ ProximamenteActivity (NUEVA, provisional): onCreate(), intentPara(), seccionDe()
 - **Entrada:** las tarjetas aparecen una detrás de otra (fundido y desplazamiento, 70 ms entre cada una); la de Mi sensor / Vincular entra a la vez que las demás con lo que se sabía (lo que respondió el servidor la última vez, guardado en el teléfono; hasta T017, el sensor de ejemplo) y luego el servidor la confirma o la cambia.
 - **ProximamenteActivity:** título, icono, etiqueta «Próximamente» y un texto de la sección, con la barra de navegación (la pestaña marcada si se abrió desde la barra; desde un acceso de Inicio no se marca ninguna y tiene flecha de volver).
 
+## 3d. Pantalla Mis lugares (T019 · H034)
+
+Pantalla completa de «Mis lugares» (Figma: «mis lugares»). Permite al usuario guardar y gestionar hasta 5 ubicaciones habituales (casa, trabajo, colegio...), consultar en cada una el nivel de ozono actual (obtenido del modelo de mapa interpolado) y activar o desactivar los avisos de calidad del aire asociados a cada ubicación. Se abre desde el acceso «Mis lugares» de `InicioActivity` o desde la opción «Mis lugares» de `PerfilActivity`.
+
+```text
+InicioActivity («filaLugares»)   --> MisLugaresActivity
+PerfilActivity («opcionMisLugares») --> MisLugaresActivity
+MisLugaresActivity --> LogicaFakeMisLugares.obtenerLugares()
+MisLugaresActivity --> LogicaFakeMisLugares.anadirLugar()
+MisLugaresActivity --> LogicaFakeMisLugares.cambiarAvisos()
+MisLugaresActivity --> LogicaFakeMisLugares.eliminarLugar()
+MisLugaresActivity --(«atrás»)--> finish()
+```
+
+### Tipos
+
+```text
+Lugar: (
+    id: Z,
+    idUsuario: Z,
+    nombre: Texto,
+    direccion: Texto,
+    latitud: R,
+    longitud: R,
+    ozonoActual: R,
+    avisosActivos: B
+)
+```
+
+### Clase Lugar (NUEVA)
+
+```text
+                                    --------- Lugar --------------------------------
+                                    |
+  id: Z, idUsuario: Z,              --> Lugar() -->
+  nombre: Texto, direccion: Texto,      |
+  lat: R, lon: R, ozono: R, avisos: B   |
+                                    |
+                                    --> nivelOzono() --x
+  NivelOzono                        <-- |     desdeValor(ozonoActual)
+                                    |
+                                    --> textoOzono() --x
+  Texto                             <-- |     "%.0f µg/m³"
+                                    |
+  json: JSONObject                  --> desdeJSON() --x
+  Lugar | null                      <-- |
+                                    |
+                                    --> aJSON() --x
+  JSONObject                        <-- |
+                                    ------------------------------------------------
+```
+
+### Clase LogicaFakeMisLugares (NUEVA)
+
+```text
+                                    --------- LogicaFakeMisLugares -----------------
+                                    |
+  token: Texto,                     --> obtenerLugares() -->
+  callback: CallbackLugares             |     200 -> lugaresObtenidos(lista)
+                                        |     401 -> sesionCaducada()
+                                    |
+  token: Texto, nombre: Texto,      --> anadirLugar() -->
+  direccion: Texto,                     |     nombre/dirección vacíos -> error()
+  callback: CallbackOperacionLugar      |     tamaño >= 5 -> limiteAlcanzado()
+                                        |     ok -> calcula ozono interpolado y guarda
+                                    |
+  token: Texto, idLugar: Z,         --> cambiarAvisos() -->
+  avisosActivos: B,                     |     actualiza estado del interruptor
+  callback: CallbackOperacionLugar      |
+                                    |
+  token: Texto, idLugar: Z,         --> eliminarLugar() -->
+  callback: CallbackEliminarLugar       |     elimina de la cuenta del usuario
+                                    |
+  token: Texto                      --> esTokenValido() --x
+  B                                 <-- |     comprueba sesión
+                                    |
+  direccion: Texto                  --> interpolarOzonoParaDireccion() --x
+  R                                 <-- |     ozono actual estimado del mapa (µg/m³)
+                                    ------------------------------------------------
+```
+
+### Pantalla
+
+```text
+MisLugaresActivity (NUEVA): onCreate(), onResume(), cargarLugares(), mostrarLugares(),
+                            guardarNuevoLugar(), confirmarEliminarLugar(), colorDe(), nombreDe()
+```
+
+- **Aislamiento por usuario:** Los lugares guardados solo los ve el usuario con sesión activa (`token`). `LogicaFakeMisLugares` indexa los almacenes por usuario.
+- **Límite de 5 lugares:** La tarjeta de contador muestra `X de 5 lugares guardados`. Si se alcanza el límite (5 lugares), se muestra el aviso de límite y se bloquea la adición hasta que se elimine algún lugar.
+- **Ozono del mapa interpolado:** Cada lugar muestra la concentración actual en µg/m³ y el nivel de ozono correspondiente (`NivelOzono`: Bueno, Moderado, Malo o Muy Malo) con su indicador visual de color.
+- **Interruptor de avisos:** Cada tarjeta de lugar incluye un `MaterialSwitch` que activa o desactiva las alertas de esa ubicación específica.
+- **Eliminación:** Cada tarjeta dispone de un botón de papelera que solicita confirmación antes de borrar el lugar.
+
 ## 4. Aclaraciones del diseño
 
 - **Petición REST:** `POST /registrarUsuario` con el cuerpo `{"nombre": ..., "apellidos": ..., "correo": ..., "contrasena": ...}`. Respuestas: `201` cuenta creada, `409` el correo ya tiene cuenta, `400` datos incorrectos, `500` error del servidor. Si no hay conexión el código es `0`.

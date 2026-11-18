@@ -21,7 +21,7 @@ public class LogicaFakeVincular {
     // false: usa el servidor (POST /solicitarVinculacion, GET /estadoVinculacion,
     // POST /reenviarCorreoVinculacion) y el correo se envía de verdad.
     // true: solicitud de ejemplo, para ver las pantallas sin servidor
-    static final boolean USAR_DATOS_DE_EJEMPLO = false;
+    static boolean USAR_DATOS_DE_EJEMPLO = true;
     // Estado que devuelve la consulta con datos de ejemplo: cambiar a
     // CONFIRMADA o RECHAZADA para ver esas pantallas
     static final SolicitudVinculacion.Estado ESTADO_DE_EJEMPLO = SolicitudVinculacion.Estado.PENDIENTE;

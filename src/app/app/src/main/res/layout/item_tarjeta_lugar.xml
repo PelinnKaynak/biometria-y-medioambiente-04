@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tarjeta individual de un lugar guardado en Mis lugares (T019).
+     Muestra el icono, nombre, dirección, valor y nivel de ozono actual con su punto
+     de color del mapa interpolado, interruptor de avisos y botón para eliminar. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    android:background="@drawable/fondo_tarjeta"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Fila superior: Icono, nombre, dirección y botón eliminar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/fondo_icono_lugar">
+
+            <ImageView
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_lugar"
+                app:tint="@color/violeta" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/textoNombreLugar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/texto_principal"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                tools:text="Casa" />
+
+            <TextView
+                android:id="@+id/textoDireccionLugar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/texto_secundario"
+                android:textSize="13sp"
+                tools:text="Carrer Major, 12, Gandia" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/botonEliminarLugar"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:contentDescription="@string/mis_lugares_icono_eliminar_desc"
+            android:focusable="true"
+            android:padding="8dp"
+            android:src="@drawable/ic_papelera"
+            app:tint="@color/texto_secundario" />
+    </LinearLayout>
+
+    <!-- Fila central: Nivel de ozono interpolado -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/puntoNivelOzono"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:background="@drawable/fondo_punto_nivel"
+            tools:backgroundTint="@color/nivel_bueno" />
+
+        <TextView
+            android:id="@+id/textoNivelOzono"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textColor="@color/texto_principal"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            tools:text="84 µg/m³ · Bueno" />
+    </LinearLayout>
+
+    <!-- Separador sutil -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="10dp"
+        android:background="@color/borde_tarjeta" />
+
+    <!-- Fila inferior: Interruptor de avisos -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textoEstadoAvisos"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/mis_lugares_avisos_activos"
+            android:textColor="@color/texto_cuerpo"
+            android:textSize="13sp" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/interruptorAvisosLugar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:useMaterialThemeColors="true" />
+    </LinearLayout>
+
+</LinearLayout>
