@@ -9,6 +9,8 @@
 // Propuestas para T024 (todavía no están en el servidor):
 //   GET  /miCuenta                     resumen, lugares y últimas mediciones
 //   GET  /miExposicion?periodo=mes     medias diarias de ozono
+//   GET  /estadoVinculacion            estado de la vinculación del sensor (T005)
+//   POST /reenviarCorreoVinculacion    vuelve a mandar el correo al comprador (T005)
 // Mientras T024 no exista, el servidor responde 404 y la
 // página muestra que todavía no hay datos del sensor.
 // ------------------------------------------------------------
@@ -118,6 +120,57 @@ class LogicaCuentaReal {
         if (respuesta.status === 404) return { correcto: true, puntos: [], error: "" };
         if (!respuesta.ok) return { correcto: false, puntos: [], error: "No se ha podido cargar la gráfica" };
         return { correcto: true, puntos: await respuesta.json(), error: "" };
+    }
+
+    // --------------------------------------------------------
+    // obtenerVinculacion() --> r: ResultadoVinculacion <--
+    //
+    // GET /estadoVinculacion (T005)
+    //   200 { numeroSerie, correoComprador (ya oculto),
+    //         estado: pendiente | confirmada | rechazada, fecha }
+    //   404 el usuario no ha pedido vincular ningún sensor
+    // Una pendiente de más de 48 h el servidor ya la da como
+    // rechazada.
+    // --------------------------------------------------------
+    async obtenerVinculacion() {
+        const respuesta = await this.pedir("/estadoVinculacion");
+        if (respuesta === null) return { correcto: false, vinculacion: null, error: "No se puede conectar con el servidor" };
+        if (respuesta.status === 404) {
+            return { correcto: true, error: "",
+                vinculacion: { estado: "sin_sensor", nodo: null, emailConfirmacion: null, fechaSolicitud: null, caducaEn: null } };
+        }
+        if (!respuesta.ok) return { correcto: false, vinculacion: null, error: "No se ha podido cargar el estado del sensor" };
+        const v = await respuesta.json();
+        const fecha = v.fecha ? new Date(v.fecha) : null;
+        return {
+            correcto: true,
+            error: "",
+            vinculacion: {
+                estado: v.estado,
+                nodo: v.numeroSerie || null,
+                emailConfirmacion: v.correoComprador || null,
+                fechaSolicitud: fecha ? fecha.toISOString() : null,
+                caducaEn: fecha ? new Date(fecha.getTime() + 48 * 3600000).toISOString() : null
+            }
+        };
+    }
+
+    // --------------------------------------------------------
+    // reenviarCorreo() --> r: ResultadoReenvio <--
+    //
+    // POST /reenviarCorreoVinculacion (T005)
+    //   200 { mensaje } · 404 no hay ninguna pendiente · 401
+    // El servidor no devuelve el correo: la página usa el que ya
+    // está enseñando.
+    // --------------------------------------------------------
+    async reenviarCorreo() {
+        const respuesta = await this.pedir("/reenviarCorreoVinculacion", "POST", {});
+        const fallo = error => ({ correcto: false, emailConfirmacion: null, error });
+        if (respuesta === null) return fallo("No se puede conectar con el servidor");
+        if (respuesta.status === 404) return fallo("No hay ninguna vinculación pendiente");
+        if (respuesta.status === 401) return fallo("Tu sesión ha caducado. Vuelve a iniciar sesión");
+        if (!respuesta.ok) return fallo("No se ha podido reenviar el correo. Inténtalo de nuevo");
+        return { correcto: true, emailConfirmacion: null, error: "" };
     }
 
     // --------------------------------------------------------

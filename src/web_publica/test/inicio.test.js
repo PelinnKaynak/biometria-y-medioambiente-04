@@ -191,9 +191,9 @@ describe("vista inicial del mapa", () => {
 });
 
 describe("menú de la página del mapa", () => {
-    test("tiene el enlace a Planes de la portada", () => {
+    test("tiene los enlaces a Ayuda y a Planes de la portada", () => {
         const enlaces = [...document.querySelectorAll("#menu-inicio a")].map((a) => a.textContent.trim());
-        expect(enlaces).toEqual(["Inicio", "Mapa", "Contaminantes", "Planes"]);
+        expect(enlaces).toEqual(["Inicio", "Mapa", "Contaminantes", "Ayuda", "Planes"]);
         expect(document.querySelector('#menu-inicio a[href="index.html#planes"]')).not.toBeNull();
     });
 });
