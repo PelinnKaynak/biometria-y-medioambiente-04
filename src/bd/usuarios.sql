@@ -128,9 +128,11 @@ CREATE TABLE IF NOT EXISTS Mediciones (
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------
--- Sensor de prueba (T005). En la app no hay compra: este sensor
--- se da de alta como si lo hubiera comprado pkaynak@upv.edu.es.
+-- Sensores de prueba (T005, T004). En la app no hay compra: se dan
+-- de alta como si los hubiera comprado pkaynak@upv.edu.es.
 -- Número de serie y sensibilidad del código de su etiqueta.
+-- 032724010309 es el sensor del nodo montado (src/arduino).
 -- ---------------------------------------------------------------
 INSERT IGNORE INTO Sensores (numeroSerie, sensibilidad, correoCompra)
-VALUES ('092021010920', -44.75, 'pkaynak@upv.edu.es');
+VALUES ('092021010920', -44.75, 'pkaynak@upv.edu.es'),
+       ('032724010309', -56.44, 'pkaynak@upv.edu.es');

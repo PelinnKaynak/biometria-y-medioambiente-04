@@ -10,13 +10,15 @@ Parte del `HolaMundoIBeacon` del Sprint 0 (código de Jordi Bataller i Mascarell
 
 | Pin del ULPSM-O3 | Placa | Uso |
 |---|---|---|
-| 1 · Vgas | A0 | Señal del gas |
-| 2 · Vref | A1 | Referencia (≈ V+/2) |
-| 3 · Vtemp | A2 | Temperatura |
-| 7, 8 · V+ | 3V3 | Alimentación (2,7–3,3 V) |
+| 1 · Vgas | 29 (AIN5) | Señal del gas |
+| 2 · Vref | 5 (AIN3) | Referencia (≈ V+/2) |
+| 3 · Vtemp | 2 (AIN0) | Temperatura |
+| 7, 8 · V+ | 3V3 | Alimentación (2,7–3,3 V; nunca a VBAT ni a 5 V) |
 | 6 · GND | GND | Masa |
 
-Si el montaje usa otros pines, solo hay que cambiarlos en `Configuracion.h`.
+Solo leen tensiones las entradas analógicas del nRF52840: los pines 2, 3, 4, 5, 28, 29, 30 y 31. Si el montaje usa otros de esa lista, se cambian en `Configuracion.h`.
+
+Comprobación con el polímetro (sensor alimentado, aire limpio): Vref ≈ 1,65 V; Vgas muy cerca de Vref (unos pocos mV por debajo); Vtemp ≈ 1,6 V a 25 °C.
 
 ## 2. Trama iBeacon
 
@@ -24,7 +26,7 @@ Si el montaje usa otros pines, solo hay que cambiarlos en `Configuracion.h`.
 TramaIBeacon = ( beaconUUID: [N]_16, major: N, minor: Z, txPower: Z )   fabricante 0x004C (Apple)
 
    beaconUUID = "AERI" (4 bytes ASCII) + numeroSerie (12 bytes ASCII, las cifras de la etiqueta)
-                p. ej. "AERI092021010920"
+                p. ej. "AERI032724010309"
    major      = tipo * 256 + contador          (byte alto: tipo; byte bajo: contador 0..255)
    minor      = valor (int16, con signo)
 
@@ -53,7 +55,7 @@ T (°C) = 87 / V+ × Vtemp − 18                                          (±3 
 ozono  = max(0, µg/m³ × factor)
 ```
 
-- Sensibilidad: la de la etiqueta del sensor (−44,75 nA/ppm en el de prueba). Ganancia TIA del módulo de ozono: 499 kV/A.
+- Sensibilidad: la de la etiqueta del sensor (−56,44 nA/ppm en el del nodo de Pelin, etiqueta «032724010309 110406 O3 2404 -56.44»). Ganancia TIA del módulo de ozono: 499 kV/A.
 - **ADC:** 1 ppm mueve Vgas solo unos 22 mV (100 µg/m³ ≈ 1,1 mV), así que se lee a 14 bits con referencia de 3,0 V (un paso ≈ 0,18 mV ≈ 16 µg/m³). Cada lectura es la media de 256 muestras, guardando los decimales.
 
 ```text

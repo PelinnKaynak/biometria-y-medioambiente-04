@@ -17,11 +17,11 @@
 namespace Configuracion {
 
   // --- Sensor de ozono de este nodo (SPEC Sensors ULPSM-O3 968-046) ---
-  // Los dos primeros números de la etiqueta («092021010920 110406 03 2109 -44.75»):
+  // El primer y el último número de la etiqueta («032724010309 110406 O3 2404 -56.44»):
   // número de serie (12 cifras) y sensibilidad (nA/ppm). Son los mismos que
   // lee la app al vincular el sensor.
-  const char NUMERO_SERIE[] = "092021010920";
-  const float SENSIBILIDAD = -44.75;     // nA/ppm (negativa en el ozono)
+  const char NUMERO_SERIE[] = "032724010309";
+  const float SENSIBILIDAD = -56.44;     // nA/ppm (negativa en el ozono)
 
   // Ganancia del amplificador del módulo para el ozono (datasheet ULPSM-O3)
   const float GANANCIA_TIA = 499.0;      // kV/A
@@ -31,9 +31,11 @@ namespace Configuracion {
   const float V_ALIMENTACION = 3.3;      // V
 
   // --- Pines (cambiarlos si el montaje es otro) ---
-  const int PIN_VGAS = A0;     // salida del gas
-  const int PIN_VREF = A1;     // referencia (≈ V+/2)
-  const int PIN_VTEMP = A2;    // temperatura
+  // Número que se ve en la placa junto al pin. Solo leen tensiones (entradas
+  // analógicas) el 2, 3, 4, 5, 28, 29, 30 y 31: el 15 o el 17 no sirven.
+  const int PIN_VGAS = 29;     // salida del gas          (AIN5)
+  const int PIN_VREF = 5;      // referencia (≈ V+/2)     (AIN3)
+  const int PIN_VTEMP = 2;     // temperatura             (AIN0)
   const int PIN_LED = 7;       // LED azul de la SparkFun Pro nRF52840 Mini
 
   // --- ADC del nRF52840 (núcleo Adafruit nRF52) ---

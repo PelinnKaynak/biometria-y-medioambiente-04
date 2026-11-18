@@ -38,7 +38,9 @@ public class CodigoSensor {
     // CodigoSensor | null <--
     // What it does: splits the text read from the code by spaces. It must
     //               have 5 parts: serial (12 digits), model (6 digits), gas
-    //               (2 digits), date (4 digits) and sensitivity (a number).
+    //               (2 or 3 letters or digits: the real labels say «O3»,
+    //               with a letter O; some printed examples say «03»), date
+    //               (4 digits) and sensitivity (a number).
     //               The sensitivity can have a comma or a dot (written by
     //               hand). If not, it is not the label of a sensor: null.
     // -----------------------------------------------------------------------
@@ -50,7 +52,7 @@ public class CodigoSensor {
         if (partes.length != 5
                 || !partes[0].matches("\\d{12}")
                 || !partes[1].matches("\\d{6}")
-                || !partes[2].matches("\\d{2}")
+                || !partes[2].matches("[A-Za-z0-9]{2,3}")
                 || !partes[3].matches("\\d{4}")) {
             return null;
         }

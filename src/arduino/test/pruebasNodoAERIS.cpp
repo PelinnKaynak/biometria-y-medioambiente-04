@@ -17,7 +17,7 @@ static int pruebasFallidas = 0;
 static int comprobaciones = 0;
 
 // Valores del sensor de prueba (los de Configuracion.h)
-static const double M = -44.75 * 499 * 1e-6;     // V/ppm ≈ -0,02233
+static const double M = Configuracion::SENSIBILIDAD * Configuracion::GANANCIA_TIA * 1e-6;   // V/ppm
 static const double V_REF = 1.65;                 // V+/2
 
 // ------------------------------------------------------------
@@ -43,9 +43,9 @@ static bool cerca(double a, double b, double margen) { return std::fabs(a - b) <
 //               with offset 0) and that temperature.
 // ------------------------------------------------------------
 static void ponerSensor(double ppm, double temperaturaC) {
-  Doble::voltiosPin[A1] = V_REF;
-  Doble::voltiosPin[A0] = V_REF + ppm * M;
-  Doble::voltiosPin[A2] = (temperaturaC + 18.0) * 3.3 / 87.0;
+  Doble::voltiosPin[Configuracion::PIN_VREF] = V_REF;
+  Doble::voltiosPin[Configuracion::PIN_VGAS] = V_REF + ppm * M;
+  Doble::voltiosPin[Configuracion::PIN_VTEMP] = (temperaturaC + 18.0) * 3.3 / 87.0;
 }
 
 // ------------------------------------------------------------
@@ -155,7 +155,8 @@ static void pruebaPublicador() {
   printf("Publicador\n");
   reiniciarDoble();
   Publicador p;
-  comprobar(memcmp(p.getUUID(), "AERI092021010920", 16) == 0, "UUID = \"AERI\" + número de serie");
+  const std::string uuidEsperado = std::string("AERI") + Configuracion::NUMERO_SERIE;
+  comprobar(memcmp(p.getUUID(), uuidEsperado.c_str(), 16) == 0, "UUID = \"AERI\" + número de serie");
   p.encenderEmisora();
   p.publicar(Publicador::OZONO, 98, 7, 6000);
   const BLEBeacon & b = Bluefruit.Advertising.ultimoBeacon;
@@ -212,7 +213,7 @@ static void pruebaProgramaCompleto() {
 
   setup();
   comprobar(Bluefruit.encendido, "setup() enciende Bluetooth");
-  comprobar(Doble::salidaSerie.find("092021010920") != std::string::npos, "setup() escribe el número de serie");
+  comprobar(Doble::salidaSerie.find(Configuracion::NUMERO_SERIE) != std::string::npos, "setup() escribe el número de serie");
 
   Doble::tiempoEsperado = 0;
   loop();

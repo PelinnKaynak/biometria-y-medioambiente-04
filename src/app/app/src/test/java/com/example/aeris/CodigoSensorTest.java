@@ -28,6 +28,16 @@ public class CodigoSensorTest {
     }
 
     @Test
+    public void etiquetaReal_conLaLetraO_seLee() {
+        // En las etiquetas de verdad el gas es «O3» (con la letra O)
+        CodigoSensor c = CodigoSensor.desdeTexto("032724010309 110406 O3 2404 -56.44");
+        assertNotNull(c);
+        assertEquals("032724010309", c.numeroSerie);
+        assertEquals("O3", c.gas);
+        assertEquals(-56.44, c.sensibilidad, 0.0001);
+    }
+
+    @Test
     public void espaciosDeMas_seIgnoran() {
         assertNotNull(CodigoSensor.desdeTexto("  092021010920  110406 03   2109 -44.75 \n"));
     }
@@ -48,5 +58,6 @@ public class CodigoSensorTest {
         assertNull(CodigoSensor.desdeTexto("092021010920 110406 03 2109"));          // falta la sensibilidad
         assertNull(CodigoSensor.desdeTexto("09202101092 110406 03 2109 -44.75"));    // serie de 11 cifras
         assertNull(CodigoSensor.desdeTexto("092021010920 110406 03 2109 abc"));      // sensibilidad no numérica
+        assertNull(CodigoSensor.desdeTexto("092021010920 110406 O3-X 2109 -44.75")); // gas con símbolos
     }
 }
