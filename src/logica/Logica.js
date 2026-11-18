@@ -4,9 +4,10 @@
 //              inicio de sesión, comprobación de la sesión y del rol, y
 //              recuperación de la contraseña, y el aviso de alertas del
 //              perfil, la edición de los datos y la foto (T010), y la
-//              vinculación de sensores confirmada por correo (T005). Es la
-//              única parte que habla con la base de datos (MySQL, tablas
-//              Usuarios y Sensores). Las sesiones y los enlaces de
+//              vinculación de sensores confirmada por correo (T005), y los
+//              datos de la página Mi cuenta (T024). Es la única parte que
+//              habla con la base de datos (MySQL, tablas Usuarios, Sensores,
+//              Contaminantes y Mediciones). Las sesiones y los enlaces de
 //              recuperación y de vinculación son tokens firmados: no usan tablas.
 //              Diseño en doc/logica_design.md. Tarea T016 · H001, H002.
 // Autores:     Equipo 04 – SenseTech
@@ -21,6 +22,7 @@ const Validador = require('./ValidadorUsuario');
 const { crearCorreoBienvenida } = require('./CorreoBienvenida');
 const { crearCorreoRecuperacion } = require('./CorreoRecuperacion');
 const { crearCorreoVinculacion } = require('./CorreoVinculacion');
+const MiCuenta = require('./MiCuenta');
 
 const ROL_PORTADOR = 'portador';        // rol de quien se registra desde la app
 const DURACION_SESION_SEGUNDOS = 30 * 24 * 60 * 60;      // 30 días
@@ -37,7 +39,8 @@ const ESTADO_RECHAZADA = 'rechazada';
 // ErrorLogica: error con un código que el servidor REST traduce a HTTP.
 //   codigo ∈ { DATOS_NO_VALIDOS, CORREO_YA_REGISTRADO, CORREO_NO_REGISTRADO,
 //              CREDENCIALES_INCORRECTAS, TOKEN_NO_VALIDO,
-//              SENSOR_NO_REGISTRADO, SENSOR_YA_VINCULADO, SIN_SOLICITUD }
+//              SENSOR_NO_REGISTRADO, SENSOR_YA_VINCULADO, SIN_SOLICITUD,
+//              SIN_SENSOR, SIN_MEDICIONES }
 // ---------------------------------------------------------------------------
 class ErrorLogica extends Error {
     constructor(codigo, mensaje, campos = []) {
@@ -481,6 +484,140 @@ class Logica {
         }
         return { estado: acepta ? ESTADO_CONFIRMADA : ESTADO_RECHAZADA,
             numeroSerie: sensor.numeroSerie, nombreSolicitante: `${sensor.nombre} ${sensor.apellidos}` };
+    }
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N, ahora: Fecha (opcional) --> resumenCuenta() --> Resumen
+    // Resumen = { nodo, ultimaSincronizacion, medicionesMes, medicionesMesAnterior,
+    //             puntos, nivel, siguienteNivel, puntosSiguienteNivel,
+    //             exposicionMedia, horasOzonoAlto, umbralAviso,
+    //             lugares: [ Lugar ], ultimasMediciones: [ MedicionCuenta ] }
+    // MedicionCuenta = { fecha, lugar, latitud, longitud, ozono }
+    // What it does: the data of the web page Mi cuenta (T024 · H035), with
+    //               the same keys as LogicaCuentaFake:
+    //               - medicionesMes / medicionesMesAnterior: this calendar
+    //                 month and the one before (UTC).
+    //               - exposicionMedia: average ozone of the last 30 days
+    //                 (null if there is none).
+    //               - horasOzonoAlto: hours of the last 7 days with some
+    //                 ozone value above the user's alert threshold
+    //                 (umbralAlerta, or 180 µg/m³).
+    //               - puntos: PROVISIONAL, one per saved measurement, until
+    //                 MovimientosPuntos exists. The level comes from MiCuenta.
+    //               - lugares: always [] until Mis lugares has a table.
+    //               - ultimasMediciones: the last 4 ozone values, with the
+    //                 coordinates as the place.
+    //               Throws SIN_SENSOR if the user has no linked sensor and
+    //               SIN_MEDICIONES if it has not sent anything yet.
+    // -----------------------------------------------------------------------
+    async resumenCuenta(idUsuario, ahora = new Date()) {
+        const sensor = await this.sensorDelUsuario(idUsuario);
+        const { inicioMes, inicioMesAnterior } = MiCuenta.limitesDeMes(ahora);
+
+        const [[cuenta]] = await this.conexion.execute(
+            `SELECT COUNT(*) AS total,
+                    COALESCE(SUM(fechaHora >= ?), 0) AS mes,
+                    COALESCE(SUM(fechaHora >= ? AND fechaHora < ?), 0) AS mesAnterior,
+                    MAX(fechaHora) AS ultima
+               FROM Mediciones WHERE idUsuario = ?`,
+            [inicioMes, inicioMesAnterior, inicioMes, idUsuario]);
+        if (Number(cuenta.total) === 0) {
+            throw new ErrorLogica('SIN_MEDICIONES', 'Todavía no hay mediciones de tu sensor');
+        }
+
+        const [[usuario]] = await this.conexion.execute(
+            'SELECT umbralAlerta FROM Usuarios WHERE idUsuario = ?', [idUsuario]);
+        const umbral = usuario && usuario.umbralAlerta !== null
+            ? Number(usuario.umbralAlerta) : MiCuenta.UMBRAL_AVISO_POR_DEFECTO;
+        const ozono = this.condicionOzono();
+
+        const [[media]] = await this.conexion.execute(
+            `SELECT AVG(valorMedicion) AS media FROM Mediciones
+              WHERE idUsuario = ? AND ${ozono.sql} AND fechaHora >= ?`,
+            [idUsuario, ...ozono.valores, MiCuenta.haceDias(ahora, MiCuenta.DIAS_EXPOSICION_MEDIA)]);
+
+        const [[horas]] = await this.conexion.execute(
+            `SELECT COUNT(DISTINCT DATE_FORMAT(fechaHora, '%Y-%m-%d %H')) AS horas FROM Mediciones
+              WHERE idUsuario = ? AND ${ozono.sql} AND fechaHora >= ? AND valorMedicion > ?`,
+            [idUsuario, ...ozono.valores, MiCuenta.haceDias(ahora, MiCuenta.DIAS_HORAS_ALTAS), umbral]);
+
+        const [ultimas] = await this.conexion.execute(
+            `SELECT fechaHora, valorMedicion, ST_Y(ubicacion) AS latitud, ST_X(ubicacion) AS longitud
+               FROM Mediciones WHERE idUsuario = ? AND ${ozono.sql}
+              ORDER BY fechaHora DESC, idMedicion DESC LIMIT ${MiCuenta.NUMERO_ULTIMAS_MEDICIONES}`,
+            [idUsuario, ...ozono.valores]);
+
+        const puntos = Number(cuenta.total);
+        return {
+            nodo: sensor.numeroSerie,
+            ultimaSincronizacion: sensor.ultimaConexion || cuenta.ultima,
+            medicionesMes: Number(cuenta.mes),
+            medicionesMesAnterior: Number(cuenta.mesAnterior),
+            puntos,
+            ...MiCuenta.nivelDePuntos(puntos),
+            exposicionMedia: media.media === null ? null : Math.round(Number(media.media)),
+            horasOzonoAlto: Number(horas.horas),
+            umbralAviso: umbral,
+            lugares: [],
+            ultimasMediciones: ultimas.map((m) => ({
+                fecha: m.fechaHora,
+                lugar: MiCuenta.textoDelSitio(m.latitud, m.longitud),
+                latitud: Number(m.latitud),
+                longitud: Number(m.longitud),
+                ozono: Number(m.valorMedicion)
+            }))
+        };
+    }
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N, periodo: Texto, ahora: Fecha (opcional) --> exposicion() --> [ PuntoExposicion ]
+    // PuntoExposicion = { fecha: Fecha (ese día a las 12:00 UTC), ozono: R }
+    // What it does: the average ozone of each day of the period
+    //               (semana = 7 días, mes = 30, 3meses = 90) for the graph of
+    //               Mi cuenta. Days without measurements are left out.
+    //               Throws DATOS_NO_VALIDOS if the period is not one of those
+    //               and SIN_SENSOR if the user has no linked sensor.
+    // -----------------------------------------------------------------------
+    async exposicion(idUsuario, periodo, ahora = new Date()) {
+        const dias = MiCuenta.diasDelPeriodo(periodo);
+        if (dias === null) {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', 'El periodo tiene que ser semana, mes o 3meses', ['periodo']);
+        }
+        await this.sensorDelUsuario(idUsuario);
+        const ozono = this.condicionOzono();
+        const [filas] = await this.conexion.execute(
+            `SELECT DATE_FORMAT(fechaHora, '%Y-%m-%d') AS dia, AVG(valorMedicion) AS media FROM Mediciones
+              WHERE idUsuario = ? AND ${ozono.sql} AND fechaHora >= ?
+              GROUP BY dia ORDER BY dia`,
+            [idUsuario, ...ozono.valores, MiCuenta.haceDias(ahora, dias)]);
+        return filas.map((f) => ({ fecha: new Date(`${f.dia}T12:00:00Z`), ozono: Math.round(Number(f.media)) }));
+    }
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N --> sensorDelUsuario() --> { idSensor, numeroSerie, ultimaConexion }
+    // What it does: the sensor linked to the user (the first one if he has
+    //               several). Throws SIN_SENSOR if there is none.
+    // -----------------------------------------------------------------------
+    async sensorDelUsuario(idUsuario) {
+        const [filas] = await this.conexion.execute(
+            'SELECT idSensor, numeroSerie, ultimaConexion FROM Sensores WHERE idUsuario = ? ORDER BY idSensor LIMIT 1',
+            [idUsuario]);
+        if (filas.length === 0) {
+            throw new ErrorLogica('SIN_SENSOR', 'No tienes ningún sensor vinculado');
+        }
+        return filas[0];
+    }
+
+    // -----------------------------------------------------------------------
+    // --> condicionOzono() --> { sql: Texto, valores: [ Texto ] }
+    // What it does: the WHERE part that keeps only the ozone measurements.
+    // -----------------------------------------------------------------------
+    condicionOzono() {
+        const huecos = MiCuenta.NOMBRES_OZONO.map(() => '?').join(', ');
+        return {
+            sql: `idContaminante IN (SELECT idContaminante FROM Contaminantes WHERE nombre IN (${huecos}))`,
+            valores: MiCuenta.NOMBRES_OZONO
+        };
     }
 
     // -----------------------------------------------------------------------

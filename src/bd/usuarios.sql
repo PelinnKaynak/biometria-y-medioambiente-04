@@ -134,3 +134,6 @@ CREATE TABLE IF NOT EXISTS Mediciones (
 -- ---------------------------------------------------------------
 INSERT IGNORE INTO Sensores (numeroSerie, sensibilidad, correoCompra)
 VALUES ('092021010920', -44.75, 'pkaynak@upv.edu.es');
+
+INSERT IGNORE INTO Contaminantes (nombre, unidad, umbralModerado, umbralMalo, umbralMuyMalo)
+VALUES ('Ozono', 'µg/m³', 100, 180, 240);

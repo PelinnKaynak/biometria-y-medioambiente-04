@@ -3,7 +3,8 @@
 // Descripción: Rutas REST de usuarios y autenticación. Cada ruta lee la
 //              petición, llama a la lógica y traduce el resultado a HTTP.
 //              Contrato completo en doc/servidor_rest_design.md. Tareas T016,
-//              T010 y T005 (vinculación del sensor confirmada por correo).
+//              T010, T005 (vinculación del sensor confirmada por correo) y
+//              T024 (datos de la página Mi cuenta).
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -23,6 +24,8 @@ const CODIGOS_HTTP = {
     CORREO_NO_REGISTRADO: 404,
     SENSOR_NO_REGISTRADO: 404,
     SIN_SOLICITUD: 404,
+    SIN_SENSOR: 404,
+    SIN_MEDICIONES: 404,
     CORREO_YA_REGISTRADO: 409,
     SENSOR_YA_VINCULADO: 409
 };
@@ -123,6 +126,18 @@ function cargarReglasREST(servidor, logica) {
     servidor.post('/reenviarCorreoVinculacion', requiereSesion(logica), envolver(async (peticion, respuesta) => {
         await logica.reenviarCorreoVinculacion(peticion.usuario.idUsuario);
         respuesta.status(200).json({ mensaje: 'Correo reenviado' });
+    }));
+
+    // GET /miCuenta  🔒                                                   (T024)
+    //   200 Resumen (ver Logica.resumenCuenta) · 404 sin sensor vinculado o sin mediciones · 401
+    servidor.get('/miCuenta', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.resumenCuenta(peticion.usuario.idUsuario));
+    }));
+
+    // GET /miExposicion?periodo=semana|mes|3meses  🔒                     (T024)
+    //   200 [ { fecha, ozono } ] media de cada día · 400 periodo no válido · 404 sin sensor · 401
+    servidor.get('/miExposicion', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.exposicion(peticion.usuario.idUsuario, peticion.query.periodo));
     }));
 
     // GET /responderVinculacion?token=…&respuesta=si|no      (enlaces del correo; abre el navegador)
