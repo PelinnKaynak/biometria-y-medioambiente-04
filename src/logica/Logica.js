@@ -500,28 +500,46 @@ class Logica {
         if (!datos || datos.t !== TIPO_VINCULACION || !Number.isInteger(datos.s) || !Number.isInteger(datos.u)) {
             throw new ErrorLogica('TOKEN_NO_VALIDO', 'El enlace no es válido o ha caducado');
         }
-        const [filas] = await this.conexion.execute(
-            `SELECT s.idSensor, s.numeroSerie, s.idUsuario, s.idSolicitante, s.estadoSolicitud, s.fechaSolicitud,
-                    u.nombre, u.apellidos
-               FROM Sensores s JOIN Usuarios u ON u.idUsuario = s.idSolicitante
-              WHERE s.idSensor = ?`, [datos.s]);
-        const sensor = filas[0];
-        if (!sensor || sensor.idSolicitante !== datos.u || sensor.estadoSolicitud !== ESTADO_PENDIENTE
-            || Math.floor(sensor.fechaSolicitud.getTime() / 1000) !== datos.f || sensor.idUsuario !== null) {
-            throw new ErrorLogica('TOKEN_NO_VALIDO', 'El enlace no es válido o ya se ha usado');
+        const conexion = await this.conexion.getConnection();
+        let transaccionIniciada = false;
+        try {
+            await conexion.beginTransaction();
+            transaccionIniciada = true;
+            const [filas] = await conexion.execute(
+                `SELECT s.idSensor, s.numeroSerie, s.idUsuario, s.idSolicitante, s.estadoSolicitud, s.fechaSolicitud,
+                        u.nombre, u.apellidos
+                   FROM Sensores s JOIN Usuarios u ON u.idUsuario = s.idSolicitante
+                  WHERE s.idSensor = ? FOR UPDATE`, [datos.s]);
+            const sensor = filas[0];
+            if (!sensor || sensor.idSolicitante !== datos.u || sensor.estadoSolicitud !== ESTADO_PENDIENTE
+                || Math.floor(sensor.fechaSolicitud.getTime() / 1000) !== datos.f || sensor.idUsuario !== null) {
+                throw new ErrorLogica('TOKEN_NO_VALIDO', 'El enlace no es válido o ya se ha usado');
+            }
+            if (acepta) {
+                await conexion.execute(
+                    'UPDATE Sensores SET idUsuario = ?, estadoSolicitud = ? WHERE idSensor = ?',
+                    [datos.u, ESTADO_CONFIRMADA, sensor.idSensor]);
+                await conexion.execute(
+                    `UPDATE Usuarios
+                        SET esPortador = TRUE,
+                            role = CASE WHEN role = 'ciudadano' THEN 'portador' ELSE role END
+                      WHERE idUsuario = ?`, [datos.u]);
+            } else {
+                await conexion.execute('UPDATE Sensores SET estadoSolicitud = ? WHERE idSensor = ?',
+                    [ESTADO_RECHAZADA, sensor.idSensor]);
+            }
+            await conexion.commit();
+            transaccionIniciada = false;
+            return {
+                estado: acepta ? ESTADO_CONFIRMADA : ESTADO_RECHAZADA,
+                numeroSerie: sensor.numeroSerie, nombreSolicitante: `${sensor.nombre} ${sensor.apellidos}`
+            };
+        } catch (error) {
+            if (transaccionIniciada) await conexion.rollback();
+            throw error;
+        } finally {
+            conexion.release();
         }
-        if (acepta) {
-            await this.conexion.execute(
-                'UPDATE Sensores SET idUsuario = ?, estadoSolicitud = ? WHERE idSensor = ?',
-                [datos.u, ESTADO_CONFIRMADA, sensor.idSensor]);
-        } else {
-            await this.conexion.execute('UPDATE Sensores SET estadoSolicitud = ? WHERE idSensor = ?',
-                [ESTADO_RECHAZADA, sensor.idSensor]);
-        }
-        return {
-            estado: acepta ? ESTADO_CONFIRMADA : ESTADO_RECHAZADA,
-            numeroSerie: sensor.numeroSerie, nombreSolicitante: `${sensor.nombre} ${sensor.apellidos}`
-        };
     }
 
     // -----------------------------------------------------------------------
