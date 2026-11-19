@@ -160,7 +160,7 @@ describe('Logica (incidencias)', function () {
     it('responder() guarda quién respondió y sale con su nombre y su rol', async function () {
         await logica.conexion.execute(
             `UPDATE Usuarios
-            SET role = 'tecnico', esAdministrador = FALSE, esTecnico = TRUE, esPortador = FALSE
+            SET esAdministrador = FALSE, esTecnico = TRUE, esPortador = FALSE
             WHERE idUsuario = ?`,
             [ana.idUsuario]
         );

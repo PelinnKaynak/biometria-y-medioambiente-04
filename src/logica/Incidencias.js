@@ -27,7 +27,11 @@ const LARGO_MAXIMO_ASUNTO = 120;
 const SELECT_INCIDENCIA = `
     SELECT i.idIncidencia, i.idUsuario, i.idSensor, i.tipo, i.asunto, i.descripcion, i.estado,
            i.respuesta, i.idResponsable, i.fechaCreacion, i.fechaRespuesta, s.numeroSerie,
-           r.nombre AS nombreResponsable, r.role AS rolResponsable
+           r.nombre AS nombreResponsable, CASE
+           WHEN r.idUsuario IS NULL THEN NULL
+           WHEN r.esAdministrador = TRUE THEN 'administrador'
+           WHEN r.esTecnico = TRUE THEN 'tecnico'
+           WHEN r.esPortador = TRUE THEN 'portador' ELSE 'ciudadano' END AS rolResponsable
       FROM Incidencias i
       LEFT JOIN Sensores s ON s.idSensor = i.idSensor
       LEFT JOIN Usuarios r ON r.idUsuario = i.idResponsable`;
@@ -39,7 +43,11 @@ const SELECT_INCIDENCIA_GESTION = `
            u.nombre, u.apellidos, u.email,
            s.numeroSerie, s.nombre AS nombreSensor, s.estado AS estadoSensor, s.bateria,
            s.ultimaConexion, s.necesitaCalibracion,
-           r.nombre AS nombreResponsable, r.role AS rolResponsable
+           r.nombre AS nombreResponsable, CASE
+           WHEN r.idUsuario IS NULL THEN NULL
+           WHEN r.esAdministrador = TRUE THEN 'administrador'
+           WHEN r.esTecnico = TRUE THEN 'tecnico'
+           WHEN r.esPortador = TRUE THEN 'portador' ELSE 'ciudadano' END AS rolResponsable
       FROM Incidencias i
       JOIN Usuarios u ON u.idUsuario = i.idUsuario
       LEFT JOIN Sensores s ON s.idSensor = i.idSensor

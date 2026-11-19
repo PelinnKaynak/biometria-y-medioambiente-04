@@ -50,10 +50,10 @@ describe('Logica (usuarios y autenticación)', function () {
 
     // --- registro -----------------------------------------------------------
 
-    it('registrarUsuario() crea el usuario como portador y abre su sesión', async function () {
+    it('registrarUsuario() crea el usuario sin permisos y abre su sesión', async function () {
         const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', ' Pelin@AERIS.es ', 'aire2026');
         assert.ok(sesion.idUsuario > 0);
-        assert.strictEqual(sesion.rol, 'portador');
+        assert.strictEqual(sesion.rol, 'ciudadano');
         assert.strictEqual(sesion.nombre, 'Pelin');
         assert.ok(Seguridad.leerToken(sesion.token, CLAVE));
 
@@ -61,6 +61,10 @@ describe('Logica (usuarios y autenticación)', function () {
         assert.strictEqual(usuario.correo, 'pelin@aeris.es');
         assert.strictEqual(usuario.apellidos, 'Kaynak');
         assert.strictEqual(usuario.hashContrasenya, undefined);
+
+        assert.strictEqual(sesion.esAdministrador, false);
+        assert.strictEqual(sesion.esTecnico, false);
+        assert.strictEqual(sesion.esPortador, false);
     });
 
     it('obtenerUsuario() devuelve alertas = true por defecto', async function () {
@@ -214,13 +218,13 @@ describe('Logica (usuarios y autenticación)', function () {
     it('iniciarSesion() con correo y contraseña correctos devuelve token y rol', async function () {
         await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
         const sesion = await logica.iniciarSesion('PELIN@aeris.es', 'aire2026');
-        assert.strictEqual(sesion.rol, 'portador');
+        assert.strictEqual(sesion.rol, 'ciudadano');
         assert.deepStrictEqual(await logica.comprobarSesion(sesion.token), {
             idUsuario: sesion.idUsuario,
-            rol: 'portador',
+            rol: 'ciudadano',
             esAdministrador: false,
             esTecnico: false,
-            esPortador: true
+            esPortador: false
         });
     });
 
@@ -236,7 +240,7 @@ describe('Logica (usuarios y autenticación)', function () {
 
         await logica.conexion.query(
             `UPDATE Usuarios
-         SET role = 'administrador', esAdministrador = TRUE, esTecnico = TRUE
+            SET esAdministrador = TRUE, esTecnico = TRUE, esPortador = TRUE
          WHERE idUsuario = ?`,
             [sesion.idUsuario]
         );

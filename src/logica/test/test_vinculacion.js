@@ -56,7 +56,7 @@ describe('Logica (vinculación del sensor por correo)', function () {
     }
 
     it('sin urlVinculacion, los enlaces del correo van al mismo servidor que urlRestablecer', function () {
-        const l = new Logica(null, async () => {}, 'https://pfermar1.upv.edu.es/restablecer.html', CLAVE);
+        const l = new Logica(null, async () => { }, 'https://pfermar1.upv.edu.es/restablecer.html', CLAVE);
         assert.strictEqual(l.urlVinculacion, 'https://pfermar1.upv.edu.es/responderVinculacion');
     });
 
@@ -144,8 +144,6 @@ describe('Logica (vinculación del sensor por correo)', function () {
     });
 
     it('responderVinculacion() con «sí» vincula el sensor y el estado pasa a confirmada', async function () {
-        await logica.conexion.execute(
-            "UPDATE Usuarios SET role = 'ciudadano', esPortador = FALSE WHERE idUsuario = ?", [pelin.idUsuario]);
         await logica.solicitarVinculacion(pelin.idUsuario, SERIE, 1);
         const r = await logica.responderVinculacion(tokenDelUltimoCorreo(), true);
         assert.deepStrictEqual(r, { estado: 'confirmada', numeroSerie: SERIE, nombreSolicitante: 'Pelin Kaynak' });
@@ -154,8 +152,9 @@ describe('Logica (vinculación del sensor por correo)', function () {
         assert.strictEqual(fila.idUsuario, pelin.idUsuario);
         assert.strictEqual((await logica.estadoVinculacion(pelin.idUsuario)).estado, 'confirmada');
         const [[usuario]] = await logica.conexion.execute(
-            'SELECT role, esPortador FROM Usuarios WHERE idUsuario = ?', [pelin.idUsuario]);
-        assert.strictEqual(usuario.role, 'portador');
+            'SELECT esPortador FROM Usuarios WHERE idUsuario = ?',
+            [pelin.idUsuario]
+        );
         assert.strictEqual(Boolean(usuario.esPortador), true);
 
         // el mismo enlace ya no vale otra vez

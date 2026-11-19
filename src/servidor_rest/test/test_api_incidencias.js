@@ -34,10 +34,9 @@ describe('API REST de incidencias', function () {
         const sesion = await logica.registrarUsuario(nombre, 'Prueba', correo, 'aire2026');
         await logica.conexion.execute(
             `UPDATE Usuarios
-            SET role = ?, esAdministrador = ?, esTecnico = ?, esPortador = ?
+            SET esAdministrador = ?, esTecnico = ?, esPortador = ?
             WHERE idUsuario = ?`,
             [
-                rol,
                 rol === 'administrador',
                 rol === 'tecnico',
                 rol === 'portador' || rol === 'ciudadano',
