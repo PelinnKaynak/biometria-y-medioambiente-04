@@ -72,7 +72,7 @@ describe('API REST de nodos del panel', function () {
         for (const token of [tokens.admin, tokens.tecnico]) {
             const r = await pedir('/nodos/resumen', token);
             assert.strictEqual(r.codigo, 200);
-            assert.deepStrictEqual(r.cuerpo, { total: 2, activos: 1, inactivos24h: 1, inactivos7d: 1, porCalibrar: 0 });
+            assert.deepStrictEqual(r.cuerpo, { total: 2, activos: 1, inactivos24h: 1, inactivos7d: 1, porCalibrar: 0, umbralHoras: 24 });
         }
     });
 

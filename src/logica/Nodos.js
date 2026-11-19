@@ -7,15 +7,24 @@
 //              por calibrar), con búsqueda, filtro por estado y páginas.
 //              Usa las tablas Sensores, Usuarios y Mediciones de
 //              src/bd/usuarios.sql. Diseño en doc/logica_design.md.
-//              Tarea T021 · H011.
+//              Tarea T021 · H011. Detección de nodos inactivos con el
+//              umbral configurable y marca en Sensores.estado: T022 · H012.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       19/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
 // ---------------------------------------------------------------------------
 'use strict';
 
-// Mismo umbral que la web (UMBRAL_INACTIVO_HORAS en web_admin/js/nodos.js)
+// Umbral de inactividad por defecto: el mismo que la web
+// (UMBRAL_INACTIVO_HORAS en web_admin/js/nodos.js). Se cambia con
+// UMBRAL_INACTIVO_HORAS en el .env del servidor (T022), de 1 a 168 horas.
 const HORAS_INACTIVO = 24;
+const HORAS_INACTIVO_MINIMO = 1;
+const HORAS_INACTIVO_MAXIMO = 168;
+
+// Valores de Sensores.estado (los mismos que usa Mediciones.js)
+const ESTADO_BD_ACTIVO = 'activo';
+const ESTADO_BD_INACTIVO = 'inactivo';
 const DIAS_INACTIVO_LARGO = 7;
 const POR_PAGINA_POR_DEFECTO = 20;
 const POR_PAGINA_MAXIMO = 100;
@@ -32,6 +41,7 @@ const CALIBRAR = 'CALIBRAR';
 // sitio donde se tomó. Si nunca ha medido, se usa ultimaConexion.
 const SQL_NODOS = `
     SELECT s.numeroSerie,
+           s.estado,
            s.bateria,
            s.necesitaCalibracion,
            CONCAT(u.nombre, ' ', u.apellidos) AS portador,
@@ -61,16 +71,16 @@ function leerEntero(valor, porDefecto, minimo, maximo) {
 }
 
 // ---------------------------------------------------------------------------
-// fila: FilaBD, ahora: Date --> aNodo() --> Nodo
+// fila: FilaBD, ahora: Date, horasInactivo: N --> aNodo() --> Nodo
 // Nodo = { id, portador, ultimaMedicion: Date | null, bateria: N | null,
 //          latitud: R | null, longitud: R | null, necesitaCalibrar: V/F,
 //          estado: ACTIVO | INACTIVO | CALIBRAR }
 // Same keys as the nodes of LogicaAdminFake in the web.
 // ---------------------------------------------------------------------------
-function aNodo(fila, ahora) {
+function aNodo(fila, ahora, horasInactivo = HORAS_INACTIVO) {
     const ultima = fila.ultimaMedicion ? new Date(fila.ultimaMedicion) : null;
     const necesitaCalibrar = Boolean(fila.necesitaCalibracion);
-    const inactivo = !ultima || ahora.getTime() - ultima.getTime() > HORAS_INACTIVO * MS_POR_HORA;
+    const inactivo = !ultima || ahora.getTime() - ultima.getTime() > horasInactivo * MS_POR_HORA;
     return {
         id: fila.numeroSerie,
         portador: fila.portador,
@@ -79,31 +89,80 @@ function aNodo(fila, ahora) {
         latitud: fila.latitud === null ? null : Number(fila.latitud),
         longitud: fila.longitud === null ? null : Number(fila.longitud),
         necesitaCalibrar,
-        estado: inactivo ? INACTIVO : (necesitaCalibrar ? CALIBRAR : ACTIVO)
+        estado: inactivo ? INACTIVO : (necesitaCalibrar ? CALIBRAR : ACTIVO),
+        estadoBD: fila.estado
     };
+}
+
+// ---------------------------------------------------------------------------
+// valor: Texto | N | undefined --> leerUmbral() --> N | null
+// What it does: the inactivity threshold in hours written in the .env, or
+//               null if it is not a whole number between 1 and 168.
+// ---------------------------------------------------------------------------
+function leerUmbral(valor) {
+    return leerEntero(valor, HORAS_INACTIVO, HORAS_INACTIVO_MINIMO, HORAS_INACTIVO_MAXIMO);
 }
 
 class Nodos {
 
     // -----------------------------------------------------------------------
     // logica: Logica --> constructor()
-    // What it does: uses the database connection and ErrorLogica of Logica.
+    // What it does: uses the database connection of Logica. The threshold
+    //               starts at 24 hours.
     // -----------------------------------------------------------------------
     constructor(logica) {
         this.logica = logica;
+        this.horasInactivo = HORAS_INACTIVO;
+    }
+
+    // -----------------------------------------------------------------------
+    // horas: Texto | N | undefined --> cambiarUmbral() --> N
+    // What it does: sets the inactivity threshold (the server calls it at the
+    //               start with UMBRAL_INACTIVO_HORAS of the .env). Empty means
+    //               24. Throws DATOS_NO_VALIDOS if it is not a whole number
+    //               between 1 and 168. The states are calculated with it from
+    //               the next request on.
+    // -----------------------------------------------------------------------
+    cambiarUmbral(horas) {
+        const umbral = leerUmbral(horas);
+        if (umbral === null) {
+            const { ErrorLogica } = require('./Logica');
+            throw new ErrorLogica('DATOS_NO_VALIDOS',
+                `El umbral de inactividad tiene que ser un número entero de ${HORAS_INACTIVO_MINIMO} a ${HORAS_INACTIVO_MAXIMO} horas`,
+                ['umbralHoras']);
+        }
+        this.horasInactivo = umbral;
+        return umbral;
+    }
+
+    // -----------------------------------------------------------------------
+    // ahora: Fecha (opcional) --> marcarInactivos() --> { inactivos: N, activos: N }
+    // What it does: writes in Sensores.estado the state of each node with the
+    //               current threshold: 'inactivo' for those that have been
+    //               more than horasInactivo without data and 'activo' for the
+    //               rest. Only touches the rows that change and returns how
+    //               many changed to each state. The server calls it every hour
+    //               and every time the nodes are listed.
+    // -----------------------------------------------------------------------
+    async marcarInactivos(ahora = new Date()) {
+        return this.guardarEstados(await this.leerNodos(ahora));
     }
 
     // -----------------------------------------------------------------------
     // ahora: Fecha (opcional) --> resumen() --> ResumenNodos
-    // ResumenNodos = { total, activos, inactivos24h, inactivos7d, porCalibrar }
+    // ResumenNodos = { total, activos, inactivos24h, inactivos7d, porCalibrar, umbralHoras }
     // What it does: the numbers at the top of the Nodos page. activos +
-    //               inactivos24h = total; inactivos7d are the inactive ones
-    //               that have not sent anything for more than a week.
+    //               inactivos24h = total; inactivos24h are those over the
+    //               threshold (24 h by default) and inactivos7d the inactive
+    //               ones that have not sent anything for more than a week.
     // -----------------------------------------------------------------------
     async resumen(ahora = new Date()) {
         const nodos = await this.todos(ahora);
         const hace7Dias = ahora.getTime() - DIAS_INACTIVO_LARGO * 24 * MS_POR_HORA;
-        const resumen = { total: nodos.length, activos: 0, inactivos24h: 0, inactivos7d: 0, porCalibrar: 0 };
+        const resumen = {
+            total: nodos.length, activos: 0, inactivos24h: 0, inactivos7d: 0, porCalibrar: 0,
+            umbralHoras: this.horasInactivo
+        };
         for (const nodo of nodos) {
             if (nodo.estado === INACTIVO) {
                 resumen.inactivos24h++;
@@ -169,12 +228,41 @@ class Nodos {
     // ahora: Fecha --> todos() --> [ Nodo ]
     // What it does: every linked sensor, ordered from the one that has been
     //               longest without data (those that never sent anything
-    //               first).
+    //               first), with its state saved in Sensores.estado.
     // -----------------------------------------------------------------------
     async todos(ahora) {
+        const nodos = await this.leerNodos(ahora);
+        await this.guardarEstados(nodos);
+        return nodos.map(({ estadoBD, ...nodo }) => nodo);
+    }
+
+    // -----------------------------------------------------------------------
+    // ahora: Fecha --> leerNodos() --> [ Nodo con estadoBD ]
+    // -----------------------------------------------------------------------
+    async leerNodos(ahora) {
         const [filas] = await this.logica.conexion.query(
             `${SQL_NODOS} ORDER BY ultimaMedicion IS NOT NULL, ultimaMedicion ASC, s.numeroSerie`);
-        return filas.map((fila) => aNodo(fila, ahora));
+        return filas.map((fila) => aNodo(fila, ahora, this.horasInactivo));
+    }
+
+    // -----------------------------------------------------------------------
+    // nodos: [ Nodo con estadoBD ] --> guardarEstados() --> { inactivos: N, activos: N }
+    // What it does: updates Sensores.estado only where it is different.
+    // -----------------------------------------------------------------------
+    async guardarEstados(nodos) {
+        const cambios = { inactivos: [], activos: [] };
+        for (const nodo of nodos) {
+            const debe = nodo.estado === INACTIVO ? ESTADO_BD_INACTIVO : ESTADO_BD_ACTIVO;
+            if (nodo.estadoBD !== debe) {
+                (debe === ESTADO_BD_INACTIVO ? cambios.inactivos : cambios.activos).push(nodo.id);
+            }
+        }
+        for (const [estado, ids] of [[ESTADO_BD_INACTIVO, cambios.inactivos], [ESTADO_BD_ACTIVO, cambios.activos]]) {
+            if (ids.length > 0) {
+                await this.logica.conexion.query('UPDATE Sensores SET estado = ? WHERE numeroSerie IN (?)', [estado, ids]);
+            }
+        }
+        return { inactivos: cambios.inactivos.length, activos: cambios.activos.length };
     }
 }
 
@@ -188,6 +276,6 @@ function quitarAcentos(texto) {
 }
 
 module.exports = {
-    Nodos, HORAS_INACTIVO, POR_PAGINA_POR_DEFECTO, POR_PAGINA_MAXIMO,
+    Nodos, HORAS_INACTIVO, HORAS_INACTIVO_MINIMO, HORAS_INACTIVO_MAXIMO, POR_PAGINA_POR_DEFECTO, POR_PAGINA_MAXIMO,
     ACTIVO, INACTIVO, CALIBRAR
 };

@@ -41,6 +41,16 @@ describe("estadoNodo()", () => {
     test("respeta otro umbral de inactividad", () => {
         expect(n.estadoNodo(nodo(5 * 60), AHORA, 4)).toBe("INACTIVO");
     });
+
+    test("inactivo si no ha medido nunca", () => {
+        expect(n.estadoNodo({ ultimaMedicion: null, necesitaCalibrar: false }, AHORA)).toBe("INACTIVO");
+    });
+
+    test("si el servidor manda el estado (con su umbral), usa ese", () => {
+        expect(n.estadoNodo(Object.assign(nodo(3 * 60), { estado: "INACTIVO" }), AHORA)).toBe("INACTIVO");
+        expect(n.estadoNodo(Object.assign(nodo(3000), { estado: "ACTIVO" }), AHORA)).toBe("ACTIVO");
+        expect(n.estadoNodo(Object.assign(nodo(10), { estado: "raro" }), AHORA)).toBe("ACTIVO");
+    });
 });
 
 describe("textoTiempoSinDatos()", () => {

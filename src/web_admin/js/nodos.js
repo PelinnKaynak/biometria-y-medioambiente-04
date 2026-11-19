@@ -34,16 +34,22 @@ function minutosSinDatos(ultima_medicion, ahora) {
 // nodo: Nodo, ahora: Fecha, umbral_horas: N --> estadoNodo()
 //                                           --> EstadoNodo
 //
-// Nodo = ( id: Text, portador: Text, ultimaMedicion: Text,
-//          bateria: N, latitud: R, longitud: R,
-//          necesitaCalibrar: B )
+// Nodo = ( id: Text, portador: Text, ultimaMedicion: Text | null,
+//          bateria: N | null, latitud: R, longitud: R,
+//          necesitaCalibrar: B, estado?: EstadoNodo )
 //
 // Un nodo es INACTIVO si lleva más de umbral_horas sin enviar
-// datos. Si no, es CALIBRAR si necesita calibración y ACTIVO
-// en el resto de casos.
+// datos o no ha medido nunca (ultimaMedicion null). Si no, es
+// CALIBRAR si necesita calibración y ACTIVO en el resto de
+// casos. Si el nodo ya trae el estado (el servidor lo calcula
+// con su umbral, UMBRAL_INACTIVO_HORAS del .env, T022), se usa
+// ese.
 // --------------------------------------------------------
 function estadoNodo(nodo, ahora, umbral_horas = UMBRAL_INACTIVO_HORAS) {
-    if (minutosSinDatos(nodo.ultimaMedicion, ahora) > umbral_horas * 60) {
+    if (Object.values(EstadoNodo).includes(nodo.estado)) {
+        return nodo.estado;
+    }
+    if (!nodo.ultimaMedicion || minutosSinDatos(nodo.ultimaMedicion, ahora) > umbral_horas * 60) {
         return EstadoNodo.INACTIVO;
     }
     return nodo.necesitaCalibrar ? EstadoNodo.CALIBRAR : EstadoNodo.ACTIVO;

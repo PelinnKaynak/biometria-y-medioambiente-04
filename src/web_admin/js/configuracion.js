@@ -5,7 +5,7 @@
 // true → datos de prueba; false → servidor REST real.
 // ------------------------------------------------------------
 
-const USAR_LOGICA_FAKE = true;
+const USAR_LOGICA_FAKE = false;
 const URL_SERVIDOR = "";
 
 // --------------------------------------------------------

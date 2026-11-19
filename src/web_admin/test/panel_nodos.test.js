@@ -88,6 +88,16 @@ describe("crearFilaNodo()", () => {
         expect(fila.querySelector(".celda-aviso").textContent).toBe("Inactivo");
     });
 
+    test("un nodo real sin batería ni mediciones enseña guiones en lugar de null", () => {
+        const fila = panelNodos.crearFilaNodo(nodo(0, { id: "092021011003", bateria: null, ultimaMedicion: null }), AHORA);
+        expect(fila.querySelector(".celda-id").textContent).toBe("092021011003");
+        expect(fila.querySelector(".celda-id").title).toBe("092021011003");
+        expect(fila.querySelector(".celda-bateria").textContent).toBe("—");
+        expect(fila.querySelector(".celda-bateria").classList.contains("bateria-baja")).toBe(false);
+        expect(fila.querySelector(".celda-tiempo").textContent).toBe("Nunca");
+        expect(fila.classList.contains("inactivo")).toBe(true);
+    });
+
     test("avisa de calibrar y de batería baja", () => {
         const fila = panelNodos.crearFilaNodo(nodo(10, { necesitaCalibrar: true, bateria: 12 }), AHORA);
         expect(fila.querySelector(".celda-aviso").textContent).toBe("Calibrar");
