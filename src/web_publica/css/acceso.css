@@ -11,18 +11,24 @@
   padding: 96px 24px 48px;
 }
 
+/* Enlace para volver: flecha y texto en morado, sin caja */
 .boton-volver {
   position: absolute;
   top: 33px;
   left: 37px;
-  padding: 14px 48px;
-  border: 1px solid var(--borde);
-  border-radius: 24px;
-  background: var(--blanco);
-  color: var(--texto);
-  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 4px;
+  border-radius: 8px;
+  color: var(--morado);
+  font-weight: 600;
   text-decoration: none;
 }
+.boton-volver:hover { text-decoration: underline; text-underline-offset: 4px; }
+.boton-volver:hover .icono-volver { transform: translateX(-3px); }
+.boton-volver:focus-visible { outline: 2px solid var(--morado); outline-offset: 2px; }
+.icono-volver { flex-shrink: 0; transition: transform 0.15s; }
 
 .tarjeta-acceso {
   display: grid;
@@ -225,9 +231,8 @@
   }
 
   .boton-volver {
-    top: 20px;
-    left: 16px;
-    padding: 8px 16px;
+    top: 16px;
+    left: 12px;
     font-size: 14px;
   }
 
