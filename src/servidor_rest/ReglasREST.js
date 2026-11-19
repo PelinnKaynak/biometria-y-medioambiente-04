@@ -141,7 +141,8 @@ function cargarReglasREST(servidor, logica) {
     // ---- Nodos del panel de administración (T021) ----
 
     // GET /nodos/resumen  🔒 administrador o técnico
-    //   200 { total, activos, inactivos24h, inactivos7d, porCalibrar } · 401 · 403
+    //   200 { total, activos, inactivos24h, inactivos7d, porCalibrar, umbralHoras } · 401 · 403
+    //   inactivos24h: los que pasan del umbral (UMBRAL_INACTIVO_HORAS, 24 h por defecto, T022)
     servidor.get('/nodos/resumen', requiereSesion(logica, ROLES_PANEL), envolver(async (peticion, respuesta) => {
         respuesta.status(200).json(await logica.nodos.resumen());
     }));

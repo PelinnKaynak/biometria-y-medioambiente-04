@@ -184,7 +184,7 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   - `test_mi_cuenta.js`: datos de la página Mi cuenta (T024).
   - `test_incidencias.js`: incidencias (T041).
   - `test_mediciones.js`: mediciones (T017).
-  - `test_nodos.js`: nodos del panel de administración (T021).
+  - `test_nodos.js`: nodos del panel de administración (T021) y detección de nodos inactivos (T022).
 - **Foto de perfil (T010):** se guarda en la columna `foto` de `Usuarios` como texto base64 (la app la reduce antes a un JPEG de 256×256, unos 30 KB), para que se vea en cualquier teléfono. No hace falta otra tabla.
 - **Cambiar la contraseña (T010):** pide la contraseña actual. Como el token lleva una huella del hash, al cambiarla se cierran todas las sesiones; por eso se devuelve un token nuevo para el teléfono que la ha cambiado.
 - **Correo de bienvenida (T002/T016):** al registrarse, `registrarUsuario()` llama a `enviarBienvenida()` sin esperarla: el registro responde enseguida y, si el correo falla (por ejemplo, Gmail no responde), la cuenta se crea igual y el error solo se escribe en la consola del servidor. El correo lo monta `CorreoBienvenida.crearCorreoBienvenida(nombre)` en español: texto plano y HTML con los colores de la app, el logo de AERIS arriba, una presentación general de la app y algunas de sus funciones (mapa, alertas, historial, previsión de ozono, rutas limpias, lugares, puntos…) y el logo de SenseTech al pie. Los logos (`src/logica/img/`) van incrustados en el correo (`cid:`), así se ven aunque el servidor no esté en internet. El nombre se escapa (`escaparHTML()`) para que no pueda meter HTML.
@@ -259,14 +259,17 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   Medicion = ( idMedicion, contaminante, valor, unidad, fecha, latitud, longitud )
 ```
 - **Nodos del panel (T021 · H011):** están en `Nodos.js` (clase `Nodos`) y se usan como `logica.nodos.buscar(…)`. Un nodo es un sensor vinculado a un usuario (`Sensores.idUsuario` no nulo); los que nadie ha vinculado todavía no salen. De cada uno se da el número de serie, el portador (nombre y apellidos), la fecha y el sitio de su última medición, la batería, si necesita calibración y el estado, con las mismas claves que los nodos de `LogicaAdminFake` de la web. Si un sensor no ha medido nunca, la fecha es `ultimaConexion` (o `null`) y la ubicación `null`.
-  - Estado: `INACTIVO` si lleva más de 24 horas sin datos o no ha medido nunca (el mismo umbral que `nodos.js` de la web); si no, `CALIBRAR` si `necesitaCalibracion` y `ACTIVO` en el resto.
+  - Estado: `INACTIVO` si lleva más horas sin datos que el umbral (24 por defecto, el mismo que `nodos.js` de la web) o no ha medido nunca; si no, `CALIBRAR` si `necesitaCalibracion` y `ACTIVO` en el resto.
   - `buscar()`: busca en el número de serie y en el portador sin mirar mayúsculas ni acentos, filtra por `estado` (`todos`, `activos` = no inactivos, `inactivos`, `calibrar`) y ordena del que lleva más tiempo sin datos al más reciente. Devuelve la página pedida (`pagina` desde 1, `porPagina` 20 por defecto y 100 como mucho) y `total`, el número de nodos que cumplen el filtro sin paginar. `porPagina` 0 los devuelve todos (el mapa). Un filtro que no vale da `DATOS_NO_VALIDOS` con los campos.
-  - `resumen()`: total, activos, inactivos de más de 24 horas, inactivos de más de 7 días y por calibrar.
+  - `resumen()`: total, activos, inactivos (los que pasan del umbral; la clave sigue siendo `inactivos24h`), inactivos de más de 7 días, por calibrar y `umbralHoras`.
+  - **Nodos inactivos (T022 · H012):** el umbral de inactividad es de 24 horas por defecto y se cambia con `UMBRAL_INACTIVO_HORAS` en el `.env` del servidor (un entero de 1 a 168). `mainServidorREST.js` lo pasa a `nodos.cambiarUmbral()` al arrancar; si no vale, avisa en la consola y deja 24. Hay que pasar del umbral: con 1 hora, un nodo que midió hace justo una hora sigue activo. El estado se calcula en cada petición con el umbral de ese momento, así que al cambiarlo se recalcula todo, y un nodo inactivo que vuelve a medir pasa a activo solo. Además, `marcarInactivos()` guarda el estado en `Sensores.estado` (`inactivo` o `activo`, los mismos valores que pone `Mediciones.js` al guardar una medición), tocando solo las filas que cambian. El servidor lo llama al arrancar y cada hora, y también se hace cada vez que se listan los nodos.
 
 ```text
   filtro: ( busqueda, estado, pagina, porPagina ), ahora: Fecha
                          --> nodos.buscar() --> ( nodos: Lista<Nodo>, total: N )   | DATOS_NO_VALIDOS
-  ahora: Fecha           --> nodos.resumen() --> ( total, activos, inactivos24h, inactivos7d, porCalibrar )
+  ahora: Fecha           --> nodos.resumen() --> ( total, activos, inactivos24h, inactivos7d, porCalibrar, umbralHoras )
+  horas: Texto | N       --> nodos.cambiarUmbral() --> N                       | DATOS_NO_VALIDOS
+  ahora: Fecha           --> nodos.marcarInactivos() --> ( inactivos: N, activos: N )   cuántos han cambiado
   Nodo = ( id, portador, ultimaMedicion: Fecha | null, bateria: N | null,
            latitud: R | null, longitud: R | null, necesitaCalibrar: V/F,
            estado: ACTIVO | INACTIVO | CALIBRAR )

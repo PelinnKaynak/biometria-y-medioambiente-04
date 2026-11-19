@@ -1,7 +1,8 @@
 // ---------------------------------------------------------------------------
 // Fichero:     test_nodos.js
 // Descripción: Tests de los nodos del panel de administración (Nodos.js,
-//              T021) contra la BD de pruebas aeris_test. Las fechas se
+//              T021) y de la detección de nodos inactivos (T022) contra la
+//              BD de pruebas aeris_test. Las fechas se
 //              calculan desde un «ahora» fijo.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       19/11/2026
@@ -141,6 +142,68 @@ describe('Logica (nodos del panel)', function () {
 
     it('resumen() cuenta activos, inactivos de 24 h y de 7 días, y por calibrar', async function () {
         assert.deepStrictEqual(await logica.nodos.resumen(AHORA),
-            { total: 4, activos: 2, inactivos24h: 2, inactivos7d: 1, porCalibrar: 1 });
+            { total: 4, activos: 2, inactivos24h: 2, inactivos7d: 1, porCalibrar: 1, umbralHoras: 24 });
+    });
+
+    // ---- T022: detección de nodos inactivos ----
+
+    async function estadosBD() {
+        const [filas] = await logica.conexion.query(
+            'SELECT numeroSerie, estado FROM Sensores WHERE idUsuario IS NOT NULL ORDER BY numeroSerie');
+        return Object.fromEntries(filas.map((f) => [f.numeroSerie, f.estado]));
+    }
+
+    afterEach(function () {
+        logica.nodos.cambiarUmbral(24);
+    });
+
+    it('marcarInactivos() guarda en Sensores.estado los que llevan más de 24 h sin datos', async function () {
+        await logica.conexion.query("UPDATE Sensores SET estado = 'activo'");
+        const r = await logica.nodos.marcarInactivos(AHORA);
+        assert.deepStrictEqual(await estadosBD(), {
+            '092021010001': 'activo', '092021010002': 'inactivo', '092021010003': 'activo', '092021010004': 'inactivo'
+        });
+        assert.deepStrictEqual(r, { inactivos: 2, activos: 0 });
+        assert.deepStrictEqual(await logica.nodos.marcarInactivos(AHORA), { inactivos: 0, activos: 0 });
+    });
+
+    it('al listar los nodos también se guarda su estado en la BD', async function () {
+        await logica.nodos.buscar({}, AHORA);
+        assert.strictEqual((await estadosBD())['092021010002'], 'inactivo');
+        const { nodos } = await logica.nodos.buscar({}, AHORA);
+        assert.ok(nodos.every((n) => !('estadoBD' in n)));
+    });
+
+    it('con otro umbral los estados se recalculan con el valor nuevo', async function () {
+        assert.strictEqual(logica.nodos.cambiarUmbral('72'), 72);    // como llega del .env
+        assert.strictEqual((await logica.nodos.buscar({ busqueda: '0002' }, AHORA)).nodos[0].estado, 'ACTIVO');
+        assert.deepStrictEqual(await logica.nodos.resumen(AHORA),
+            { total: 4, activos: 3, inactivos24h: 1, inactivos7d: 1, porCalibrar: 1, umbralHoras: 72 });
+        assert.strictEqual((await estadosBD())['092021010002'], 'activo');
+
+        logica.nodos.cambiarUmbral(1);        // la de hace justo 1 h aún cuenta; hace falta pasar del umbral
+        assert.deepStrictEqual((await logica.nodos.buscar({ estado: 'activos' }, AHORA)).nodos.map((n) => n.id),
+            ['092021010003', '092021010001']);
+        assert.strictEqual((await logica.nodos.buscar({ estado: 'activos' },
+            new Date(AHORA.getTime() + 60000))).total, 1);   // un minuto después, la de hace 1 h ya es inactiva
+        logica.nodos.cambiarUmbral(undefined);                         // sin nada en el .env: 24
+        assert.strictEqual(logica.nodos.horasInactivo, 24);
+    });
+
+    it('cambiarUmbral() solo acepta enteros de 1 a 168 horas', function () {
+        for (const malo of [0, 169, '12.5', 'mucho', -3]) {
+            assert.throws(() => logica.nodos.cambiarUmbral(malo), { codigo: 'DATOS_NO_VALIDOS', campos: ['umbralHoras'] }, String(malo));
+        }
+        assert.strictEqual(logica.nodos.horasInactivo, 24);
+        assert.strictEqual(logica.nodos.cambiarUmbral(168), 168);
+    });
+
+    it('un nodo inactivo que vuelve a medir pasa a activo', async function () {
+        await logica.nodos.marcarInactivos(AHORA);
+        const [[s2]] = await logica.conexion.query("SELECT idSensor FROM Sensores WHERE numeroSerie = '092021010002'");
+        await medir(s2.idSensor, pau, 5 * 60000);
+        assert.strictEqual((await logica.nodos.buscar({ busqueda: '0002' }, AHORA)).nodos[0].estado, 'ACTIVO');
+        await logica.nodos.marcarInactivos(AHORA);
+        assert.strictEqual((await estadosBD())['092021010002'], 'activo');
     });
 });
