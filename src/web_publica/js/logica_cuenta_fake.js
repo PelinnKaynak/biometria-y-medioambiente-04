@@ -22,6 +22,8 @@ var CUENTAS_CON_SENSOR = ["laura@correo.es", "admin@aeris.es"];
 var CORREO_COMPRADOR_FAKE = "maria.lopez@gmail.com";
 var NODO_FAKE = "N-0412";
 var HORAS_PARA_CONFIRMAR = 48;
+var NUMERO_SERIE_FAKE = "092021010920";
+var NUMERO_SERIE_VINCULADO_FAKE = "999999999999";
 
 // --------------------------------------------------------
 // --> estadoDeLaUrl() --> Text | null
@@ -200,6 +202,48 @@ class LogicaCuentaFake {
                 caducaEn: new Date(new Date(fechaSolicitud).getTime() + HORAS_PARA_CONFIRMAR * 3600000).toISOString()
             }
         };
+    }
+
+    // --------------------------------------------------------
+    // codigo: CodigoSensor --> solicitarVinculacion() --> r: ResultadoSolicitud
+    //
+    // Simula un sensor de prueba registrado y otro ya vinculado.
+    // --------------------------------------------------------
+    async solicitarVinculacion(codigo) {
+        await esperarCuenta(this.retardo_ms);
+        const usuario = this.usuarioActual();
+        const fallo = (error, sinSesion = false) => ({ correcto: false, solicitud: null, error, sinSesion });
+
+        if (!usuario) return fallo("Inicia sesión para vincular tu sensor", true);
+        if (!codigo || !/^\d{12}$/.test(String(codigo.numeroSerie || ""))) {
+            return fallo("El código del sensor no es válido. Revisa la etiqueta.");
+        }
+        if (codigo.numeroSerie === NUMERO_SERIE_VINCULADO_FAKE) {
+            return fallo("Este sensor ya está vinculado a otra cuenta.");
+        }
+        if (codigo.numeroSerie !== NUMERO_SERIE_FAKE) {
+            return fallo("Este sensor no está registrado. Revisa el código o escríbenos desde Ayuda.");
+        }
+
+        const estado = CUENTAS_CON_SENSOR.includes(String(usuario.correo).toLowerCase())
+            ? "confirmada"
+            : "pendiente";
+        const fechaSolicitud = this.ahora.toISOString();
+        const solicitud = {
+            numeroSerie: codigo.numeroSerie,
+            correoComprador: CORREO_COMPRADOR_FAKE,
+            estado,
+            fecha: fechaSolicitud
+        };
+        if (estado === "pendiente") {
+            guardarVinculacionFake({
+                estado,
+                nodo: codigo.numeroSerie,
+                emailConfirmacion: CORREO_COMPRADOR_FAKE,
+                fechaSolicitud
+            });
+        }
+        return { correcto: true, solicitud, error: "", sinSesion: false };
     }
 
     // --------------------------------------------------------

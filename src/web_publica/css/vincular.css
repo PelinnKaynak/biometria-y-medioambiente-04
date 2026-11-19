@@ -1,0 +1,117 @@
+/* ------------------------------------------------------------
+   vincular.css · página Vincular sensor (T045 · H019, H037)
+   ------------------------------------------------------------ */
+
+.contenido-vincular {
+    max-width: 1040px;
+    padding-top: 28px;
+}
+
+.volver-cuenta {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: var(--texto-suave);
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.volver-cuenta:hover { color: var(--morado); }
+
+.entradilla-vincular {
+    margin: 0 0 28px;
+    color: var(--texto-suave);
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.panel-vincular {
+    max-width: 760px;
+    margin: 0 auto 32px;
+    padding: 32px;
+}
+
+.etiqueta-paso {
+    margin: 0 0 10px;
+    color: var(--morado);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+.panel-vincular h2 { margin: 0; font-size: 24px; }
+
+.texto-ayuda {
+    margin: 10px 0 22px;
+    color: var(--texto-suave);
+    font-size: 15px;
+    line-height: 1.55;
+}
+
+#formulario-codigo label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#formulario-codigo .campo { font-family: monospace; }
+
+.ayuda-campo {
+    margin: 8px 0 18px;
+    color: var(--texto-suave);
+    font-size: 13px;
+}
+
+.mensaje-error {
+    margin: 12px 0;
+    padding: 12px 14px;
+    border-radius: 8px;
+    background: #FDECEE;
+    color: var(--malo-texto);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.45;
+}
+
+#formulario-codigo .boton { min-width: 160px; }
+
+.datos-sensor {
+    display: grid;
+    gap: 0;
+    margin: 26px 0;
+    border-top: 1px solid var(--borde);
+}
+
+.datos-sensor > div {
+    display: grid;
+    grid-template-columns: minmax(150px, 1fr) 1.5fr;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--borde);
+}
+
+.datos-sensor dt { color: var(--texto-suave); }
+.datos-sensor dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+
+.acciones-vinculacion {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.acciones-vinculacion .boton,
+.acciones-vinculacion .boton-borde { min-width: 150px; }
+
+.acciones-vinculacion button:disabled { opacity: 0.65; cursor: wait; }
+
+@media (max-width: 800px) {
+    .contenido-vincular { padding-top: 20px; }
+    .volver-cuenta { margin-bottom: 16px; }
+    .entradilla-vincular { margin-bottom: 20px; font-size: 15px; }
+    .panel-vincular { padding: 20px 16px; }
+    .panel-vincular h2 { font-size: 21px; }
+    .acciones-vinculacion { flex-direction: column-reverse; }
+    .acciones-vinculacion .boton,
+    .acciones-vinculacion .boton-borde { width: 100%; }
+    .datos-sensor > div { grid-template-columns: 1fr; gap: 5px; }
+}
