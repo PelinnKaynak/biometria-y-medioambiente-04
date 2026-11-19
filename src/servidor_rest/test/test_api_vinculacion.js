@@ -124,6 +124,8 @@ describe('API REST de vinculación del sensor', function () {
     });
 
     it('POST /responderVinculacion con «si» vincula y la app ve confirmada; el enlace usado ya no vale', async function () {
+        await logica.conexion.execute(
+            "UPDATE Usuarios SET role = 'ciudadano', esPortador = FALSE WHERE email = ?", ['pelin@aeris.es']);
         await peticion('POST', '/solicitarVinculacion', { numeroSerie: SERIE, sensibilidad: 1 });
         const r = await enviarFormulario(tokenDelCorreo(), 'si');
         assert.strictEqual(r.codigo, 200);
@@ -132,6 +134,10 @@ describe('API REST de vinculación del sensor', function () {
         assert.match(r.html, /src="\/img\/logo-aeris\.svg"/);
         assert.match(r.html, /@media \(max-width: 480px\)/);
         assert.strictEqual((await peticion('GET', '/estadoVinculacion')).cuerpo.estado, 'confirmada');
+        const [[usuario]] = await logica.conexion.execute(
+            'SELECT role, esPortador FROM Usuarios WHERE email = ?', ['pelin@aeris.es']);
+        assert.strictEqual(usuario.role, 'portador');
+        assert.strictEqual(Boolean(usuario.esPortador), true);
 
         const otraVez = await enviarFormulario(tokenDelCorreo(), 'si');
         assert.strictEqual(otraVez.codigo, 400);

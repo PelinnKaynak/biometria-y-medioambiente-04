@@ -122,6 +122,17 @@ describe('Logica (vinculación del sensor por correo)', function () {
         assert.strictEqual(fila.sensibilidad, -41.5);
     });
 
+    it('solicitarVinculacion() envía el correo al comprador aunque sea quien lo solicita', async function () {
+        await logica.conexion.execute(
+            'UPDATE Sensores SET correoCompra = ? WHERE numeroSerie = ?', ['pelin@aeris.es', SERIE]);
+
+        const solicitud = await logica.solicitarVinculacion(pelin.idUsuario, SERIE, -41.5);
+
+        assert.strictEqual(solicitud.estado, 'pendiente');
+        assert.strictEqual(correos.length, 1);
+        assert.strictEqual(correos[0].destinatario, 'pelin@aeris.es');
+    });
+
     it('solicitarVinculacion() con datos mal escritos, sensor desconocido o de otra cuenta da error', async function () {
         await assert.rejects(logica.solicitarVinculacion(pelin.idUsuario, '12345', 1), { codigo: 'DATOS_NO_VALIDOS' });
         await assert.rejects(logica.solicitarVinculacion(pelin.idUsuario, SERIE, 'mucho'), { codigo: 'DATOS_NO_VALIDOS' });
@@ -133,6 +144,8 @@ describe('Logica (vinculación del sensor por correo)', function () {
     });
 
     it('responderVinculacion() con «sí» vincula el sensor y el estado pasa a confirmada', async function () {
+        await logica.conexion.execute(
+            "UPDATE Usuarios SET role = 'ciudadano', esPortador = FALSE WHERE idUsuario = ?", [pelin.idUsuario]);
         await logica.solicitarVinculacion(pelin.idUsuario, SERIE, 1);
         const r = await logica.responderVinculacion(tokenDelUltimoCorreo(), true);
         assert.deepStrictEqual(r, { estado: 'confirmada', numeroSerie: SERIE, nombreSolicitante: 'Pelin Kaynak' });
@@ -140,6 +153,10 @@ describe('Logica (vinculación del sensor por correo)', function () {
         const fila = await filaSensor();
         assert.strictEqual(fila.idUsuario, pelin.idUsuario);
         assert.strictEqual((await logica.estadoVinculacion(pelin.idUsuario)).estado, 'confirmada');
+        const [[usuario]] = await logica.conexion.execute(
+            'SELECT role, esPortador FROM Usuarios WHERE idUsuario = ?', [pelin.idUsuario]);
+        assert.strictEqual(usuario.role, 'portador');
+        assert.strictEqual(Boolean(usuario.esPortador), true);
 
         // el mismo enlace ya no vale otra vez
         await assert.rejects(logica.responderVinculacion(tokenDelUltimoCorreo(), false), { codigo: 'TOKEN_NO_VALIDO' });
