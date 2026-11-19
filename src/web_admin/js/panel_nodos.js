@@ -51,8 +51,8 @@ function crearFilaNodo(nodo, ahora) {
     const celdas = [
         ["celda-id", nodo.id],
         ["celda-portador", nodo.portador],
-        ["celda-tiempo", herramientasNodos.textoTiempoSinDatos(minutos)],
-        ["celda-bateria", nodo.bateria + " %"]
+        ["celda-tiempo", nodo.ultimaMedicion ? herramientasNodos.textoTiempoSinDatos(minutos) : "Nunca"],
+        ["celda-bateria", nodo.bateria === null || nodo.bateria === undefined ? "—" : nodo.bateria + " %"]
     ];
     for (const [clase, texto] of celdas) {
         const celda = document.createElement("span");
@@ -60,7 +60,9 @@ function crearFilaNodo(nodo, ahora) {
         celda.textContent = texto;
         fila.appendChild(celda);
     }
-    fila.querySelector(".celda-bateria").classList.toggle("bateria-baja", nodo.bateria < 20);
+    fila.querySelector(".celda-id").title = nodo.id;
+    fila.querySelector(".celda-bateria").classList.toggle("bateria-baja",
+        typeof nodo.bateria === "number" && nodo.bateria < 20);
 
     const aviso = document.createElement("span");
     aviso.className = "celda-aviso";

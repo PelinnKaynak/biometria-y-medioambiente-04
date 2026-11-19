@@ -110,7 +110,7 @@
 .cabecera-lista,
 .fila-nodo {
     display: grid;
-    grid-template-columns: 70px 1fr 90px 70px 84px;
+    grid-template-columns: 112px 1fr 90px 70px 84px;   /* ID: los 12 dígitos del número de serie */
     align-items: center;
     gap: 8px;
     padding: 0 12px;
@@ -142,6 +142,7 @@
 .fila-nodo span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .celda-tiempo,
 .celda-bateria { text-align: right; }
+.celda-id { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .fila-nodo.inactivo .celda-tiempo { color: var(--malo); font-weight: 600; }
 .celda-bateria.bateria-baja { color: var(--malo); }
 
@@ -170,7 +171,7 @@
     .resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 32px; }
     .zona-datos { gap: 20px; }
     .cabecera-lista,
-    .fila-nodo { grid-template-columns: 62px 1fr 72px 56px 74px; }
+    .fila-nodo { grid-template-columns: 104px 1fr 72px 56px 74px; }
 }
 
 /* ---------- Móvil (diseño de 390 px) ---------- */
