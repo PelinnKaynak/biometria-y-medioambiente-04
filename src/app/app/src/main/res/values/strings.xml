@@ -141,12 +141,22 @@
     <string name="inicio_lugares_texto">Guarda casa, el trabajo y tus sitios</string>
     <string name="inicio_lugar_nivel">%1$s: %2$s</string>
 
+    <!-- Mis datos (T007) -->
+    <string name="mis_datos_titulo">Mis datos</string>
+    <string name="mis_datos_fecha">Hoy, %1$s</string>
+    <string name="mis_datos_distancia">Distancia recorrida</string>
+    <string name="mis_datos_calidad_media">Calidad media</string>
+    <string name="mis_datos_ozono_hoy">Ozono respirado hoy (µg/m³)</string>
+    <string name="mis_datos_sin_datos">—</string>
+    <string name="mis_datos_hoy_sin_mediciones">Todavía no tienes mediciones de hoy.</string>
+    <string name="mis_datos_grafica_vacia">Sin mediciones de hoy</string>
+    <string name="mis_datos_limite_moderado">Límite moderado</string>
+    <string name="mis_datos_sin_sensor">Vincula tu sensor para consultar la distancia recorrida y el ozono que has respirado.</string>
+
     <!-- Secciones aún no hechas (pantalla provisional, T006) -->
     <string name="proximamente_etiqueta">Próximamente</string>
     <string name="proximamente_mapa">Mapa</string>
     <string name="proximamente_mapa_texto">Aquí verás el mapa de la calidad del aire de tu ciudad. Esta sección se está preparando.</string>
-    <string name="proximamente_mis_datos">Mis datos</string>
-    <string name="proximamente_mis_datos_texto">Aquí verás todas tus mediciones, con gráficas por día y por semana. Esta sección se está preparando.</string>
     <string name="proximamente_prevision">Previsión</string>
     <string name="proximamente_prevision_texto">Aquí verás cómo estará el aire las próximas horas y la mejor hora para salir. Esta sección se está preparando.</string>
     <string name="proximamente_lugares">Mis lugares</string>

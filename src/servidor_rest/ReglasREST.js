@@ -4,7 +4,8 @@
 //              petición, llama a la lógica y traduce el resultado a HTTP.
 //              Contrato completo en doc/servidor_rest_design.md. Tareas T016,
 //              T010, T005 (vinculación del sensor confirmada por correo),
-//              T041 (incidencias), T017 (mediciones), T024 (datos de la
+//              T041 (incidencias), T017 (mediciones), T007 (Mis datos),
+//              T024 (datos de la
 //              página Mi cuenta), T021 (nodos del panel) y T046 (lugares).
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
@@ -322,6 +323,18 @@ function cargarReglasREST(servidor, logica) {
         const cantidad = textoDeConsulta(peticion.query.cantidad);
         respuesta.status(200).json(await logica.mediciones.ultimasDeUsuario(peticion.usuario.idUsuario,
             cantidad === undefined ? undefined : Number(cantidad)));
+    }));
+
+    // GET /misDatos?desde=<epoch-ms>&hasta=<epoch-ms>  🔒
+    //   200 [ Medicion ] del usuario en el periodo (máximo 26 h) · 400 fechas no válidas · 404 sin sensor · 401
+    servidor.get('/misDatos', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        await logica.sensorDelUsuario(peticion.usuario.idUsuario);
+        const desdeTexto = textoDeConsulta(peticion.query.desde);
+        const hastaTexto = textoDeConsulta(peticion.query.hasta);
+        const desdeMs = desdeTexto && /^\d+$/.test(desdeTexto) ? Number(desdeTexto) : NaN;
+        const hastaMs = hastaTexto && /^\d+$/.test(hastaTexto) ? Number(hastaTexto) : NaN;
+        respuesta.status(200).json(await logica.mediciones.deUsuarioEnPeriodo(
+            peticion.usuario.idUsuario, new Date(desdeMs), new Date(hastaMs)));
     }));
 
     // GET /ultimaMedicion  (pública, sin sesión: H006)
