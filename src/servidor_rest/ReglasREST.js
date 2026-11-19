@@ -94,6 +94,16 @@ function cargarReglasREST(servidor, logica) {
         respuesta.status(204).end();
     }));
 
+    servidor.get('/avisos', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const cursor = peticion.query.desdeId;
+        const desdeId = cursor === undefined ? 0
+            : typeof cursor === 'string' && /^\d+$/.test(cursor) ? Number(cursor)
+                : NaN;
+
+        const avisos = await logica.listarAvisos(peticion.usuario.idUsuario, desdeId);
+        respuesta.status(200).json(avisos);
+    }));
+
     // POST /actualizarDatos  { nombre, apellidos, correo }  🔒            (T010)
     //   200 { nombre, apellidos, correo } · 400 { error, campos } · 409 correo de otra cuenta · 401
     servidor.post('/actualizarDatos', requiereSesion(logica), envolver(async (peticion, respuesta) => {
@@ -285,7 +295,8 @@ function cargarReglasREST(servidor, logica) {
         envolver(async (peticion, respuesta) => {
             const { estado, tipo } = peticion.query;
             respuesta.status(200).json(await logica.incidencias.listar({
-                estado: textoDeConsulta(estado), tipo: textoDeConsulta(tipo) }));
+                estado: textoDeConsulta(estado), tipo: textoDeConsulta(tipo)
+            }));
         }));
 
     // GET /numeroIncidenciasAbiertas  🔒 técnico o administrador
