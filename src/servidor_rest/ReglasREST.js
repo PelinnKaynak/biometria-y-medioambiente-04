@@ -5,7 +5,7 @@
 //              Contrato completo en doc/servidor_rest_design.md. Tareas T016,
 //              T010, T005 (vinculación del sensor confirmada por correo),
 //              T041 (incidencias), T017 (mediciones), T024 (datos de la
-//              página Mi cuenta) y T021 (nodos del panel).
+//              página Mi cuenta), T021 (nodos del panel) y T046 (lugares).
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -33,8 +33,10 @@ const CODIGOS_HTTP = {
     SIN_SOLICITUD: 404,
     INCIDENCIA_NO_EXISTE: 404,
     SIN_MEDICIONES: 404,
+    LUGAR_NO_EXISTE: 404,
     SENSOR_NO_ES_TUYO: 403,
     SIN_SENSOR: 404,
+    LIMITE_LUGARES: 409,
     CORREO_YA_REGISTRADO: 409,
     SENSOR_YA_VINCULADO: 409
 };
@@ -181,6 +183,39 @@ function cargarReglasREST(servidor, logica) {
     //   200 Resumen (ver Logica.resumenCuenta) · 404 sin sensor vinculado o sin mediciones · 401
     servidor.get('/miCuenta', requiereSesion(logica), envolver(async (peticion, respuesta) => {
         respuesta.status(200).json(await logica.resumenCuenta(peticion.usuario.idUsuario));
+    }));
+
+    // GET /lugares  (Authorization: Bearer <token>)
+    //   200 [ Lugar ] del usuario autenticado · 401
+    servidor.get('/lugares', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.lugares.listar(peticion.usuario.idUsuario));
+    }));
+
+    // POST /lugares  { nombre, tipo, direccion, latitud, longitud, avisosActivos? }
+    //   201 Lugar · 400 { error, campos } · 401 · 409 límite de cinco
+    servidor.post('/lugares', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const lugar = await logica.lugares.crear(peticion.usuario.idUsuario, peticion.body);
+        respuesta.status(201).json(lugar);
+    }));
+
+    // PUT /lugares/:idLugar y PATCH /lugares/:idLugar
+    //   200 Lugar actualizado · 400 { error, campos } · 401 · 404 si no es del usuario
+    servidor.put('/lugares/:idLugar', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const lugar = await logica.lugares.actualizar(
+            peticion.usuario.idUsuario, peticion.params.idLugar, peticion.body);
+        respuesta.status(200).json(lugar);
+    }));
+    servidor.patch('/lugares/:idLugar', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const lugar = await logica.lugares.actualizar(
+            peticion.usuario.idUsuario, peticion.params.idLugar, peticion.body);
+        respuesta.status(200).json(lugar);
+    }));
+
+    // DELETE /lugares/:idLugar
+    //   204 eliminado · 401 · 404 si no existe o no es del usuario
+    servidor.delete('/lugares/:idLugar', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        await logica.lugares.eliminar(peticion.usuario.idUsuario, peticion.params.idLugar);
+        respuesta.status(204).end();
     }));
 
     // GET /miExposicion?periodo=semana|mes|3meses  🔒                     (T024)

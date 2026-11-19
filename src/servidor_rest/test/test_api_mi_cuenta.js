@@ -92,4 +92,27 @@ describe('API REST de Mi cuenta', function () {
         assert.deepStrictEqual(mal.cuerpo.campos, ['periodo']);
         assert.strictEqual((await pedir('/miExposicion')).codigo, 400);
     });
+
+    it('GET /miCuenta devuelve los lugares propios con su zona y ozono interpolado', async function () {
+        await vincularSensor();
+        await medir(90, 1);
+        await logica.lugares.crear(sesion.idUsuario, {
+            nombre: 'Casa',
+            tipo: 'casa',
+            direccion: 'Gandia',
+            latitud: 38.967,
+            longitud: -0.181,
+            avisosActivos: true
+        });
+
+        const r = await pedir('/miCuenta');
+        assert.strictEqual(r.codigo, 200);
+        assert.deepStrictEqual(r.cuerpo.lugares, [{
+            idLugar: 1,
+            nombre: 'Casa',
+            tipo: 'casa',
+            zona: 'Gandia',
+            ozono: 90
+        }]);
+    });
 });

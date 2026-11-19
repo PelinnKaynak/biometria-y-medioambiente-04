@@ -12,6 +12,7 @@
 // ---------------------------------------------------------------------------
 package com.example.aeris;
 
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,7 +35,7 @@ public class LogicaFakeMisLugaresTest {
     @Before
     public void setUp() {
         LogicaFakeMisLugares.reiniciarParaPruebas();
-        logica = new LogicaFakeMisLugares();
+        logica = new LogicaFakeMisLugares(true);
     }
 
     // -----------------------------------------------------------------------
@@ -211,6 +212,20 @@ public class LogicaFakeMisLugaresTest {
 
         Lugar lugarMuyMalo = new Lugar(4, "Punto Crítico", "Autovía", 260.0, true);
         assertEquals(NivelOzono.MUY_MALO, lugarMuyMalo.nivelOzono());
+    }
+
+    @Test
+    public void testLugarDesdeApiConservaTipoYOzonoNulo() throws Exception {
+        Lugar lugar = Lugar.desdeJSON(new JSONObject(
+                "{\"idLugar\":7,\"nombre\":\"Casa\",\"tipo\":\"casa\",\"zona\":\"Gandia\",\"ozono\":null}"));
+
+        assertNotNull(lugar);
+        assertEquals(7, lugar.id);
+        assertEquals("casa", lugar.tipo);
+        assertEquals("Gandia", lugar.direccion);
+        assertEquals(null, lugar.ozonoActual);
+        assertEquals(null, lugar.nivelOzono());
+        assertEquals("Sin datos recientes", lugar.textoOzono());
     }
 
     // -----------------------------------------------------------------------

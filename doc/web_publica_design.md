@@ -295,7 +295,7 @@ Página `mi_cuenta.html`. Es donde llega el portador después de iniciar sesión
 - Saludo con el nombre y el estado del nodo: identificador y hace cuánto se sincronizó.
 - Cuatro indicadores: mediciones del mes comparadas con el mes anterior, puntos y nivel, exposición media al ozono con su nivel, y horas por encima del umbral de aviso esta semana.
 - Gráfica de la exposición al ozono (media diaria) por semana, mes o 3 meses, con las líneas de 100 µg/m³ (valor guía de la OMS) y 180 µg/m³ (umbral de aviso) y el máximo del periodo marcado.
-- Mis lugares con la calidad del aire actual de cada uno. Se añaden y se editan desde la app.
+- Mis lugares guardados en el servidor, con nombre, zona y ozono interpolado. Cuando no hay mediciones O3 recientes, se indica «Sin datos recientes». Se gestionan desde la app (T046).
 - Recompensas: puntos que faltan para el siguiente nivel y barra de progreso.
 - Últimas mediciones (solo en escritorio).
 - Tu perfil: nombre, correo, aviso de ozono y plan. El botón «Editar perfil» abre un diálogo para cambiar nombre, apellidos y correo. La contraseña, la foto y los avisos se cambian desde la app.
@@ -321,12 +321,12 @@ Página `mi_cuenta.html`. Es donde llega el portador después de iniciar sesión
 | `obtenerVinculacion()` | `GET /estadoVinculacion` | Ya está en el servidor (T005) |
 | `solicitarVinculacion(codigo)` | `POST /solicitarVinculacion { numeroSerie, sensibilidad? }` · 200 · 201 · 400 · 404 · 409 | Ya está en el servidor (T005, T045) |
 | `reenviarCorreo()` | `POST /reenviarCorreoVinculacion` | Ya está en el servidor (T005) |
-| `obtenerResumen()` | `GET /miCuenta` | Propuesta para T024 |
-| `obtenerExposicion(periodo)` | `GET /miExposicion?periodo=semana, mes o 3meses` | Propuesta para T024 |
+| `obtenerResumen()` | `GET /miCuenta` | Servidor implementado (T024); incluye lugares del usuario (T046) |
+| `obtenerExposicion(periodo)` | `GET /miExposicion?periodo=semana, mes o 3meses` | Servidor implementado (T024) |
 
-Todas las peticiones llevan la cabecera `Authorization: Bearer <token>`. Mientras T024 no esté hecha, el servidor responde 404 a las dos rutas nuevas y la página muestra el aviso de que todavía no hay mediciones. Con la lógica fake se ve la página completa con datos de ejemplo.
+Todas las peticiones llevan la cabecera `Authorization: Bearer <token>`. Si no hay mediciones del sensor, el servidor responde 404 y la página muestra el aviso de que todavía no hay mediciones. Los lugares se exponen en el resumen incluso si su ozono es `null`.
 
-Respuesta propuesta de `GET /miCuenta`:
+Ejemplo de respuesta de `GET /miCuenta`:
 
 ```
 { nodo, ultimaSincronizacion, medicionesMes, medicionesMesAnterior,
@@ -336,7 +336,7 @@ Respuesta propuesta de `GET /miCuenta`:
   ultimasMediciones: [ { fecha, lugar, ozono } ] }
 ```
 
-Respuesta propuesta de `GET /miExposicion`: `[ { fecha, ozono } ]`, una media por día.
+Respuesta de `GET /miExposicion`: `[ { fecha, ozono } ]`, una media por día.
 
 Funciones principales de `js/mi_cuenta.js`: `nivelOzono()`, `formatearNumero()`, `formatearFecha()`, `textoHace()`, `textoVariacion()`, `calcularGrafica()`, `cargarCuenta()`, `cambiarPeriodo()`, `validarPerfil()` y `guardarPerfil()`.
 

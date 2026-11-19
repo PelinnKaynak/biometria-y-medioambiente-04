@@ -19,6 +19,7 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -39,6 +40,9 @@ public class MisLugaresActivity extends AppCompatActivity {
     private View tarjetaAnadirLugar;
     private EditText campoNombreLugar;
     private EditText campoDireccionLugar;
+    private EditText campoLatitudLugar;
+    private EditText campoLongitudLugar;
+    private Spinner campoTipoLugar;
     private TextView errorAnadirLugar;
     private View botonGuardarLugar;
 
@@ -61,6 +65,9 @@ public class MisLugaresActivity extends AppCompatActivity {
         tarjetaAnadirLugar = findViewById(R.id.tarjetaAnadirLugar);
         campoNombreLugar = findViewById(R.id.campoNombreLugar);
         campoDireccionLugar = findViewById(R.id.campoDireccionLugar);
+        campoLatitudLugar = findViewById(R.id.campoLatitudLugar);
+        campoLongitudLugar = findViewById(R.id.campoLongitudLugar);
+        campoTipoLugar = findViewById(R.id.campoTipoLugar);
         errorAnadirLugar = findViewById(R.id.errorAnadirLugar);
         botonGuardarLugar = findViewById(R.id.botonGuardarLugar);
 
@@ -164,11 +171,17 @@ public class MisLugaresActivity extends AppCompatActivity {
             textoNombre.setText(lugar.nombre);
             textoDireccion.setText(lugar.direccion);
 
-            NivelOzono nivel = lugar.nivelOzono();
-            puntoNivel.setBackgroundTintList(ColorStateList.valueOf(
-                    ContextCompat.getColor(this, colorDe(nivel))));
-            textoNivel.setText(getString(R.string.mis_lugares_nivel_formato,
-                    lugar.ozonoActual, getString(nombreDe(nivel))));
+            if (lugar.ozonoActual == null) {
+                puntoNivel.setVisibility(View.INVISIBLE);
+                textoNivel.setText(R.string.mis_lugares_sin_datos_recientes);
+            } else {
+                NivelOzono nivel = lugar.nivelOzono();
+                puntoNivel.setVisibility(View.VISIBLE);
+                puntoNivel.setBackgroundTintList(ColorStateList.valueOf(
+                        ContextCompat.getColor(this, colorDe(nivel))));
+                textoNivel.setText(getString(R.string.mis_lugares_nivel_formato,
+                        lugar.ozonoActual, getString(nombreDe(nivel))));
+            }
 
             interruptor.setChecked(lugar.avisosActivos);
             textoEstadoAvisos.setText(lugar.avisosActivos
@@ -217,13 +230,25 @@ public class MisLugaresActivity extends AppCompatActivity {
         String nombre = campoNombreLugar.getText().toString().trim();
         String direccion = campoDireccionLugar.getText().toString().trim();
         String token = Sesion.token(this);
+        String tipo = getResources().getStringArray(R.array.mis_lugares_tipos_valores)
+                [campoTipoLugar.getSelectedItemPosition()];
+        Double latitud = leerCoordenada(campoLatitudLugar);
+        Double longitud = leerCoordenada(campoLongitudLugar);
+        if (latitud == null || longitud == null) {
+            errorAnadirLugar.setText(R.string.mis_lugares_coordenadas_invalidas);
+            errorAnadirLugar.setVisibility(View.VISIBLE);
+            return;
+        }
 
-        logica.anadirLugar(token, nombre, direccion, new LogicaFakeMisLugares.CallbackOperacionLugar() {
+        logica.anadirLugar(token, nombre, tipo, direccion, latitud, longitud,
+                new LogicaFakeMisLugares.CallbackOperacionLugar() {
             @Override
             public void exito(Lugar nuevoLugar) {
                 runOnUiThread(() -> {
                     campoNombreLugar.setText("");
                     campoDireccionLugar.setText("");
+                    campoLatitudLugar.setText("");
+                    campoLongitudLugar.setText("");
                     campoNombreLugar.clearFocus();
                     campoDireccionLugar.clearFocus();
                     errorAnadirLugar.setVisibility(View.GONE);
@@ -255,6 +280,17 @@ public class MisLugaresActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private Double leerCoordenada(EditText campo) {
+        String texto = campo.getText().toString().trim().replace(',', '.');
+        if (texto.isEmpty()) return null;
+        try {
+            double valor = Double.parseDouble(texto);
+            return Double.isFinite(valor) ? valor : null;
+        } catch (NumberFormatException error) {
+            return null;
+        }
     }
 
     // -----------------------------------------------------------------------

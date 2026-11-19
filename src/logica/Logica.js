@@ -7,9 +7,10 @@
 //              vinculación de sensores confirmada por correo (T005), y los
 //              datos de la página Mi cuenta (T024). Las incidencias (T041)
 //              están en Incidencias.js, las mediciones (T017) en
-//              Mediciones.js y los nodos del panel (T021) en Nodos.js. Es la única parte que habla con la base de
-//              datos (MySQL, tablas Usuarios, Sensores, Contaminantes y
-//              Mediciones). Las sesiones y los enlaces de
+//              Mediciones.js, los nodos del panel (T021) en Nodos.js y los
+//              lugares (T046) en Lugares.js. Es la única parte que habla con
+//              la base de datos (MySQL, tablas Usuarios, Sensores,
+//              Contaminantes, Mediciones y Lugares). Las sesiones y los enlaces de
 //              recuperación y de vinculación son tokens firmados: no usan tablas.
 //              Diseño en doc/logica_design.md. Tarea T016 · H001, H002.
 // Autores:     Equipo 04 – SenseTech
@@ -27,6 +28,7 @@ const { crearCorreoVinculacion } = require('./CorreoVinculacion');
 const { Incidencias } = require('./Incidencias');
 const { Mediciones } = require('./Mediciones');
 const { Nodos } = require('./Nodos');
+const { Lugares } = require('./Lugares');
 const MiCuenta = require('./MiCuenta');
 
 function obtenerRoles(usuario) {
@@ -121,6 +123,7 @@ class Logica {
         this.incidencias = new Incidencias(this);     // T041: logica.incidencias.crear(…), …
         this.mediciones = new Mediciones(this);       // T017: logica.mediciones.guardar(…), …
         this.nodos = new Nodos(this);                 // T021: logica.nodos.buscar(…), …
+        this.lugares = new Lugares(this);             // T046: CRUD y exposición interpolada.
     }
 
     // -----------------------------------------------------------------------
@@ -566,7 +569,8 @@ class Logica {
     //                 (umbralAlerta, or 180 µg/m³).
     //               - puntos: PROVISIONAL, one per saved measurement, until
     //                 MovimientosPuntos exists. The level comes from MiCuenta.
-    //               - lugares: always [] until Mis lugares has a table.
+    //               - lugares: the user's saved places with current
+    //                 interpolated ozone from recent sensor measurements.
     //               - ultimasMediciones: the last 4 ozone values, with the
     //                 coordinates as the place.
     //               Throws SIN_SENSOR if the user has no linked sensor and
@@ -610,6 +614,7 @@ class Logica {
             [idUsuario, ...ozono.valores]);
 
         const puntos = Number(cuenta.total);
+        const lugares = await this.lugares.paraCuenta(idUsuario, ahora);
         return {
             nodo: sensor.numeroSerie,
             ultimaSincronizacion: sensor.ultimaConexion || cuenta.ultima,
@@ -620,7 +625,7 @@ class Logica {
             exposicionMedia: media.media === null ? null : Math.round(Number(media.media)),
             horasOzonoAlto: Number(horas.horas),
             umbralAviso: umbral,
-            lugares: [],
+            lugares,
             ultimasMediciones: ultimas.map((m) => ({
                 fecha: m.fechaHora,
                 lugar: MiCuenta.textoDelSitio(m.latitud, m.longitud),

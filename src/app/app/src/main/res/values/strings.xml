@@ -320,6 +320,10 @@
     <string name="mis_lugares_anadir_titulo">Añadir nuevo lugar</string>
     <string name="mis_lugares_campo_nombre">Nombre (ej. Casa, Trabajo, Colegio)</string>
     <string name="mis_lugares_campo_direccion">Dirección o municipio</string>
+    <string name="mis_lugares_campo_tipo">Tipo</string>
+    <string name="mis_lugares_campo_coordenadas">Coordenadas (latitud, longitud)</string>
+    <string name="mis_lugares_campo_latitud">Latitud</string>
+    <string name="mis_lugares_campo_longitud">Longitud</string>
     <string name="mis_lugares_boton_guardar">Guardar lugar</string>
     <string name="mis_lugares_boton_anadir">Añadir lugar</string>
     <string name="mis_lugares_error_nombre">Escribe un nombre para el lugar</string>
@@ -335,6 +339,21 @@
     <string name="mis_lugares_eliminar_cancelar">Cancelar</string>
     <string name="mis_lugares_icono_eliminar_desc">Eliminar lugar</string>
     <string name="mis_lugares_nivel_formato">%1$.0f µg/m³ · %2$s</string>
+    <string name="mis_lugares_sin_datos_recientes">Sin datos recientes</string>
+    <string name="mis_lugares_coordenadas_invalidas">Introduce una latitud y longitud válidas.</string>
+
+    <string-array name="mis_lugares_tipos_etiquetas">
+        <item>Casa</item>
+        <item>Trabajo</item>
+        <item>Colegio</item>
+        <item>Otro</item>
+    </string-array>
+    <string-array name="mis_lugares_tipos_valores">
+        <item>casa</item>
+        <item>trabajo</item>
+        <item>colegio</item>
+        <item>otro</item>
+    </string-array>
 
     <!-- Recepción de las mediciones del sensor por Bluetooth (T023) -->
     <string name="medicion_canal">Medición con tu sensor</string>

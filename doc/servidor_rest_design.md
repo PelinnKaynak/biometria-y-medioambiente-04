@@ -35,8 +35,13 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `POST /reenviarCorreoVinculacion` 🔒 | — | **200** `{ mensaje }` · **404** no hay ninguna pendiente · **401** (T005) |
 | `GET /responderVinculacion?token=…&respuesta=si\|no` | — | **200** HTML «¿Vinculamos el sensor?» con un botón · **400** HTML enlace no válido — lo abren los botones del correo (T005) |
 | `POST /responderVinculacion` | formulario `token`, `respuesta` | **200** HTML «Sensor vinculado» o «Vinculación rechazada» · **400** HTML «Enlace no válido»; al confirmar, asigna el sensor y activa el rol de portador (T037) |
-| `GET /miCuenta` 🔒 | — | **200** `Resumen` (ver `logica_design.md`, T024) · **404** sin sensor vinculado o sin mediciones todavía · **401** — página Mi cuenta de la web |
+| `GET /miCuenta` 🔒 | — | **200** `Resumen`, incluidos los lugares del usuario con ozono actual o `null` si no hay mediciones recientes · **404** sin sensor vinculado o sin mediciones todavía · **401** — página Mi cuenta de la web |
 | `GET /miExposicion?periodo=semana\|mes\|3meses` 🔒 | — | **200** `[ { fecha, ozono } ]` media de cada día · **400** periodo no válido (`campos: ["periodo"]`) · **404** sin sensor vinculado · **401** — gráfica de Mi cuenta (T024) |
+| `GET /lugares` 🔒 | — | **200** `[ Lugar ]` del usuario, aunque no tenga sensor · **401** |
+| `POST /lugares` 🔒 | `{ nombre, tipo, direccion, latitud, longitud, avisosActivos? }` | **201** `Lugar` · **400** `{ error, campos }` · **409** límite de cinco · **401**. Tipo: `casa`, `trabajo`, `colegio` u `otro` (T046) |
+| `PUT /lugares/:idLugar` 🔒 | Todos los campos de `Lugar` | **200** `Lugar` actualizado · **400** `{ error, campos }` · **404** no existe o no pertenece al usuario · **401** (T046) |
+| `PATCH /lugares/:idLugar` 🔒 | Uno o más campos de `Lugar` | **200** `Lugar` actualizado · **400** `{ error, campos }` · **404** no existe o no pertenece al usuario · **401** (T046) |
+| `DELETE /lugares/:idLugar` 🔒 | — | **204** eliminado · **404** no existe o no pertenece al usuario · **401** (T046) |
 | `POST /crearIncidencia` 🔒 | `{ tipo, asunto, descripcion, idSensor? }` | **201** `Incidencia` · **400** `{ error, campos }` · **401** — Ayuda de la app y de la web (T041). `tipo`: sensor, datos, cuenta, otra. Sin `idSensor`, las de tipo sensor o datos llevan el sensor del usuario |
 | `GET /misIncidencias` 🔒 | — | **200** `[ Incidencia ]` del usuario, con la respuesta, la más nueva primero · **401** (T041) |
 | `GET /incidencias?estado=…&tipo=…` 🔒👷 | — | **200** `[ IncidenciaGestion ]` · **400** filtro no válido · **401** · **403** — pantalla Incidencias del panel (T041, T044) |
@@ -55,6 +60,7 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 `Incidencia = { idIncidencia, tipo, asunto, descripcion, estado, respuesta, responsable: { nombre, rol } | null, fechaCreacion, fechaRespuesta, sensor: { idSensor, numeroSerie } | null }` — `responsable` es quien respondió (para «Respuesta de Marc (técnico)»).
 `IncidenciaGestion = Incidencia + usuario: { idUsuario, nombre, apellidos, correo }`, en `responsable` también `idUsuario` y, en `sensor`, también `nombre, estado, bateria, ultimaConexion, necesitaCalibracion`.
 `Medicion = { idMedicion, contaminante, valor, unidad, fecha, latitud, longitud }` — `fecha` en ISO (UTC); nunca dice quién la tomó.
+`Lugar = { id, idLugar, idUsuario, nombre, tipo, direccion, zona, latitud, longitud, avisosActivos, ozonoActual, ozono }`. La exposición usa la interpolación inversa al cuadrado de la distancia de mediciones O3 de las últimas 24 horas; si no hay, devuelve `null`. Todas las operaciones filtran por el usuario de la sesión.
 
 Errores comunes: **400** JSON mal formado · **401** sin sesión · **403** el rol no tiene permiso · **404** ruta que no existe · **500** error del servidor (sin detalles).
 
@@ -134,4 +140,4 @@ servidor.get('/usuarios', requiereSesion(logica, ['administrador', 'tecnico']), 
 
 - **Lenguaje:** JavaScript (Node.js 18 o superior), Express 4.
 - **Cabecera de fichero** y **cabecera de cada función** con su diseño lógico y una línea `What it does:`.
-- **Tests automáticos (mocha):** `npm test` desde `src/servidor_rest`. Arrancan el servidor en un puerto libre con la BD de pruebas `aeris_test` y hacen peticiones HTTP reales a cada ruta (códigos 200/201/204/400/401/403/404/409). La vinculación, las incidencias y las mediciones tienen sus propios ficheros: `test_api_vinculacion.js`, `test_api_incidencias.js` y `test_api_mediciones.js`.
+- **Tests automáticos (mocha):** `npm test` desde `src/servidor_rest`. Arrancan el servidor en un puerto libre con la BD de pruebas `aeris_test` y hacen peticiones HTTP reales a cada ruta (códigos 200/201/204/400/401/403/404/409). La vinculación, las incidencias, las mediciones y los lugares tienen sus propios ficheros: `test_api_vinculacion.js`, `test_api_incidencias.js`, `test_api_mediciones.js` y `test_api_lugares.js`.

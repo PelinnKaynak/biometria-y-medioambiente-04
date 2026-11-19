@@ -10,6 +10,10 @@
 // ---------------------------------------------------------------------------
 package com.example.aeris;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,9 +27,11 @@ public class LogicaFakeMisLugares {
 
     public static final int CODIGO_OK = 200;
     public static final int CODIGO_CREADO = 201;
-    public static final int CODIGO_LIMITE = 400;
+    public static final int CODIGO_LIMITE = 409;
     public static final int CODIGO_SIN_SESION = 401;
+    public static final int CODIGO_SIN_CONEXION = 0;
 
+    public static final String MENSAJE_SIN_CONEXION = "No hay conexión con el servidor. Inténtalo de nuevo.";
     public static final String ERROR_NOMBRE_VACIO = "Escribe un nombre para el lugar";
     public static final String ERROR_DIRECCION_VACIA = "Escribe una dirección para el lugar";
     public static final String ERROR_LIMITE_ALCANZADO = "Has alcanzado el límite máximo de 5 lugares";
@@ -34,6 +40,16 @@ public class LogicaFakeMisLugares {
     // Almacén en memoria indexado por usuario/token para garantizar aislamiento
     private static final Map<String, List<Lugar>> ALMACEN_LUGARES = new HashMap<>();
     private static final AtomicInteger SECUENCIA_IDS = new AtomicInteger(100);
+
+    private final boolean usarDatosDeEjemplo;
+
+    public LogicaFakeMisLugares() {
+        this(false);
+    }
+
+    LogicaFakeMisLugares(boolean usarDatosDeEjemplo) {
+        this.usarDatosDeEjemplo = usarDatosDeEjemplo;
+    }
 
     // -----------------------------------------------------------------------
     // Callbacks para las operaciones asíncronas
@@ -62,6 +78,16 @@ public class LogicaFakeMisLugares {
     // What it does: fetches all saved places for the authenticated user.
     // -----------------------------------------------------------------------
     public void obtenerLugares(String token, final CallbackLugares callback) {
+        if (!usarDatosDeEjemplo) {
+            if (!esTokenValido(token)) {
+                callback.sesionCaducada();
+                return;
+            }
+            new PeticionarioREST().hacerPeticionREST("GET",
+                    LogicaFakeRegistro.URL_SERVIDOR + "/lugares", null, token,
+                    (codigo, cuerpo) -> notificarLista(codigo, cuerpo, callback));
+            return;
+        }
         if (!esTokenValido(token)) {
             callback.sesionCaducada();
             return;
@@ -77,6 +103,33 @@ public class LogicaFakeMisLugares {
     //               interpolated ozone and saves the place for the user.
     // -----------------------------------------------------------------------
     public void anadirLugar(String token, String nombre, String direccion, final CallbackOperacionLugar callback) {
+        anadirLugar(token, nombre, "otro", direccion, 38.967, -0.183, callback);
+    }
+
+    public void anadirLugar(String token, String nombre, String tipo, String direccion,
+                            double latitud, double longitud, final CallbackOperacionLugar callback) {
+        if (!usarDatosDeEjemplo) {
+            if (!esTokenValido(token)) {
+                callback.sesionCaducada();
+                return;
+            }
+            JSONObject cuerpo;
+            try {
+                cuerpo = new JSONObject()
+                        .put("nombre", nombre == null ? "" : nombre.trim())
+                        .put("tipo", tipo)
+                        .put("direccion", direccion == null ? "" : direccion.trim())
+                        .put("latitud", latitud)
+                        .put("longitud", longitud);
+            } catch (JSONException error) {
+                callback.error("No se han podido preparar los datos del lugar.");
+                return;
+            }
+            new PeticionarioREST().hacerPeticionREST("POST",
+                    LogicaFakeRegistro.URL_SERVIDOR + "/lugares", cuerpo.toString(), token,
+                    (codigo, respuesta) -> notificarOperacion(codigo, respuesta, callback));
+            return;
+        }
         if (!esTokenValido(token)) {
             callback.sesionCaducada();
             return;
@@ -100,7 +153,8 @@ public class LogicaFakeMisLugares {
 
         double ozonoInterpolado = interpolarOzonoParaDireccion(direccion.trim());
         int nuevoId = SECUENCIA_IDS.incrementAndGet();
-        Lugar nuevoLugar = new Lugar(nuevoId, 0, nombre.trim(), direccion.trim(), 38.967, -0.183, ozonoInterpolado, true);
+        Lugar nuevoLugar = new Lugar(nuevoId, 0, nombre.trim(), tipo, direccion.trim(),
+                latitud, longitud, ozonoInterpolado, true);
 
         lista.add(nuevoLugar);
         callback.exito(nuevoLugar);
@@ -111,6 +165,21 @@ public class LogicaFakeMisLugares {
     // What it does: toggles alerts on/off for a specific place of the user.
     // -----------------------------------------------------------------------
     public void cambiarAvisos(String token, int idLugar, boolean avisosActivos, final CallbackOperacionLugar callback) {
+        if (!usarDatosDeEjemplo) {
+            if (!esTokenValido(token)) {
+                callback.sesionCaducada();
+                return;
+            }
+            try {
+                String cuerpo = new JSONObject().put("avisosActivos", avisosActivos).toString();
+                new PeticionarioREST().hacerPeticionREST("PATCH",
+                        LogicaFakeRegistro.URL_SERVIDOR + "/lugares/" + idLugar, cuerpo, token,
+                        (codigo, respuesta) -> notificarOperacion(codigo, respuesta, callback));
+            } catch (JSONException error) {
+                callback.error("No se ha podido actualizar la configuración de avisos.");
+            }
+            return;
+        }
         if (!esTokenValido(token)) {
             callback.sesionCaducada();
             return;
@@ -135,6 +204,26 @@ public class LogicaFakeMisLugares {
     // What it does: removes a place from the user's account.
     // -----------------------------------------------------------------------
     public void eliminarLugar(String token, int idLugar, final CallbackEliminarLugar callback) {
+        if (!usarDatosDeEjemplo) {
+            if (!esTokenValido(token)) {
+                callback.sesionCaducada();
+                return;
+            }
+            new PeticionarioREST().hacerPeticionREST("DELETE",
+                    LogicaFakeRegistro.URL_SERVIDOR + "/lugares/" + idLugar, null, token,
+                    (codigo, cuerpo) -> {
+                        if (codigo == 204) {
+                            callback.eliminado(idLugar);
+                        } else if (codigo == CODIGO_SIN_SESION) {
+                            callback.sesionCaducada();
+                        } else if (codigo == CODIGO_SIN_CONEXION) {
+                            callback.error(MENSAJE_SIN_CONEXION);
+                        } else {
+                            callback.error(mensajeError(codigo, cuerpo));
+                        }
+                    });
+            return;
+        }
         if (!esTokenValido(token)) {
             callback.sesionCaducada();
             return;
@@ -158,6 +247,75 @@ public class LogicaFakeMisLugares {
     // -----------------------------------------------------------------------
     public static boolean esTokenValido(String token) {
         return token != null && !token.trim().isEmpty() && !token.equals("token_invalido");
+    }
+
+    private static void notificarLista(int codigo, String cuerpo, CallbackLugares callback) {
+        if (codigo == CODIGO_OK) {
+            try {
+                JSONArray json = new JSONArray(cuerpo);
+                List<Lugar> lugares = new ArrayList<>();
+                for (int i = 0; i < json.length(); i++) {
+                    Lugar lugar = Lugar.desdeJSON(json.optJSONObject(i));
+                    if (lugar == null) {
+                        callback.error("Respuesta del servidor no válida.");
+                        return;
+                    }
+                    lugares.add(lugar);
+                }
+                callback.lugaresObtenidos(lugares);
+            } catch (JSONException error) {
+                callback.error("Respuesta del servidor no válida.");
+            }
+        } else if (codigo == CODIGO_SIN_SESION) {
+            callback.sesionCaducada();
+        } else if (codigo == CODIGO_SIN_CONEXION) {
+            callback.error(MENSAJE_SIN_CONEXION);
+        } else {
+            callback.error(mensajeError(codigo, cuerpo));
+        }
+    }
+
+    private static void notificarOperacion(int codigo, String cuerpo, CallbackOperacionLugar callback) {
+        if (codigo == CODIGO_OK || codigo == CODIGO_CREADO) {
+            try {
+                Lugar lugar = Lugar.desdeJSON(new JSONObject(cuerpo));
+                if (lugar != null) {
+                    callback.exito(lugar);
+                } else {
+                    callback.error("Respuesta del servidor no válida.");
+                }
+            } catch (JSONException error) {
+                callback.error("Respuesta del servidor no válida.");
+            }
+        } else if (codigo == CODIGO_LIMITE) {
+            callback.limiteAlcanzado(ERROR_LIMITE_ALCANZADO);
+        } else if (codigo == CODIGO_SIN_SESION) {
+            callback.sesionCaducada();
+        } else if (codigo == CODIGO_SIN_CONEXION) {
+            callback.error(MENSAJE_SIN_CONEXION);
+        } else {
+            callback.error(mensajeError(codigo, cuerpo));
+        }
+    }
+
+    private static String mensajeError(int codigo, String cuerpo) {
+        try {
+            JSONObject json = new JSONObject(cuerpo);
+            String mensaje = json.optString("error", "");
+            JSONArray campos = json.optJSONArray("campos");
+            if (campos != null && campos.length() > 0) {
+                StringBuilder detalle = new StringBuilder();
+                for (int i = 0; i < campos.length(); i++) {
+                    if (i > 0) detalle.append(", ");
+                    detalle.append(campos.optString(i));
+                }
+                return "Revisa estos campos: " + detalle + ".";
+            }
+            if (!mensaje.isEmpty()) return mensaje;
+        } catch (JSONException ignored) {
+            // A non-JSON body has no server-provided error message.
+        }
+        return "No se ha podido guardar el lugar (error " + codigo + ").";
     }
 
     // -----------------------------------------------------------------------
