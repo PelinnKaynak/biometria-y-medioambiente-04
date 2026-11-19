@@ -167,8 +167,6 @@
     <string name="proximamente_mi_sensor">Mi sensor</string>
     <string name="proximamente_mi_sensor_texto">Consulta el estado, la batería y la vinculación de tu sensor desde Mi sensor.</string>
     <string name="proximamente_lugares_texto">Aquí podrás guardar casa, el trabajo y tus sitios para ver su calidad del aire. Esta sección se está preparando.</string>
-    <string name="proximamente_ayuda">Ayuda</string>
-    <string name="proximamente_ayuda_texto">Aquí podrás contarnos un problema con tu sensor, tus datos o tu cuenta y ver nuestras respuestas. Esta sección se está preparando.</string>
 
     <!-- Barra de navegación inferior (T010) -->
     <string name="barra_inicio">Inicio</string>
@@ -396,4 +394,59 @@
     <string name="aviso_mapa_titulo">Zona del aviso</string>
     <string name="aviso_mapa_zona_sin_nombre">Zona del aviso</string>
     <string name="aviso_mapa_descripcion">Mapa con la zona del aviso marcada</string>
+
+    <!-- Ayuda (T043) -->
+    <string name="perfil_ayuda">Ayuda</string>
+    <string name="mi_sensor_ayuda">¿Algún problema con tu sensor? Cuéntanoslo  &gt;</string>
+    <string name="ayuda_titulo">Ayuda</string>
+    <string name="ayuda_subtitulo">Resuelve tus dudas o cuéntanos un problema y te responderemos aquí.</string>
+    <string name="ayuda_seccion_faq">PREGUNTAS FRECUENTES</string>
+    <string name="ayuda_seccion_formulario">ENVIAR UNA INCIDENCIA</string>
+    <string name="ayuda_seccion_mis_incidencias">MIS INCIDENCIAS</string>
+
+    <!-- Las cinco preguntas frecuentes son las mismas de la página Ayuda de la web (T042) -->
+    <string name="ayuda_faq_1_pregunta">¿Cómo vinculo mi sensor AERIS a la app móvil?</string>
+    <string name="ayuda_faq_1_respuesta">Para vincular tu sensor, enciende el Bluetooth de tu teléfono, abre la app de AERIS y accede a «Mi sensor» o «Vincular sensor». Escanea el código QR de la etiqueta trasera o escribe el número de serie de 12 dígitos. Si el sensor fue adquirido con otro correo electrónico, se enviará automáticamente un email de confirmación al comprador para autorizar el enlace.</string>
+    <string name="ayuda_faq_2_pregunta">¿Por qué mi sensor no conecta por Bluetooth o parpadea en azul?</string>
+    <string name="ayuda_faq_2_respuesta">Comprueba que el Bluetooth y los permisos de ubicación estén activos en tu teléfono. Mantén el sensor a menos de 5 metros del dispositivo. Si el sensor parpadea continuamente o la luz se apaga, conéctalo con el cable de carga USB durante al menos 30 minutos antes de intentar reconectar.</string>
+    <string name="ayuda_faq_3_pregunta">¿Cómo se mide el ozono y cómo se calcula el mapa de contaminación?</string>
+    <string name="ayuda_faq_3_respuesta">Cada nodo incorpora una celda electroquímica de alta precisión (SPEC Sensors) calibrada en laboratorio. Las mediciones recopiladas por los portadores se envían de forma anónima y se combinan con las estaciones oficiales de la red pública mediante modelos de interpolación espacial en tiempo real.</string>
+    <string name="ayuda_faq_4_pregunta">¿Qué significan los niveles de calidad del aire?</string>
+    <string name="ayuda_faq_4_respuesta">AERIS clasifica la concentración en 4 niveles según las directivas europeas y los estándares OMS: Bueno (≤ 100 µg/m³), Moderado (101–180 µg/m³), Malo (181–240 µg/m³) y Muy malo (&gt; 240 µg/m³). En los niveles alto y muy alto se recomienda evitar el ejercicio intenso en las horas de mayor insolación.</string>
+    <string name="ayuda_faq_5_pregunta">¿Cómo puedo solicitar un cambio de correo o recuperar mi cuenta?</string>
+    <string name="ayuda_faq_5_respuesta">Puedes cambiar tu dirección de correo o contraseña desde la página «Mi cuenta» en la web o en «Editar mis datos» en la app. Si has olvidado tu clave de acceso, utiliza el enlace «¿Has olvidado tu contraseña?» en la pantalla de inicio de sesión.</string>
+
+    <string name="ayuda_formulario_texto">¿Tienes alguna avería o consulta técnica? Escríbenos y un técnico responderá a tu solicitud.</string>
+    <string name="ayuda_tipo_etiqueta">¿De qué trata?</string>
+    <string name="ayuda_tipo_sensor">Sensor</string>
+    <string name="ayuda_tipo_datos">Mediciones</string>
+    <string name="ayuda_tipo_cuenta">Cuenta</string>
+    <string name="ayuda_tipo_otra">Otra consulta</string>
+    <string name="ayuda_sensor_preseleccionado">Sensor: %1$s · %2$s</string>
+    <string name="ayuda_asunto_etiqueta">Asunto</string>
+    <string name="ayuda_asunto_pista">Ej. El sensor no sincroniza datos</string>
+    <string name="ayuda_descripcion_etiqueta">Mensaje</string>
+    <string name="ayuda_descripcion_pista">Describe con detalle qué ocurre para que podamos ayudarte mejor…</string>
+    <string name="ayuda_enviar">Enviar incidencia</string>
+    <string name="ayuda_enviando">Enviando…</string>
+    <string name="ayuda_enviada">¡Incidencia enviada! La encontrarás abajo, en «Mis incidencias».</string>
+    <string name="ayuda_sin_incidencias">Aún no has enviado ninguna incidencia.</string>
+    <string name="ayuda_reintentar">Reintentar</string>
+    <string name="ayuda_estado_abierta">Abierta</string>
+    <string name="ayuda_estado_en_curso">En curso</string>
+    <string name="ayuda_estado_resuelta">Resuelta</string>
+    <string name="ayuda_con_respuesta">Con respuesta</string>
+    <string name="ayuda_ver_conversacion">Ver la conversación  &gt;</string>
+
+    <!-- Conversación de una incidencia (T043) -->
+    <string name="conversacion_tu_mensaje">Tú</string>
+    <string name="conversacion_rol_tecnico">técnico</string>
+    <string name="conversacion_rol_administrador">administrador</string>
+    <string name="conversacion_equipo">Equipo AERIS</string>
+    <string name="conversacion_autor_con_rol">%1$s (%2$s)</string>
+    <string name="conversacion_en_revision">Tu incidencia está siendo revisada por nuestro equipo técnico. Te responderemos aquí.</string>
+    <string name="conversacion_mensaje_pista">Escribe un mensaje…</string>
+    <string name="conversacion_enviar">Enviar</string>
+    <string name="conversacion_enviar_descripcion">Enviar el mensaje</string>
+    <string name="conversacion_no_existe">Esta incidencia ya no está disponible.</string>
 </resources>

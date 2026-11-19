@@ -4,7 +4,8 @@
 //              petición, llama a la lógica y traduce el resultado a HTTP.
 //              Contrato completo en doc/servidor_rest_design.md. Tareas T016,
 //              T010, T005 (vinculación del sensor confirmada por correo),
-//              T041 (incidencias), T017 (mediciones), T007 (Mis datos),
+//              T041 (incidencias), T043 (conversación de cada incidencia),
+//              T017 (mediciones), T007 (Mis datos),
 //              T024 (datos de la
 //              página Mi cuenta), T021 (nodos del panel) y T046 (lugares).
 // Autores:     Equipo 04 – SenseTech
@@ -323,6 +324,26 @@ function cargarReglasREST(servidor, logica) {
             respuesta.status(200).json(await logica.incidencias.responder(idIncidencia, { respuesta: texto, estado },
                 peticion.usuario.idUsuario));
         }));
+
+    // ---- Conversación de cada incidencia (T043) · la usan la app y el panel ----
+
+    // GET /mensajesIncidencia?id=N  🔒 quien envió la incidencia, técnico o administrador
+    //   200 [ Mensaje ] (la conversación, el más antiguo primero; la descripción de la incidencia es el primer mensaje
+    //   y no se repite) · 401 · 404 (no existe, o no es suya y el usuario no es del equipo)
+    servidor.get('/mensajesIncidencia', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(
+            await logica.incidencias.listarMensajes(Number(peticion.query.id), peticion.usuario.idUsuario));
+    }));
+
+    // POST /enviarMensajeIncidencia  { idIncidencia, texto, estado (opcional, solo lo tiene en cuenta el equipo) }  🔒
+    //   Quien envió la incidencia: su mensaje (si estaba «resuelta», se reabre como «abierta»). Un técnico o
+    //   administrador: la respuesta del equipo, igual que /responderIncidencia con respuesta (se manda UN correo al usuario).
+    //   201 Mensaje · 400 { error, campos } · 401 · 404
+    servidor.post('/enviarMensajeIncidencia', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const { idIncidencia, texto, estado } = peticion.body;
+        respuesta.status(201).json(
+            await logica.incidencias.enviarMensaje(idIncidencia, peticion.usuario.idUsuario, texto, estado));
+    }));
 
     // ---- Mediciones (T017) · la app las recibe del nodo por Bluetooth ----
 

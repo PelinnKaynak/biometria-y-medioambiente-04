@@ -424,11 +424,11 @@ public class VincularSensorActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // abrirAyuda() -->
-    // What it does: opens Ayuda. Until the Ayuda screen exists (T043) it is
-    //               the «Próximamente» screen.
+    // What it does: opens Ayuda (T043) with «Sensor» already chosen in the form
+    //               (the user has no sensor linked yet, so none is preselected).
     // -----------------------------------------------------------------------
     private void abrirAyuda() {
-        startActivity(ProximamenteActivity.intentPara(this, ProximamenteActivity.Seccion.AYUDA));
+        startActivity(AyudaActivity.intentPara(this, Incidencia.TIPO_SENSOR, null, null));
     }
 
     private void cerrarSesion() {

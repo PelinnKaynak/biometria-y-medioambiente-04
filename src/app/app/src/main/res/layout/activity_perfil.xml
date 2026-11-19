@@ -201,6 +201,17 @@
                     android:textSize="14sp" />
             </LinearLayout>
 
+            <LinearLayout
+                android:id="@+id/opcionAyuda"
+                style="@style/AERIS.Fila">
+
+                <TextView
+                    style="@style/AERIS.FilaTexto"
+                    android:text="@string/perfil_ayuda" />
+
+                <TextView style="@style/AERIS.FilaFlecha" />
+            </LinearLayout>
+
             <TextView
                 android:id="@+id/botonCerrarSesion"
                 android:layout_width="180dp"

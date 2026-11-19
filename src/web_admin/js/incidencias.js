@@ -16,6 +16,14 @@ const ESTADOS_INCIDENCIA = {
     resuelta: "Resuelta"
 };
 
+// Cómo se llama en la conversación a quien escribió cada mensaje (T043)
+const ROLES_MENSAJE = {
+    administrador: "Administrador",
+    tecnico: "Técnico",
+    portador: "Portador",
+    ciudadano: "Usuario"
+};
+
 const pantallaIncidencias = {
     incidencias: [],
     idSeleccionada: null,
@@ -143,9 +151,12 @@ function pintarDetalleIncidencia(incidencia) {
         ? "Última conexión: " + formatearFechaIncidencia(sensor.ultimaConexion)
         : "Última conexión: —";
 
-    const respuestaPanel = document.getElementById("respuesta-actual-panel");
-    respuestaPanel.classList.toggle("oculto", !incidencia.respuesta);
+    // La conversación llega aparte (cargarConversacion): hasta entonces no se enseña ni la
+    // conversación ni la última respuesta, para que no parpadee una y luego la otra
+    document.getElementById("respuesta-actual-panel").classList.add("oculto");
     document.getElementById("respuesta-actual").textContent = incidencia.respuesta || "";
+    document.getElementById("conversacion-panel").classList.add("oculto");
+    document.getElementById("lista-mensajes").replaceChildren();
     document.getElementById("nuevo-estado").value = incidencia.estado;
     document.getElementById("texto-respuesta").value = "";
     document.getElementById("error-respuesta").classList.add("oculto");
@@ -164,6 +175,76 @@ async function cargarDetalleIncidencia(logica, idIncidencia) {
         return;
     }
     pintarDetalleIncidencia(resultado.incidencia);
+
+    const conversacion = await logica.obtenerMensajesIncidencia(idIncidencia);
+    if (solicitud !== pantallaIncidencias.solicitudDetalle ||
+        idIncidencia !== pantallaIncidencias.idSeleccionada) return;
+    pintarConversacion(conversacion, resultado.incidencia);
+}
+
+// ------------------------------------------------------------
+// mensaje: Mensaje --> etiquetaAutorMensaje() --> Text            (T043)
+// «Lucía · Usuario» si lo escribió quien envió la incidencia;
+// «Marc · Técnico» (o Administrador) si lo escribió el equipo.
+// ------------------------------------------------------------
+function etiquetaAutorMensaje(mensaje) {
+    const autor = mensaje.autor;
+    if (mensaje.delUsuario) {
+        return (autor && autor.nombre ? autor.nombre + " · " : "") + ROLES_MENSAJE.ciudadano;
+    }
+    if (!autor) return "Equipo de soporte";
+    return [autor.nombre, ROLES_MENSAJE[autor.rol] || "Equipo"].filter(Boolean).join(" · ");
+}
+
+// ------------------------------------------------------------
+// mensaje: Mensaje --> crearMensajeIncidencia() --> <li>          (T043)
+// ------------------------------------------------------------
+function crearMensajeIncidencia(mensaje) {
+    const elemento = document.createElement("li");
+    elemento.className = "mensaje " + (mensaje.delUsuario ? "mensaje-usuario" : "mensaje-equipo");
+    elemento.dataset.id = String(mensaje.idMensaje);
+
+    const cabecera = document.createElement("div");
+    cabecera.className = "cabecera-mensaje";
+    const autor = document.createElement("strong");
+    autor.textContent = etiquetaAutorMensaje(mensaje);
+    const fecha = document.createElement("time");
+    fecha.textContent = formatearFechaIncidencia(mensaje.fecha);
+    cabecera.append(autor, fecha);
+
+    const texto = document.createElement("p");
+    texto.className = "texto-mensaje";
+    texto.textContent = mensaje.texto;
+    elemento.append(cabecera, texto);
+    return elemento;
+}
+
+// ------------------------------------------------------------
+// resultado: ResultadoMensajes, incidencia: IncidenciaGestion --> pintarConversacion()   (T043)
+//
+// Enseña la conversación debajo de lo que escribió el usuario (la descripción es el
+// primer mensaje). Como la conversación ya incluye las respuestas del equipo, no se
+// repite «Respuesta enviada»; solo se enseña esa si no hay conversación (no se pudo
+// cargar o es una incidencia anterior a la conversación).
+// ------------------------------------------------------------
+function pintarConversacion(resultado, incidencia) {
+    const panel = document.getElementById("conversacion-panel");
+    const lista = document.getElementById("lista-mensajes");
+    const error = document.getElementById("error-conversacion");
+    const respuestaPanel = document.getElementById("respuesta-actual-panel");
+    lista.replaceChildren();
+    error.classList.add("oculto");
+
+    if (!resultado.correcto) {
+        error.textContent = "No se ha podido cargar la conversación: " + resultado.error;
+        error.classList.remove("oculto");
+        panel.classList.remove("oculto");
+        respuestaPanel.classList.toggle("oculto", !incidencia.respuesta);
+        return;
+    }
+    for (const mensaje of resultado.mensajes) lista.appendChild(crearMensajeIncidencia(mensaje));
+    panel.classList.toggle("oculto", resultado.mensajes.length === 0);
+    respuestaPanel.classList.toggle("oculto", resultado.mensajes.length > 0 || !incidencia.respuesta);
 }
 
 async function enviarRespuestaIncidencia(evento, logica) {
@@ -224,7 +305,8 @@ if (enNodeIncidencias) {
     module.exports = {
         pantallaIncidencias, formatearFechaIncidencia, crearBotonIncidencia,
         pintarListaIncidencias, cargarIncidencias, cargarDetalleIncidencia,
-        pintarDetalleIncidencia, enviarRespuestaIncidencia, claseEstado
+        pintarDetalleIncidencia, enviarRespuestaIncidencia, claseEstado,
+        etiquetaAutorMensaje, crearMensajeIncidencia, pintarConversacion
     };
 } else {
     document.addEventListener("DOMContentLoaded", iniciarPantallaIncidencias);

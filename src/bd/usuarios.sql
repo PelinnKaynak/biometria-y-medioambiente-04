@@ -174,6 +174,32 @@ CREATE TABLE IF NOT EXISTS Incidencias (
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------
+-- Tabla: MensajesIncidencia (T043)
+-- La conversación de cada incidencia: lo que escribe el usuario y lo
+-- que responden los técnicos y los administradores, por orden de
+-- fecha. La descripción de la incidencia es el primer mensaje del
+-- usuario y no se repite aquí. idAutor es NULL si el autor se borró.
+-- Al borrar una incidencia se borran sus mensajes.
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS MensajesIncidencia (
+    idMensaje INT NOT NULL AUTO_INCREMENT,
+    idIncidencia INT NOT NULL,
+    idAutor INT NULL,
+    texto TEXT NOT NULL,
+    fecha DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
+    PRIMARY KEY (idMensaje),
+    INDEX idx_mensajes_incidencia (idIncidencia, fecha, idMensaje),
+    CONSTRAINT fk_mensajes_incidencias
+        FOREIGN KEY (idIncidencia)
+        REFERENCES Incidencias(idIncidencia)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_mensajes_autor
+        FOREIGN KEY (idAutor)
+        REFERENCES Usuarios(idUsuario)
+        ON DELETE SET NULL
+) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------
 -- Tabla: Lugares (T046 · H034, H035)
 -- Ubicaciones habituales de cada usuario. POINT almacena
 -- POINT(longitud, latitud); direccion conserva el texto introducido.

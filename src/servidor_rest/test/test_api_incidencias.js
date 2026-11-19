@@ -167,4 +167,82 @@ describe('API REST de incidencias', function () {
         assert.strictEqual((await peticion('POST', '/responderIncidencia', tecnico, { idIncidencia: 999, respuesta: 'x' })).codigo, 404);
         assert.deepStrictEqual((await peticion('GET', '/numeroIncidenciasAbiertas', tecnico)).cuerpo, { abiertas: 0 });
     });
+
+    // --- conversación de cada incidencia (T043) ---------------------------------
+
+    it('sin sesión las rutas de la conversación dan 401', async function () {
+        assert.strictEqual((await peticion('GET', '/mensajesIncidencia?id=1')).codigo, 401);
+        assert.strictEqual((await peticion('POST', '/enviarMensajeIncidencia', null, { idIncidencia: 1, texto: 'Hola' })).codigo, 401);
+    });
+
+    it('POST /enviarMensajeIncidencia y GET /mensajesIncidencia: el usuario y el equipo mantienen la conversación', async function () {
+        const { cuerpo: i } = await peticion('POST', '/crearIncidencia', portador, { tipo: 'sensor', asunto: 'No conecta', descripcion: 'La luz parpadea' });
+        assert.deepStrictEqual((await peticion('GET', `/mensajesIncidencia?id=${i.idIncidencia}`, portador)).cuerpo, []);
+
+        // el usuario añade un mensaje
+        const m1 = await peticion('POST', '/enviarMensajeIncidencia', portador, { idIncidencia: i.idIncidencia, texto: '  Sigue igual  ' });
+        assert.strictEqual(m1.codigo, 201);
+        assert.strictEqual(m1.cuerpo.texto, 'Sigue igual');
+        assert.strictEqual(m1.cuerpo.delUsuario, true);
+        assert.strictEqual(m1.cuerpo.autor.nombre, 'Pelin');
+        assert.strictEqual(correos.length, 0);
+
+        // el técnico responde por la ruta nueva: respuesta del equipo, estado y UN correo
+        const m2 = await peticion('POST', '/enviarMensajeIncidencia', tecnico, { idIncidencia: i.idIncidencia, texto: 'Reinícialo' });
+        assert.strictEqual(m2.codigo, 201);
+        assert.strictEqual(m2.cuerpo.delUsuario, false);
+        assert.strictEqual(m2.cuerpo.autor.rol, 'tecnico');
+        assert.strictEqual(correos.length, 1);
+        assert.strictEqual(correos[0].destinatario, 'pelin@aeris.es');
+        const [laApp] = (await peticion('GET', '/misIncidencias', portador)).cuerpo;
+        assert.strictEqual(laApp.estado, 'resuelta');
+        assert.strictEqual(laApp.respuesta, 'Reinícialo');
+
+        // el administrador responde por la ruta de siempre y también queda en la conversación (un correo más)
+        await peticion('POST', '/responderIncidencia', admin, { idIncidencia: i.idIncidencia, respuesta: 'Te lo cambiamos', estado: 'en curso' });
+        assert.strictEqual(correos.length, 2);
+
+        // el usuario escribe otra vez: no manda correo y reabre si estaba «resuelta»
+        await peticion('POST', '/responderIncidencia', tecnico, { idIncidencia: i.idIncidencia, estado: 'resuelta' });
+        await peticion('POST', '/enviarMensajeIncidencia', portador, { idIncidencia: i.idIncidencia, texto: 'Gracias' });
+        assert.strictEqual((await peticion('GET', '/misIncidencias', portador)).cuerpo[0].estado, 'abierta');
+        assert.strictEqual(correos.length, 2);
+
+        // el usuario y el equipo leen la misma conversación, por orden
+        for (const token of [portador, tecnico, admin]) {
+            const r = await peticion('GET', `/mensajesIncidencia?id=${i.idIncidencia}`, token);
+            assert.strictEqual(r.codigo, 200);
+            assert.deepStrictEqual(r.cuerpo.map((m) => m.texto), ['Sigue igual', 'Reinícialo', 'Te lo cambiamos', 'Gracias']);
+            assert.deepStrictEqual(r.cuerpo.map((m) => m.delUsuario), [true, false, false, true]);
+        }
+    });
+
+    it('un usuario que no envió la incidencia (y no es del equipo) recibe 404 al leer y al escribir', async function () {
+        const { cuerpo: i } = await peticion('POST', '/crearIncidencia', portador, { tipo: 'otra', asunto: 'Asunto', descripcion: 'Privado' });
+        const otro = await usuarioConRol('Carla', 'carla@aeris.es', 'portador');
+
+        assert.strictEqual((await peticion('GET', `/mensajesIncidencia?id=${i.idIncidencia}`, otro)).codigo, 404);
+        assert.strictEqual((await peticion('POST', '/enviarMensajeIncidencia', otro, { idIncidencia: i.idIncidencia, texto: 'Intruso' })).codigo, 404);
+        assert.deepStrictEqual((await peticion('GET', `/mensajesIncidencia?id=${i.idIncidencia}`, portador)).cuerpo, []);
+        assert.strictEqual(correos.length, 0);
+    });
+
+    it('conversación: 400 con un texto o un estado no válidos y 404 con una incidencia que no existe', async function () {
+        const { cuerpo: i } = await peticion('POST', '/crearIncidencia', portador, { tipo: 'otra', asunto: 'Asunto', descripcion: 'Hola' });
+
+        const vacio = await peticion('POST', '/enviarMensajeIncidencia', portador, { idIncidencia: i.idIncidencia, texto: '   ' });
+        assert.strictEqual(vacio.codigo, 400);
+        assert.ok(vacio.cuerpo.campos.includes('texto'));
+        assert.strictEqual((await peticion('POST', '/enviarMensajeIncidencia', portador, { idIncidencia: i.idIncidencia, texto: 'x'.repeat(2001) })).codigo, 400);
+        const estado = await peticion('POST', '/enviarMensajeIncidencia', tecnico, { idIncidencia: i.idIncidencia, texto: 'Hola', estado: 'cerrada' });
+        assert.strictEqual(estado.codigo, 400);
+        assert.ok(estado.cuerpo.campos.includes('estado'));
+
+        assert.strictEqual((await peticion('POST', '/enviarMensajeIncidencia', portador, { idIncidencia: 999, texto: 'Hola' })).codigo, 404);
+        assert.strictEqual((await peticion('POST', '/enviarMensajeIncidencia', portador, { texto: 'Hola' })).codigo, 404);
+        assert.strictEqual((await peticion('GET', '/mensajesIncidencia?id=999', portador)).codigo, 404);
+        assert.strictEqual((await peticion('GET', '/mensajesIncidencia?id=abc', tecnico)).codigo, 404);
+        assert.strictEqual((await peticion('GET', '/mensajesIncidencia', tecnico)).codigo, 404);
+        assert.deepStrictEqual((await peticion('GET', `/mensajesIncidencia?id=${i.idIncidencia}`, portador)).cuerpo, []);
+    });
 });

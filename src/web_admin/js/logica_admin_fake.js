@@ -272,6 +272,23 @@ class LogicaAdminFake {
     }
 
     // --------------------------------------------------------
+    // id_incidencia: N --> obtenerMensajesIncidencia()   (T043)
+    //
+    // La conversación de la incidencia, el más antiguo primero
+    // (como GET /mensajesIncidencia). La descripción no va en la lista.
+    // --------------------------------------------------------
+    async obtenerMensajesIncidencia(id_incidencia) {
+        await esperarAdmin(this.retardo_ms);
+        if (!this.puedeGestionarIncidencias()) {
+            return { correcto: false, mensajes: [], error: MENSAJE_SOLO_GESTION };
+        }
+        const incidencia = this.incidencias.find(i => i.idIncidencia === Number(id_incidencia));
+        return incidencia
+            ? { correcto: true, mensajes: incidencia.mensajes.slice(), error: "" }
+            : { correcto: false, mensajes: [], error: "Esa incidencia no existe" };
+    }
+
+    // --------------------------------------------------------
     // --> obtenerNumeroIncidenciasAbiertas() --> { abiertas }
     // --------------------------------------------------------
     async obtenerNumeroIncidenciasAbiertas() {
@@ -304,6 +321,15 @@ class LogicaAdminFake {
             incidencia.fechaRespuesta = this.ahora.toISOString();
             const usuario = this.usuarioActual();
             incidencia.responsable = { nombre: usuario && usuario.nombre || "Equipo AERIS", rol: usuario && usuario.rol || "tecnico" };
+            // La respuesta también es un mensaje de la conversación (T043)
+            incidencia.mensajes.push({
+                idMensaje: incidencia.idIncidencia * 100 + incidencia.mensajes.length + 1,
+                idIncidencia: incidencia.idIncidencia,
+                texto: incidencia.respuesta,
+                fecha: incidencia.fechaRespuesta,
+                autor: { idUsuario: usuario && usuario.id || 1, nombre: incidencia.responsable.nombre, rol: incidencia.responsable.rol },
+                delUsuario: false
+            });
         }
         if (datos.estado !== undefined) incidencia.estado = datos.estado;
         else if (datos.respuesta !== undefined) incidencia.estado = "resuelta";
@@ -446,19 +472,31 @@ function crearUsuariosPrueba(ahora, nodos) {
 }
 
 function crearIncidenciasPrueba(ahora) {
-    const crear = (id, tipo, asunto, descripcion, estado, nombre, apellidos, correo, sensor, dias) => ({
-        idIncidencia: id,
-        tipo,
-        asunto,
-        descripcion,
-        estado,
-        respuesta: estado === "resuelta" ? "Hemos revisado el caso y ya está solucionado." : null,
-        responsable: estado === "resuelta" ? { idUsuario: 1, nombre: "Administración", rol: "administrador" } : null,
-        fechaCreacion: new Date(ahora.getTime() - dias * 86400000).toISOString(),
-        fechaRespuesta: estado === "resuelta" ? new Date(ahora.getTime() - (dias - 0.5) * 86400000).toISOString() : null,
-        usuario: { idUsuario: id + 20, nombre, apellidos, correo },
-        sensor
-    });
+    const crear = (id, tipo, asunto, descripcion, estado, nombre, apellidos, correo, sensor, dias) => {
+        const resuelta = estado === "resuelta";
+        const fechaRespuesta = resuelta ? new Date(ahora.getTime() - (dias - 0.5) * 86400000).toISOString() : null;
+        const responsable = resuelta ? { idUsuario: 1, nombre: "Administración", rol: "administrador" } : null;
+        const respuesta = resuelta ? "Hemos revisado el caso y ya está solucionado." : null;
+        return {
+            idIncidencia: id,
+            tipo,
+            asunto,
+            descripcion,
+            estado,
+            respuesta,
+            responsable,
+            fechaCreacion: new Date(ahora.getTime() - dias * 86400000).toISOString(),
+            fechaRespuesta,
+            usuario: { idUsuario: id + 20, nombre, apellidos, correo },
+            sensor,
+            // La conversación (T043): la respuesta de siempre es su primer mensaje del equipo
+            mensajes: resuelta ? [{
+                idMensaje: id * 100 + 1, idIncidencia: id, texto: respuesta, fecha: fechaRespuesta,
+                autor: { idUsuario: responsable.idUsuario, nombre: responsable.nombre, rol: responsable.rol },
+                delUsuario: false
+            }] : []
+        };
+    };
     const sensorLaura = {
         idSensor: 1, numeroSerie: "AER-24001", nombre: "Sensor Laura",
         estado: "activo", bateria: 72,
@@ -471,7 +509,7 @@ function crearIncidenciasPrueba(ahora) {
         ultimaConexion: new Date(ahora.getTime() - 28 * 3600000).toISOString(),
         necesitaCalibracion: true
     };
-    return [
+    const incidencias = [
         crear(101, "sensor", "El sensor no enciende", "El sensor dejó de encender después de cargarlo.", "abierta",
             "Laura", "Martínez", "laura@correo.es", sensorLaura, 0.2),
         crear(102, "datos", "Faltan mediciones", "No aparecen mediciones de esta mañana en la aplicación.", "en curso",
@@ -481,6 +519,13 @@ function crearIncidenciasPrueba(ahora) {
         crear(104, "otra", "Consulta sobre el servicio", "Quería saber cuándo se publicarán los datos del último mes.", "resuelta",
             "Andrés", "Gil", "andres@correo.es", null, 4)
     ];
+    // La usuaria de la 103 ha añadido un mensaje después de enviarla (T043)
+    incidencias[2].mensajes.push({
+        idMensaje: 10301, idIncidencia: 103, texto: "Sigue sin dejarme guardar el correo. ¿Podéis mirarlo?",
+        fecha: new Date(ahora.getTime() - 1.5 * 86400000).toISOString(),
+        autor: { idUsuario: 123, nombre: "Lucía", rol: "ciudadano" }, delUsuario: true
+    });
+    return incidencias;
 }
 
 // --------------------------------------------------------

@@ -112,6 +112,26 @@ describe("incidencias", () => {
         ]);
     });
 
+    test("obtenerMensajesIncidencia() pide la conversación de esa incidencia (T043)", async () => {
+        const mensajes = [{ idMensaje: 1, texto: "Hola", delUsuario: true }];
+        fetch.mockReturnValue(respuestaFalsa(200, mensajes));
+        const logica = new LogicaAdminReal("");
+        const resultado = await logica.obtenerMensajesIncidencia(7);
+        expect(fetch.mock.calls[0][0]).toBe("/mensajesIncidencia?id=7");
+        expect(fetch.mock.calls[0][1].method).toBe("GET");
+        expect(resultado).toEqual({ correcto: true, mensajes, error: "" });
+    });
+
+    test("obtenerMensajesIncidencia() devuelve el error del servidor", async () => {
+        fetch.mockReturnValue(respuestaFalsa(404, { error: "Esa incidencia no existe" }));
+        const resultado = await new LogicaAdminReal("").obtenerMensajesIncidencia(999);
+        expect(resultado).toEqual({ correcto: false, mensajes: [], error: "Esa incidencia no existe" });
+
+        fetch.mockReturnValue(respuestaFalsa(403, {}));
+        expect((await new LogicaAdminReal("").obtenerMensajesIncidencia(1)).error)
+            .toBe("Tu cuenta no tiene permiso para hacer esto");
+    });
+
     test("responderIncidencia() envía la respuesta y el nuevo estado", async () => {
         fetch.mockReturnValue(respuestaFalsa(200, { idIncidencia: 7, estado: "en curso" }));
         const logica = new LogicaAdminReal("");

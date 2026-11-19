@@ -4,7 +4,7 @@ Motor: **MySQL / MariaDB** (XAMPP en local).
 Base de datos: `aeris` (codificación `utf8mb4`).
 Script: [`src/bd/usuarios.sql`](../src/bd/usuarios.sql)
 
-Sigue el diagrama de la BD en Figma (enlace en el README). Ahora están las tablas `Usuarios`, `Contaminantes`, `Sensores`, `Mediciones` (T015), `Incidencias` (T041) y `Lugares` (T046), más las columnas de la solicitud de vinculación en `Sensores` (T005). Las sesiones y los enlaces de recuperación de contraseña de T016 son tokens firmados por el servidor, así que no necesitan tablas (ver `logica_design.md`). El resto (MovimientosPuntos, Insignias, UsuarioInsignia, Recompensas, Canjes, Campañas, ZonasSensibles) se añadirá en las tareas correspondientes.
+Sigue el diagrama de la BD en Figma (enlace en el README). Ahora están las tablas `Usuarios`, `Contaminantes`, `Sensores`, `Mediciones` (T015), `Incidencias` (T041), `MensajesIncidencia` (T043) y `Lugares` (T046), más las columnas de la solicitud de vinculación en `Sensores` (T005). Las sesiones y los enlaces de recuperación de contraseña de T016 son tokens firmados por el servidor, así que no necesitan tablas (ver `logica_design.md`). El resto (MovimientosPuntos, Insignias, UsuarioInsignia, Recompensas, Canjes, Campañas, ZonasSensibles) se añadirá en las tareas correspondientes.
 
 ## Tabla `Usuarios`
 
@@ -89,10 +89,24 @@ Las que el usuario envía desde Ayuda (app y web). Las reciben y las responden l
 | `asunto` | VARCHAR(120) | NOT NULL | Título corto que escribe el usuario (el de la tarjeta en «Mis incidencias») |
 | `descripcion` | TEXT | NOT NULL | Lo que escribe el usuario |
 | `estado` | VARCHAR(10) | NOT NULL, DEFAULT 'abierta', CHECK | 'abierta', 'en curso' o 'resuelta' |
-| `respuesta` | TEXT | NULL | Respuesta del técnico o administrador |
+| `respuesta` | TEXT | NULL | Última respuesta del técnico o administrador (la sigue usando la web; la conversación completa está en `MensajesIncidencia`, T043) |
 | `idResponsable` | INT | FK → Usuarios, NULL, ON DELETE SET NULL | Técnico o administrador que respondió (su nombre sale junto a la respuesta) |
 | `fechaCreacion` | DATETIME | NOT NULL, DEFAULT UTC_TIMESTAMP | Cuándo se envió (UTC) |
 | `fechaRespuesta` | DATETIME | NULL | Cuándo se respondió (UTC) |
+
+## Tabla `MensajesIncidencia` (T043)
+
+La conversación de cada incidencia desde la pantalla Ayuda de la app (y desde el panel): lo que el usuario añade después de enviarla y lo que responden los técnicos y los administradores, por orden de fecha. **No hay una tabla de mensajes distinta**: esta es la única. La descripción de la incidencia es el primer mensaje del usuario y se queda en `Incidencias.descripcion` (no se copia aquí).
+
+| Columna | Tipo | Restricciones | Descripción |
+|---|---|---|---|
+| `idMensaje` | INT | PK, AUTO_INCREMENT | Identificador |
+| `idIncidencia` | INT | FK → Incidencias, NOT NULL, ON DELETE CASCADE | Incidencia a la que pertenece; al borrarla se borran sus mensajes |
+| `idAutor` | INT | FK → Usuarios, NULL, ON DELETE SET NULL | Quién lo escribió: el usuario de la incidencia o un técnico o administrador. NULL si se borró su cuenta |
+| `texto` | TEXT | NOT NULL | El mensaje (la lógica admite hasta 2000 caracteres) |
+| `fecha` | DATETIME | NOT NULL, DEFAULT UTC_TIMESTAMP | Cuándo se escribió (UTC) |
+
+El índice `idx_mensajes_incidencia (idIncidencia, fecha, idMensaje)` sirve para leer la conversación en orden y para la clave foránea. El rol del autor no se guarda: se calcula al leer, con los roles que tenga el usuario (el mismo método que ya usa «Respuesta de Marc (técnico)»).
 
 ## Tabla `Lugares` (T046 · H034, H035)
 
@@ -120,7 +134,9 @@ Lugares habituales, privados por usuario. La app envía la dirección y sus coor
 1. Abrir XAMPP Control Panel y pulsar **Start** en Apache y MySQL.
 2. Abrir `http://localhost/phpmyadmin`.
 3. Pestaña **Importar** → seleccionar `src/bd/usuarios.sql` → **Importar**.
-4. Debe aparecer la base de datos `aeris` con las tablas `Usuarios`, `Contaminantes`, `Sensores`, `Mediciones`, `Incidencias` y `Lugares`.
+4. Debe aparecer la base de datos `aeris` con las tablas `Usuarios`, `Contaminantes`, `Sensores`, `Mediciones`, `Incidencias`, `MensajesIncidencia` y `Lugares`.
+
+**Instalación limpia (BD nueva):** basta con `src/bd/usuarios.sql`, que ya incluye `MensajesIncidencia`. No hay que importar ningún `actualizar_*.sql`.
 
 **Si la BD ya estaba creada antes de T010:** importar también `src/bd/actualizar_T010.sql`, que añade la columna `foto` sin borrar los usuarios.
 
@@ -129,6 +145,8 @@ Lugares habituales, privados por usuario. La app envía la dirección y sus coor
 **Si la BD ya estaba creada antes de T017:** importar `src/bd/actualizar_T017.sql`, que añade el ozono a `Contaminantes` y la clave única de `Mediciones`. Se puede importar más de una vez.
 
 **Si la BD ya estaba creada antes de T041:** importar `src/bd/actualizar_T041.sql`, que crea la tabla `Incidencias` sin borrar nada. Si ya se había importado una versión anterior (sin `asunto` ni `idResponsable`), borrar antes la tabla con `DROP TABLE Incidencias;`.
+
+**Si la BD ya estaba creada antes de T043:** importar `src/bd/actualizar_T043.sql`, que crea `MensajesIncidencia` y pasa a ella las respuestas que ya había en `Incidencias.respuesta`, para que salgan en la conversación. **No borra ni cambia nada** (solo crea la tabla y añade filas) y se puede importar más de una vez sin duplicar mensajes. Requiere que exista la tabla `Incidencias` (de T041).
 
 **Si la BD ya estaba creada antes de T046:** importar `src/bd/actualizar_T046.sql`, que crea `Lugares` sin borrar nada. Se puede importar más de una vez.
 
