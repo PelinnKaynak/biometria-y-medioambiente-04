@@ -293,23 +293,35 @@ public class InicioActivity extends AppCompatActivity {
                     @Override
                     public void zonaSinModelo(String zonaDisponible) {
                         cargandoPrevision = false;
+                        previsionNoDisponible();
                     }
 
                     @Override
                     public void sinDatos() {
                         cargandoPrevision = false;
+                        previsionNoDisponible();
                     }
 
                     @Override
                     public void servicioOcupado() {
                         cargandoPrevision = false;
+                        previsionNoDisponible();
                     }
 
                     @Override
                     public void error(String mensaje) {
                         cargandoPrevision = false;
+                        previsionNoDisponible();
                     }
                 });
+    }
+
+    // Si no se puede renovar, no se deja un pico caducado: vuelve el texto por defecto
+    private void previsionNoDisponible() {
+        resumenPrevision = null;
+        if (!isDestroyed() && !deEjemplo) {
+            textoPrevision.setText(R.string.inicio_prevision_texto);
+        }
     }
 
     private String resumirPrevision(PrevisionOzono prevision) {
