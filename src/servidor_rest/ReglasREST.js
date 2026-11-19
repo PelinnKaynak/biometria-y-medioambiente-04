@@ -191,6 +191,14 @@ function cargarReglasREST(servidor, logica) {
         respuesta.status(200).json({ nodos: conSitio, total: conSitio.length });
     }));
 
+    // POST /nodos/:numeroSerie/desvincular  🔒 solo administrador
+    //   200 { numeroSerie } · 404 el sensor no existe o no está vinculado · 401 · 403
+    //   Quita el sensor a su usuario; el sensor y sus mediciones se conservan.
+    servidor.post('/nodos/:numeroSerie/desvincular', requiereSesion(logica, ['administrador']), envolver(async (peticion, respuesta) => {
+        const { numeroSerie } = await logica.desvincularSensor(peticion.params.numeroSerie);
+        respuesta.status(200).json({ numeroSerie });
+    }));
+
     // GET /miCuenta  🔒                                                   (T024)
     //   200 Resumen (ver Logica.resumenCuenta) · 404 sin sensor vinculado o sin mediciones · 401
     servidor.get('/miCuenta', requiereSesion(logica), envolver(async (peticion, respuesta) => {

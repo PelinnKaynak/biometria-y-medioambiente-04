@@ -83,6 +83,7 @@ function mostrarMenuMovil(abierto) {
 // --------------------------------------------------------
 function conectarMenu(logica, irA) {
     ajustarMenuSegunRol(logica.usuarioActual());
+    actualizarContadorIncidencias(logica);
     document.getElementById("boton-menu").addEventListener("click", () => mostrarMenuMovil(true));
     document.getElementById("boton-cerrar-menu").addEventListener("click", () => mostrarMenuMovil(false));
     document.getElementById("boton-salir").addEventListener("click", evento => {
@@ -96,9 +97,39 @@ function conectarMenu(logica, irA) {
     }
 }
 
+// --------------------------------------------------------
+// logica: LogicaAdmin --> actualizarContadorIncidencias()
+//
+// El signo de exclamación deja visible el fallo en el menú
+// en vez de ocultar silenciosamente un contador que no cargó.
+// --------------------------------------------------------
+async function actualizarContadorIncidencias(logica) {
+    const contador = document.getElementById("contador-incidencias");
+    if (!contador || typeof logica.obtenerNumeroIncidenciasAbiertas !== "function") return;
+
+    const mostrarError = error => {
+        contador.textContent = "!";
+        contador.title = error || "No se pudo cargar el número de incidencias abiertas";
+        contador.setAttribute("aria-label", "No se pudo cargar el número de incidencias abiertas");
+    };
+    try {
+        const resultado = await logica.obtenerNumeroIncidenciasAbiertas();
+        if (!resultado.correcto || !Number.isInteger(resultado.abiertas) || resultado.abiertas < 0) {
+            mostrarError(resultado.error);
+            return;
+        }
+        contador.textContent = String(resultado.abiertas);
+        contador.title = resultado.abiertas + " incidencias abiertas";
+        contador.setAttribute("aria-label", resultado.abiertas + " incidencias abiertas");
+    } catch (error) {
+        mostrarError(error.message);
+    }
+}
+
 if (typeof module !== "undefined") {
     module.exports = {
         tieneAccesoAdmin, comprobarAcceso, ajustarMenuSegunRol,
-        mostrarMenuMovil, conectarMenu, PAGINA_LOGIN, PAGINA_INICIO_PANEL
+        mostrarMenuMovil, conectarMenu, actualizarContadorIncidencias,
+        PAGINA_LOGIN, PAGINA_INICIO_PANEL
     };
 }

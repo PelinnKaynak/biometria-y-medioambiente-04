@@ -146,6 +146,25 @@
 .fila-nodo.inactivo .celda-tiempo { color: var(--malo); font-weight: 600; }
 .celda-bateria.bateria-baja { color: var(--malo); }
 
+/* Columna «Desvincular»: solo la ve el administrador (clase con-acciones en .caja-lista) */
+.cabecera-accion,
+.celda-accion { display: none; }
+.con-acciones .cabecera-lista,
+.con-acciones .fila-nodo { grid-template-columns: 108px minmax(120px, 1fr) 72px 58px 74px 86px; }
+.con-acciones .cabecera-accion,
+.con-acciones .celda-accion { display: block; text-align: right; }
+
+.boton-desvincular {
+    padding: 3px 8px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: var(--blanco);
+    color: var(--malo);
+    font: 500 12px "Inter", sans-serif;
+    cursor: pointer;
+}
+.boton-desvincular:hover { border-color: var(--malo); background: #FDECEE; }
+
 .etiqueta {
     display: inline-block;
     padding: 2px 8px;
@@ -172,6 +191,8 @@
     .zona-datos { gap: 20px; }
     .cabecera-lista,
     .fila-nodo { grid-template-columns: 104px 1fr 72px 56px 74px; }
+    .con-acciones .cabecera-lista,
+    .con-acciones .fila-nodo { grid-template-columns: 104px minmax(100px, 1fr) 66px 52px 70px 86px; }
 }
 
 /* ---------- Móvil (diseño de 390 px) ---------- */
@@ -247,6 +268,16 @@
     .celda-tiempo::before { content: "Sin datos: "; }
     .celda-bateria { grid-area: bateria; color: var(--bueno); }
     .celda-bateria::before { content: "Batería "; }
+
+    .con-acciones .fila-nodo {
+        grid-template-columns: auto 1fr auto;
+        grid-template-areas:
+      "id portador aviso"
+      "tiempo tiempo bateria"
+      "accion accion accion";
+    }
+    .celda-accion { grid-area: accion; }
+    .boton-desvincular { width: 100%; padding: 8px; }
 
 
 }

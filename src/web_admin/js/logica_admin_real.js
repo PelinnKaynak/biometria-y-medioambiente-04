@@ -107,6 +107,19 @@ class LogicaAdminReal {
     }
 
     // --------------------------------------------------------
+    // id: Text --> desvincularNodo() --> r: ResultadoOperacion <--
+    //
+    // POST /nodos/:numeroSerie/desvincular   (solo administrador)
+    //   200 { numeroSerie } · 403 · 404 { error }
+    // --------------------------------------------------------
+    async desvincularNodo(id) {
+        const { respuesta, error } =
+            await this.pedir("/nodos/" + encodeURIComponent(id) + "/desvincular", "POST");
+        if (respuesta) return { correcto: true, error: "" };
+        return { correcto: false, error };
+    }
+
+    // --------------------------------------------------------
     // ruta: Text, filtro: FiltroNodos --> pedirNodos() -->
     //       r: ResultadoNodos <--
     // --------------------------------------------------------
@@ -155,6 +168,54 @@ class LogicaAdminReal {
         if (!respuesta) return { correcto: false, usuarios: [], total: 0, error };
         const datos = await respuesta.json();
         return { correcto: true, usuarios: datos.usuarios, total: datos.total, error: "" };
+    }
+
+    // --------------------------------------------------------
+    // filtros: FiltroIncidencias --> obtenerIncidencias() -->
+    //       r: ResultadoIncidencias <--
+    //
+    // GET /incidencias?estado=&tipo=
+    // --------------------------------------------------------
+    async obtenerIncidencias(filtros = {}) {
+        const parametros = new URLSearchParams();
+        if (filtros.estado && filtros.estado !== "todos") parametros.set("estado", filtros.estado);
+        if (filtros.tipo && filtros.tipo !== "todos") parametros.set("tipo", filtros.tipo);
+        const consulta = parametros.toString();
+        const { respuesta, error } = await this.pedir("/incidencias" + (consulta ? "?" + consulta : ""));
+        if (!respuesta) return { correcto: false, incidencias: [], error };
+        return { correcto: true, incidencias: await respuesta.json(), error: "" };
+    }
+
+    // --------------------------------------------------------
+    // id_incidencia: N --> obtenerIncidencia() --> IncidenciaGestion
+    // GET /incidencia?id=
+    // --------------------------------------------------------
+    async obtenerIncidencia(id_incidencia) {
+        const parametros = new URLSearchParams({ id: String(id_incidencia) });
+        const { respuesta, error } = await this.pedir("/incidencia?" + parametros);
+        if (!respuesta) return { correcto: false, incidencia: null, error };
+        return { correcto: true, incidencia: await respuesta.json(), error: "" };
+    }
+
+    // --------------------------------------------------------
+    // GET /numeroIncidenciasAbiertas --> { abiertas }
+    // --------------------------------------------------------
+    async obtenerNumeroIncidenciasAbiertas() {
+        const { respuesta, error } = await this.pedir("/numeroIncidenciasAbiertas");
+        if (!respuesta) return { correcto: false, abiertas: null, error };
+        const datos = await respuesta.json();
+        return { correcto: true, abiertas: datos.abiertas, error: "" };
+    }
+
+    // --------------------------------------------------------
+    // datos: { idIncidencia, respuesta?, estado? }
+    // --> responderIncidencia() --> IncidenciaGestion
+    // --------------------------------------------------------
+    async responderIncidencia(datos) {
+        const { respuesta, error, cuerpoError } =
+            await this.pedir("/responderIncidencia", "POST", datos);
+        if (!respuesta) return { correcto: false, incidencia: null, error, campos: (cuerpoError && cuerpoError.campos) || [] };
+        return { correcto: true, incidencia: await respuesta.json(), error: "", campos: [], modoDemo: false };
     }
 
     // --------------------------------------------------------

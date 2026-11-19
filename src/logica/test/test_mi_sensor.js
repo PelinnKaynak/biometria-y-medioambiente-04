@@ -51,11 +51,10 @@ describe('Logica (Mi sensor)', function () {
         assert.strictEqual(actualizado.ultimaConexion.toISOString(), ultimaConexion.toISOString());
     });
 
-    it('desvincularMiSensor elimina la asociación y quita el permiso de portador si era el único sensor', async function () {
+    it('desvincularMiSensor elimina la asociación y deja de ser portador si era el único sensor', async function () {
         await logica.conexion.execute(
             'UPDATE Usuarios SET esPortador = TRUE WHERE idUsuario = ?',
-            [usuario.idUsuario]
-        );
+            [usuario.idUsuario]);
 
         const resultado = await logica.desvincularMiSensor(usuario.idUsuario);
         assert.strictEqual(resultado.numeroSerie, '092021010920');
@@ -70,28 +69,63 @@ describe('Logica (Mi sensor)', function () {
         assert.strictEqual(Boolean(sensor.luzActiva), false);
 
         const [[actualizado]] = await logica.conexion.execute(
-            'SELECT esPortador FROM Usuarios WHERE idUsuario = ?',
-            [usuario.idUsuario]
-        );
+            'SELECT esPortador FROM Usuarios WHERE idUsuario = ?', [usuario.idUsuario]);
         assert.strictEqual(Boolean(actualizado.esPortador), false);
 
         await assert.rejects(logica.obtenerMiSensor(usuario.idUsuario), { codigo: 'SIN_SENSOR' });
         await assert.rejects(logica.desvincularMiSensor(usuario.idUsuario), { codigo: 'SIN_SENSOR' });
     });
 
-    it('mantiene el permiso de portador si el usuario conserva otro sensor', async function () {
+    it('sigue siendo portador si conserva otro sensor', async function () {
         await anadirSensor('092021010921', usuario.idUsuario);
         await logica.conexion.execute(
             'UPDATE Usuarios SET esPortador = TRUE WHERE idUsuario = ?',
-            [usuario.idUsuario]
-        );
+            [usuario.idUsuario]);
 
         await logica.desvincularMiSensor(usuario.idUsuario);
 
         const [[actualizado]] = await logica.conexion.execute(
-            'SELECT esPortador FROM Usuarios WHERE idUsuario = ?',
-            [usuario.idUsuario]
-        );
+            'SELECT esPortador FROM Usuarios WHERE idUsuario = ?', [usuario.idUsuario]);
         assert.strictEqual(Boolean(actualizado.esPortador), true);
+    });
+
+    // ---- El administrador desvincula un sensor desde el panel de Nodos ----
+
+    it('desvincularSensor() quita el sensor a su usuario y conserva sus mediciones', async function () {
+        await logica.conexion.execute('UPDATE Usuarios SET esPortador = TRUE WHERE idUsuario = ?', [usuario.idUsuario]);
+        const [[o]] = await logica.conexion.query("SELECT idContaminante FROM Contaminantes WHERE nombre = 'O3'");
+        const idO3 = o ? o.idContaminante
+            : (await logica.conexion.execute("INSERT INTO Contaminantes (nombre, unidad) VALUES ('O3', 'µg/m³')"))[0].insertId;
+        await logica.conexion.execute(
+            `INSERT INTO Mediciones (idSensor, idUsuario, idContaminante, valorMedicion, ubicacion, fechaHora)
+             VALUES (?, ?, ?, 80, POINT(-0.181, 38.967), NOW())`, [idSensor, usuario.idUsuario, idO3]);
+
+        const r = await logica.desvincularSensor('092021010920');
+        assert.deepStrictEqual(r, { numeroSerie: '092021010920', idUsuario: usuario.idUsuario });
+        const [[sensor]] = await logica.conexion.execute(
+            'SELECT idUsuario, idSolicitante, estadoSolicitud FROM Sensores WHERE idSensor = ?', [idSensor]);
+        assert.deepStrictEqual({ ...sensor }, { idUsuario: null, idSolicitante: null, estadoSolicitud: null });
+        const [[mediciones]] = await logica.conexion.execute(
+            'SELECT COUNT(*) AS n FROM Mediciones WHERE idSensor = ?', [idSensor]);
+        assert.strictEqual(Number(mediciones.n), 1);
+        const [[u]] = await logica.conexion.execute('SELECT esPortador FROM Usuarios WHERE idUsuario = ?', [usuario.idUsuario]);
+        assert.strictEqual(Boolean(u.esPortador), false);
+        await assert.rejects(logica.obtenerMiSensor(usuario.idUsuario), { codigo: 'SIN_SENSOR' });
+    });
+
+    it('desvincularSensor() con un sensor sin dueño o que no existe da SIN_SENSOR', async function () {
+        await logica.desvincularSensor('092021010920');
+        await assert.rejects(logica.desvincularSensor('092021010920'), { codigo: 'SIN_SENSOR' });
+        await assert.rejects(logica.desvincularSensor('000000000000'), { codigo: 'SIN_SENSOR' });
+        await assert.rejects(logica.desvincularSensor(undefined), { codigo: 'SIN_SENSOR' });
+    });
+
+    it('desvincularSensor() deja al usuario como portador si tiene otro sensor', async function () {
+        await anadirSensor('092021010921', usuario.idUsuario);
+        await logica.conexion.execute('UPDATE Usuarios SET esPortador = TRUE WHERE idUsuario = ?', [usuario.idUsuario]);
+        await logica.desvincularSensor('092021010920');
+        const [[u]] = await logica.conexion.execute('SELECT esPortador FROM Usuarios WHERE idUsuario = ?', [usuario.idUsuario]);
+        assert.strictEqual(Boolean(u.esPortador), true);
+        assert.strictEqual((await logica.obtenerMiSensor(usuario.idUsuario)).numeroSerie, '092021010921');
     });
 });

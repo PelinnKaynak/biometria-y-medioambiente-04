@@ -27,6 +27,8 @@
     <nav class="menu-opciones" aria-label="Panel de administración">
         <a href="panel_nodos.html" class="opcion-menu activa" aria-current="page">
             <span class="icono icono-nodos"></span>Nodos</a>
+        <a href="incidencias.html" class="opcion-menu"><span class="icono icono-historico"></span>Incidencias
+            <span id="contador-incidencias" class="contador-incidencias" aria-live="polite">0</span></a>
         <a href="usuarios.html" data-solo-admin class="opcion-menu"><span class="icono icono-usuarios"></span>Usuarios</a>
         <a href="historico.html" class="opcion-menu"><span class="icono icono-historico"></span>Histórico</a>
         <a href="campanas.html" class="opcion-menu"><span class="icono icono-campanas"></span>Campañas</a>
@@ -70,6 +72,7 @@
     </header>
 
     <p id="aviso-error" class="aviso-panel oculto" role="alert"></p>
+    <p id="aviso-ok" class="aviso-ok-panel oculto" role="status"></p>
 
     <section class="resumen" aria-label="Resumen de nodos">
         <article class="tarjeta-dato">
@@ -119,6 +122,7 @@
             <div class="cabecera-lista" aria-hidden="true">
                 <span>ID</span><span>Portador</span><span class="derecha">Sin datos</span>
                 <span class="derecha">Batería</span><span>Aviso</span>
+                <span class="cabecera-accion"></span>
             </div>
             <ul id="lista-nodos" class="lista-nodos"></ul>
             <p id="sin-resultados" class="sin-resultados oculto">No hay nodos que coincidan con la búsqueda.</p>
@@ -134,6 +138,18 @@
         </div>
     </section>
 </main>
+
+<!-- Confirmación para desvincular un sensor (solo administrador) -->
+<div id="dialogo-desvincular" class="fondo-dialogo oculto">
+    <div class="dialogo" role="alertdialog" aria-modal="true" aria-labelledby="titulo-desvincular">
+        <h2 id="titulo-desvincular">¿Desvincular el sensor?</h2>
+        <p id="texto-desvincular" class="texto-dialogo"></p>
+        <div class="botones-dialogo">
+            <button id="boton-cancelar-desvincular" type="button" class="boton-secundario">Cancelar</button>
+            <button id="boton-confirmar-desvincular" type="button" class="boton boton-peligro">Desvincular</button>
+        </div>
+    </div>
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="js/nodos.js"></script>
