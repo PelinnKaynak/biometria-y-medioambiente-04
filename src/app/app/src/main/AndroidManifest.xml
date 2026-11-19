@@ -109,6 +109,11 @@
             android:name=".SeleccionarUbicacionActivity"
             android:exported="false" />
 
+        <!-- Mapa mínimo de un aviso del panel de notificaciones (T008) -->
+        <activity
+            android:name=".MapaAvisoActivity"
+            android:exported="false" />
+
         <activity
             android:name=".VincularSensorActivity"
             android:exported="false" />

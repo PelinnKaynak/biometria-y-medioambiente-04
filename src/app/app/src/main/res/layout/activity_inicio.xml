@@ -560,6 +560,7 @@
             android:layout_marginStart="56dp"
             android:layout_marginTop="82dp"
             android:layout_marginEnd="20dp"
+            android:layout_marginBottom="24dp"
             android:background="@drawable/fondo_panel_avisos"
             android:clickable="true"
             android:elevation="12dp"
@@ -578,12 +579,20 @@
                 android:textSize="22sp"
                 android:textFontWeight="600" />
 
-            <LinearLayout
-                android:id="@+id/listaAvisos"
+            <!-- Con muchos avisos (hasta 20, T008) la lista se desplaza dentro del panel -->
+            <ScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:orientation="vertical" />
+                android:overScrollMode="ifContentScrolls"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/listaAvisos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+            </ScrollView>
 
             <TextView
                 android:id="@+id/textoSinAvisos"

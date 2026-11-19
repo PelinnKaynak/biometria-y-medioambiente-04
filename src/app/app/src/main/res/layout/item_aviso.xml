@@ -51,6 +51,18 @@
             android:textColor="@color/texto_secundario"
             android:textSize="12sp"
             tools:text="El ozono ha superado el límite en tu zona." />
+
+        <!-- Solo si el aviso tiene coordenadas (T008): al pulsar el aviso se abre el mapa -->
+        <TextView
+            android:id="@+id/enlaceMapaAviso"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:text="@string/aviso_ver_en_mapa"
+            android:textColor="@color/violeta"
+            android:textFontWeight="600"
+            android:textSize="12sp"
+            android:visibility="gone" />
     </LinearLayout>
 
     <TextView

@@ -64,6 +64,7 @@ public class InicioActivity extends AppCompatActivity {
 
     private final LogicaFakeInicio logicaInicio = new LogicaFakeInicio();
     private final LogicaFakePerfil logicaPerfil = new LogicaFakePerfil();
+    private final LogicaFakeAvisos logicaAvisos = new LogicaFakeAvisos();
     private final Handler temporizador = new Handler(Looper.getMainLooper());
     private final Runnable refrescarTextos = this::refrescarTextos;
 
@@ -83,6 +84,7 @@ public class InicioActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context contexto, Intent intent) {
             cargarMediciones();
+            cargarAvisosServidor();
         }
     };
 
@@ -121,6 +123,8 @@ public class InicioActivity extends AppCompatActivity {
     private long valorMostrado = 0;              // número que se ve ahora en el arco
     private boolean animado = false;             // la entrada se anima solo la primera vez
     private List<Aviso> avisos = new ArrayList<>();
+    private List<Aviso> avisosServidor = new ArrayList<>();   // los de GET /avisos (T008)
+    private boolean pidiendoAvisos = false;
     private Set<String> leidos = new HashSet<>();   // claves de los avisos ya leídos
     private int sinLeer = 0;
     private ObjectAnimator latido;               // halo del punto «Conectado»
@@ -236,6 +240,7 @@ public class InicioActivity extends AppCompatActivity {
                 new IntentFilter(ServicioMediciones.ACCION_MEDICION_GUARDADA), ContextCompat.RECEIVER_NOT_EXPORTED);
         cargarMediciones();
         cargarSensor();
+        cargarAvisosServidor();
         temporizador.postDelayed(refrescarTextos, REFRESCO_TEXTOS);
     }
 
@@ -596,14 +601,16 @@ public class InicioActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // actualizarAvisos() -->
-    // What it does: the notifications (the Figma examples, or the ones that
-    //               come from the measurements) and, on the bell, the number
-    //               of the ones not read yet. When it grows, the bell rings.
+    // What it does: the notifications (the Figma examples, or the ones of the
+    //               server plus the local «Sensor desconectado») and, on the
+    //               bell, the number of the ones not read yet. When it grows,
+    //               the bell rings.
     // -----------------------------------------------------------------------
     private void actualizarAvisos() {
         long ahora = System.currentTimeMillis();
         avisos = deEjemplo ? LogicaFakeInicio.avisosDeEjemplo(ahora)
-                : Aviso.calcular(mediciones, Boolean.TRUE.equals(tieneSensor), ahora);
+                : LogicaFakeAvisos.combinar(avisosServidor,
+                        Aviso.calcular(mediciones, Boolean.TRUE.equals(tieneSensor), ahora));
         // Los de ejemplo (hasta T017) no se guardan como leídos: cada vez que se
         // abre la app vuelven a salir con su punto
         if (!deEjemplo) {
@@ -614,6 +621,42 @@ public class InicioActivity extends AppCompatActivity {
         if (sinLeer > antes) {
             sonarCampana();
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // cargarAvisosServidor() -->
+    // What it does: asks GET /avisos (T008) and updates the panel and the
+    //               number of the bell. If it fails, the last avisos stay.
+    //               Only one request at a time. With the example data, none.
+    // -----------------------------------------------------------------------
+    private void cargarAvisosServidor() {
+        if (LogicaFakeInicio.USAR_DATOS_DE_EJEMPLO || pidiendoAvisos) {
+            return;
+        }
+        pidiendoAvisos = true;
+        logicaAvisos.obtenerAvisos(Sesion.token(this), new LogicaFakeAvisos.RespuestaAvisos() {
+            @Override
+            public void avisosObtenidos(List<Aviso> lista) {
+                pidiendoAvisos = false;
+                if (!isDestroyed()) {
+                    avisosServidor = lista;
+                    actualizarAvisos();
+                }
+            }
+
+            @Override
+            public void sesionCaducada() {
+                pidiendoAvisos = false;
+                if (!isDestroyed()) {
+                    cerrarSesion();
+                }
+            }
+
+            @Override
+            public void error(String mensaje) {
+                pidiendoAvisos = false;
+            }
+        });
     }
 
     // el número de la campana: aparece con rebote, cambia o se va encogiéndose
@@ -660,9 +703,11 @@ public class InicioActivity extends AppCompatActivity {
     // abrirAvisos() -->      cerrarAvisos() -->
     // What it does: the dark veil fades in and the white panel grows from
     //               the bell; the notifications come in one after another,
-    //               the new ones with a violet dot. Touching one marks it as
-    //               read (its dot goes away). Closing the panel (outside or
-    //               «atrás») marks all of them as read.
+    //               the new ones with a violet dot. Touching one marks only
+    //               that one as read (its dot goes away) and, if it has
+    //               coordinates, closes the panel and opens the map on its
+    //               zone. Closing the panel (outside or «atrás») does not
+    //               mark any as read.
     // -----------------------------------------------------------------------
     private void abrirAvisos() {
         if (capaAvisos.getVisibility() == View.VISIBLE) {
@@ -693,11 +738,6 @@ public class InicioActivity extends AppCompatActivity {
 
     private void cerrarAvisos() {
         cerrarAvisosAlVolver.setEnabled(false);
-        List<String> claves = new ArrayList<>();
-        for (Aviso aviso : avisos) {
-            claves.add(aviso.clave);
-        }
-        marcarLeidos(claves);
         panelAvisos.animate().scaleX(0.85f).scaleY(0.85f).alpha(0f).setDuration(170).start();
         capaAvisos.animate().alpha(0f).setDuration(200)
                 .withEndAction(() -> capaAvisos.setVisibility(View.GONE)).start();
@@ -718,11 +758,18 @@ public class InicioActivity extends AppCompatActivity {
             ((TextView) item.findViewById(R.id.textoAviso)).setText(aviso.texto);
             ((TextView) item.findViewById(R.id.horaAviso)).setText(
                     TiempoTranscurrido.horaODia(aviso.momento, ahora, ZoneId.systemDefault()));
+            // Solo los que tienen coordenadas llevan al mapa (T008)
+            item.findViewById(R.id.enlaceMapaAviso).setVisibility(
+                    aviso.tieneZona() ? View.VISIBLE : View.GONE);
             item.setOnClickListener(vista -> {
                 if (punto.getVisibility() == View.VISIBLE) {
                     punto.animate().scaleX(0f).scaleY(0f).setDuration(220)
                             .withEndAction(() -> punto.setVisibility(View.INVISIBLE)).start();
                     marcarLeidos(java.util.Collections.singletonList(aviso.clave));
+                }
+                if (aviso.tieneZona()) {
+                    cerrarAvisos();
+                    startActivity(MapaAvisoActivity.intentPara(this, aviso));
                 }
             });
             EfectoPulsar.aplicar(item);

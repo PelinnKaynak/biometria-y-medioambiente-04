@@ -390,4 +390,10 @@
     <string name="medicion_bluetooth_apagado">Activa el Bluetooth para recibir las medidas de tu sensor.</string>
     <string name="medicion_sin_bluetooth">Este teléfono no tiene Bluetooth.</string>
     <string name="inicio_sin_permisos_medicion">Sin permiso de ubicación y Bluetooth no podemos recibir las medidas de tu sensor.</string>
+
+    <!-- Notificaciones: aviso con zona y mapa mínimo (T008) -->
+    <string name="aviso_ver_en_mapa">Ver en el mapa ›</string>
+    <string name="aviso_mapa_titulo">Zona del aviso</string>
+    <string name="aviso_mapa_zona_sin_nombre">Zona del aviso</string>
+    <string name="aviso_mapa_descripcion">Mapa con la zona del aviso marcada</string>
 </resources>

@@ -23,6 +23,7 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `GET /usuarioActual` 🔒 | — | **200** `{ idUsuario, nombre, apellidos, correo, rol, fechaAlta, alertas, premiumHasta, foto, sensor, numeroSerie }` · **401** — `sensor` (nombre) y `numeroSerie` del sensor vinculado, o `null` (T017) |
 | `GET /miSensor` 🔒 | — | **200** `{ nombre, numeroSerie, bateria, ultimaConexion }` · **404** sin sensor · **401** — información del sensor de la cuenta (T011); batería y última conexión pueden ser `null` |
 | `DELETE /miSensor` 🔒 | — | **204** desvinculado · **404** sin sensor · **401** — quita la asociación y, si era su último sensor, pone `esPortador` a falso (T011) |
+| `GET /avisos?desdeId=N` 🔒 | — | **200** `[ Aviso ]` del usuario (máx. 100 por llamada, de menor a mayor `idAviso`; `desdeId` es el cursor: devuelve los de `idAviso` mayor, 0 si no se dice) · **400** `desdeId` no es un entero ≥ 0 · **401** — avisos de contaminación que guarda el servidor al recibir una medición O3 (personal) o al empeorar el ozono de un lugar. Panel de notificaciones de la app (T008) |
 | `POST /cambiarAlertas` 🔒 | `{ alertas: true \| false }` | **204** guardado · **400** valor no válido · **401** — interruptor «Notificaciones» del perfil (T010) |
 | `POST /actualizarDatos` 🔒 | `{ nombre, apellidos, correo }` | **200** `{ nombre, apellidos, correo }` · **400** `{ error, campos }` · **409** el correo es de otra cuenta · **401** — «Editar mis datos» (T010) |
 | `POST /cambiarContrasenya` 🔒 | `{ contrasenaActual, contrasenaNueva }` | **200** `{ idUsuario, token, rol, nombre }` (sesión nueva) · **400** contraseña débil · **403** la contraseña actual no es correcta · **401** (T010) |
@@ -62,6 +63,7 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 
 `Incidencia = { idIncidencia, tipo, asunto, descripcion, estado, respuesta, responsable: { nombre, rol } | null, fechaCreacion, fechaRespuesta, sensor: { idSensor, numeroSerie } | null }` — `responsable` es quien respondió (para «Respuesta de Marc (técnico)»).
 `IncidenciaGestion = Incidencia + usuario: { idUsuario, nombre, apellidos, correo }`, en `responsable` también `idUsuario` y, en `sensor`, también `nombre, estado, bateria, ultimaConexion, necesitaCalibracion`.
+`Aviso = { idAviso, tipo: 'personal' \| 'lugar', contaminante, valor, unidad, zona, latitud, longitud, fechaCreacion }` — `zona`: nombre del lugar («Casa (Gandía)») o, en los personales, las coordenadas en texto; `fechaCreacion` en ISO (UTC). No hay «leído»: la app lo guarda en el teléfono (T008).
 `Medicion = { idMedicion, contaminante, valor, unidad, fecha, latitud, longitud }` — `fecha` en ISO (UTC); nunca dice quién la tomó.
 `Lugar = { id, idLugar, idUsuario, nombre, tipo, direccion, zona, latitud, longitud, avisosActivos, ozonoActual, ozono }`. La exposición usa la interpolación inversa al cuadrado de la distancia de mediciones O3 de las últimas 24 horas; si no hay, devuelve `null`. Todas las operaciones filtran por el usuario de la sesión.
 
