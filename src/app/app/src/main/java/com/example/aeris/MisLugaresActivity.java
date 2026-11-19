@@ -11,6 +11,7 @@
 // ---------------------------------------------------------------------------
 package com.example.aeris;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
@@ -22,6 +23,9 @@ import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
@@ -40,11 +44,14 @@ public class MisLugaresActivity extends AppCompatActivity {
     private View tarjetaAnadirLugar;
     private EditText campoNombreLugar;
     private EditText campoDireccionLugar;
-    private EditText campoLatitudLugar;
-    private EditText campoLongitudLugar;
+    private View botonSeleccionarUbicacion;
+    private TextView textoUbicacionSeleccionada;
     private Spinner campoTipoLugar;
     private TextView errorAnadirLugar;
     private View botonGuardarLugar;
+    private ActivityResultLauncher<Intent> selectorUbicacion;
+    private Double latitudSeleccionada;
+    private Double longitudSeleccionada;
 
     private LinearLayout listaLugares;
     private View tarjetaSinLugares;
@@ -65,11 +72,25 @@ public class MisLugaresActivity extends AppCompatActivity {
         tarjetaAnadirLugar = findViewById(R.id.tarjetaAnadirLugar);
         campoNombreLugar = findViewById(R.id.campoNombreLugar);
         campoDireccionLugar = findViewById(R.id.campoDireccionLugar);
-        campoLatitudLugar = findViewById(R.id.campoLatitudLugar);
-        campoLongitudLugar = findViewById(R.id.campoLongitudLugar);
+        botonSeleccionarUbicacion = findViewById(R.id.botonSeleccionarUbicacion);
+        textoUbicacionSeleccionada = findViewById(R.id.textoUbicacionSeleccionada);
         campoTipoLugar = findViewById(R.id.campoTipoLugar);
         errorAnadirLugar = findViewById(R.id.errorAnadirLugar);
         botonGuardarLugar = findViewById(R.id.botonGuardarLugar);
+
+        selectorUbicacion = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(), this::recibirUbicacion);
+        botonSeleccionarUbicacion.setOnClickListener(v -> {
+            errorAnadirLugar.setVisibility(View.GONE);
+            selectorUbicacion.launch(new Intent(this, SeleccionarUbicacionActivity.class));
+        });
+        if (savedInstanceState != null
+                && savedInstanceState.containsKey(SeleccionarUbicacionActivity.EXTRA_LATITUD)
+                && savedInstanceState.containsKey(SeleccionarUbicacionActivity.EXTRA_LONGITUD)) {
+            latitudSeleccionada = savedInstanceState.getDouble(SeleccionarUbicacionActivity.EXTRA_LATITUD);
+            longitudSeleccionada = savedInstanceState.getDouble(SeleccionarUbicacionActivity.EXTRA_LONGITUD);
+            mostrarUbicacionSeleccionada();
+        }
 
         listaLugares = findViewById(R.id.listaLugares);
         tarjetaSinLugares = findViewById(R.id.tarjetaSinLugares);
@@ -79,6 +100,42 @@ public class MisLugaresActivity extends AppCompatActivity {
         botonGuardarLugar.setOnClickListener(v -> guardarNuevoLugar());
 
         cargarLugares();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle estado) {
+        if (latitudSeleccionada != null && longitudSeleccionada != null) {
+            estado.putDouble(SeleccionarUbicacionActivity.EXTRA_LATITUD, latitudSeleccionada);
+            estado.putDouble(SeleccionarUbicacionActivity.EXTRA_LONGITUD, longitudSeleccionada);
+        }
+        super.onSaveInstanceState(estado);
+    }
+
+    private void recibirUbicacion(ActivityResult resultado) {
+        if (resultado.getResultCode() != Activity.RESULT_OK || resultado.getData() == null) return;
+        double latitud = resultado.getData().getDoubleExtra(
+                SeleccionarUbicacionActivity.EXTRA_LATITUD, Double.NaN);
+        double longitud = resultado.getData().getDoubleExtra(
+                SeleccionarUbicacionActivity.EXTRA_LONGITUD, Double.NaN);
+        if (!Double.isFinite(latitud) || latitud < -90 || latitud > 90
+                || !Double.isFinite(longitud) || longitud < -180 || longitud > 180) {
+            errorAnadirLugar.setText(R.string.mis_lugares_error_ubicacion);
+            errorAnadirLugar.setVisibility(View.VISIBLE);
+            return;
+        }
+        latitudSeleccionada = latitud;
+        longitudSeleccionada = longitud;
+        mostrarUbicacionSeleccionada();
+        errorAnadirLugar.setVisibility(View.GONE);
+    }
+
+    private void mostrarUbicacionSeleccionada() {
+        if (latitudSeleccionada == null || longitudSeleccionada == null) {
+            textoUbicacionSeleccionada.setText(R.string.mis_lugares_ubicacion_pendiente);
+            return;
+        }
+        textoUbicacionSeleccionada.setText(getString(
+                R.string.mis_lugares_ubicacion_formato, latitudSeleccionada, longitudSeleccionada));
     }
 
     // -----------------------------------------------------------------------
@@ -232,10 +289,10 @@ public class MisLugaresActivity extends AppCompatActivity {
         String token = Sesion.token(this);
         String tipo = getResources().getStringArray(R.array.mis_lugares_tipos_valores)
                 [campoTipoLugar.getSelectedItemPosition()];
-        Double latitud = leerCoordenada(campoLatitudLugar);
-        Double longitud = leerCoordenada(campoLongitudLugar);
+        Double latitud = latitudSeleccionada;
+        Double longitud = longitudSeleccionada;
         if (latitud == null || longitud == null) {
-            errorAnadirLugar.setText(R.string.mis_lugares_coordenadas_invalidas);
+            errorAnadirLugar.setText(R.string.mis_lugares_error_ubicacion);
             errorAnadirLugar.setVisibility(View.VISIBLE);
             return;
         }
@@ -247,8 +304,9 @@ public class MisLugaresActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     campoNombreLugar.setText("");
                     campoDireccionLugar.setText("");
-                    campoLatitudLugar.setText("");
-                    campoLongitudLugar.setText("");
+                    latitudSeleccionada = null;
+                    longitudSeleccionada = null;
+                    mostrarUbicacionSeleccionada();
                     campoNombreLugar.clearFocus();
                     campoDireccionLugar.clearFocus();
                     errorAnadirLugar.setVisibility(View.GONE);
@@ -280,17 +338,6 @@ public class MisLugaresActivity extends AppCompatActivity {
                 });
             }
         });
-    }
-
-    private Double leerCoordenada(EditText campo) {
-        String texto = campo.getText().toString().trim().replace(',', '.');
-        if (texto.isEmpty()) return null;
-        try {
-            double valor = Double.parseDouble(texto);
-            return Double.isFinite(valor) ? valor : null;
-        } catch (NumberFormatException error) {
-            return null;
-        }
     }
 
     // -----------------------------------------------------------------------
