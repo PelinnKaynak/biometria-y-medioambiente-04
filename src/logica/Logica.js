@@ -667,6 +667,83 @@ class Logica {
     }
 
     // -----------------------------------------------------------------------
+    // idUsuario: N --> obtenerMiSensor() --> SensorUsuario
+    // SensorUsuario = { nombre, numeroSerie, bateria: N | null, ultimaConexion: Fecha | null }
+    // What it does: returns the linked sensor details needed by the app,
+    //               without requiring that it has already sent measurements.
+    // -----------------------------------------------------------------------
+    async obtenerMiSensor(idUsuario) {
+        const [filas] = await this.conexion.execute(
+            `SELECT nombre, numeroSerie, bateria, ultimaConexion
+               FROM Sensores WHERE idUsuario = ? ORDER BY idSensor LIMIT 1`,
+            [idUsuario]);
+        if (filas.length === 0) {
+            throw new ErrorLogica('SIN_SENSOR', 'No tienes ningún sensor vinculado');
+        }
+        const sensor = filas[0];
+        return {
+            nombre: sensor.nombre,
+            numeroSerie: sensor.numeroSerie,
+            bateria: sensor.bateria === null ? null : Number(sensor.bateria),
+            ultimaConexion: sensor.ultimaConexion
+        };
+    }
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N --> desvincularMiSensor() --> { numeroSerie }
+    // What it does: removes the user's association with their first linked
+    //               sensor in a transaction. If no other sensor remains,
+    //               the user returns to the citizen role.
+    // -----------------------------------------------------------------------
+    async desvincularMiSensor(idUsuario) {
+        const conexion = await this.conexion.getConnection();
+        let transaccionIniciada = false;
+        try {
+            await conexion.beginTransaction();
+            transaccionIniciada = true;
+            const [sensores] = await conexion.execute(
+                `SELECT idSensor, numeroSerie FROM Sensores
+                  WHERE idUsuario = ? ORDER BY idSensor LIMIT 1 FOR UPDATE`,
+                [idUsuario]);
+            const sensor = sensores[0];
+            if (!sensor) {
+                throw new ErrorLogica('SIN_SENSOR', 'No tienes ningún sensor vinculado');
+            }
+
+            await conexion.execute(
+                'SELECT idUsuario FROM Usuarios WHERE idUsuario = ? FOR UPDATE',
+                [idUsuario]);
+            const [[cuenta]] = await conexion.execute(
+                'SELECT COUNT(*) AS restantes FROM Sensores WHERE idUsuario = ? AND idSensor <> ?',
+                [idUsuario, sensor.idSensor]);
+            await conexion.execute(
+                `UPDATE Sensores
+                    SET idUsuario = NULL, idSolicitante = NULL, estadoSolicitud = NULL,
+                        fechaSolicitud = NULL, luzActiva = FALSE
+                  WHERE idSensor = ? AND idUsuario = ?`,
+                [sensor.idSensor, idUsuario]);
+
+            if (Number(cuenta.restantes) === 0) {
+                await conexion.execute(
+                    `UPDATE Usuarios
+                        SET esPortador = FALSE,
+                            role = CASE WHEN role = ? THEN 'ciudadano' ELSE role END
+                      WHERE idUsuario = ?`,
+                    [ROL_PORTADOR, idUsuario]);
+            }
+
+            await conexion.commit();
+            transaccionIniciada = false;
+            return { numeroSerie: sensor.numeroSerie };
+        } catch (error) {
+            if (transaccionIniciada) await conexion.rollback();
+            throw error;
+        } finally {
+            conexion.release();
+        }
+    }
+
+    // -----------------------------------------------------------------------
     // --> condicionOzono() --> { sql: Texto, valores: [ Texto ] }
     // What it does: the WHERE part that keeps only the ozone measurements.
     // -----------------------------------------------------------------------
