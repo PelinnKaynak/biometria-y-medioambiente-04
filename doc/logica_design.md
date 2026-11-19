@@ -181,6 +181,7 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   - `test_seguridad_validador.js`: hash, tokens firmados y validación (sin BD).
   - `test_logica.js`: registro, inicio de sesión, tokens caducados o modificados, roles, recuperación de contraseña.
   - `test_vinculacion.js`: vinculación del sensor por correo (T005).
+  - `test_mi_cuenta.js`: datos de la página Mi cuenta (T024).
   - `test_incidencias.js`: incidencias (T041).
   - `test_mediciones.js`: mediciones (T017).
 - **Foto de perfil (T010):** se guarda en la columna `foto` de `Usuarios` como texto base64 (la app la reduce antes a un JPEG de 256×256, unos 30 KB), para que se vea en cualquier teléfono. No hace falta otra tabla.
@@ -203,6 +204,29 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   token: Texto, acepta: V/F
                     --> responderVinculacion() --> ( estado, numeroSerie, nombreSolicitante )   | TOKEN_NO_VALIDO
   Solicitud = ( numeroSerie, correoComprador (oculto: «p•••••@upv.edu.es»), estado, fecha )
+```
+
+- **Datos de Mi cuenta (T024 · H035):** `resumenCuenta()` y `exposicion()` calculan lo que enseña la página Mi cuenta de la web, con las mismas claves que `LogicaCuentaFake`. Se usan las mediciones del usuario (`Mediciones.idUsuario`) y, para los valores de ozono, solo las del contaminante `O3` de `Contaminantes` (también se acepta el nombre `Ozono`). Los cálculos que no necesitan la BD están en `MiCuenta.js`.
+  - `medicionesMes` y `medicionesMesAnterior`: mes natural, en UTC.
+  - `exposicionMedia`: media de ozono de los últimos 30 días, redondeada; `null` si no hay ninguna.
+  - `horasOzonoAlto`: horas de los últimos 7 días con algún valor por encima del umbral de aviso del usuario (`umbralAlerta`) o, si no tiene, 180 µg/m³. Dos mediciones en la misma hora cuentan una vez. Se devuelve también `umbralAviso`.
+  - `puntos` y nivel: provisional, un punto por medición guardada, hasta que exista la tabla `MovimientosPuntos`. Niveles: Principiante (0), Explorador (1.000), Guardián (3.000) y Experto (10.000).
+  - `lugares`: lista vacía hasta que Mis lugares tenga tabla.
+  - `ultimasMediciones`: las 4 últimas de ozono. Como todavía no hay nombres de sitios, `lugar` son las coordenadas («38,967, -0,181»), y se mandan aparte `latitud` y `longitud`. En `ubicacion` el POINT es (longitud, latitud).
+  - `nodo`: número de serie del sensor vinculado. `ultimaSincronizacion`: `Sensores.ultimaConexion` o, si está vacía, la fecha de la última medición.
+  - `exposicion(periodo)`: media de ozono de cada día de los últimos 7, 30 o 90 días (`semana`, `mes`, `3meses`). Los días sin mediciones no salen. Cada punto lleva la fecha de ese día a las 12:00 UTC.
+
+```text
+  idUsuario: N, ahora: Fecha    --> resumenCuenta() --> Resumen                 | SIN_SENSOR, SIN_MEDICIONES
+  idUsuario: N, periodo: Texto, ahora: Fecha
+                                --> exposicion() --> [ PuntoExposicion ]        | DATOS_NO_VALIDOS, SIN_SENSOR
+  idUsuario: N                  --> sensorDelUsuario() --> ( idSensor, numeroSerie, ultimaConexion )   | SIN_SENSOR
+
+  Resumen = ( nodo, ultimaSincronizacion, medicionesMes, medicionesMesAnterior,
+              puntos, nivel, siguienteNivel, puntosSiguienteNivel,
+              exposicionMedia, horasOzonoAlto, umbralAviso,
+              lugares: [ ], ultimasMediciones: [ ( fecha, lugar, latitud, longitud, ozono ) ] )
+  PuntoExposicion = ( fecha: Fecha, ozono: R )
 ```
 
 - **Incidencias (T041):** están en `Incidencias.js` (clase `Incidencias`), para no hacer más grande `Logica.js`. Se usan como `logica.incidencias.crear(…)`. Tabla `Incidencias` (ver `bd_design.md`). `tipo`: sensor, datos, cuenta, otra. `estado`: abierta, en curso, resuelta. Una incidencia nueva está «abierta» y lleva un `asunto` (como mucho 120 caracteres). Si es de tipo sensor o datos y no se dice qué sensor, se pone el del usuario (o ninguno si no tiene). Al responder, si no se indica el estado pasa a «resuelta», se guardan `fechaRespuesta` e `idResponsable` (el técnico o administrador de la sesión, que sale como `responsable: { nombre, rol }`) y se manda al usuario el correo de `CorreoRespuestaIncidencia.crearCorreoRespuestaIncidencia()` (su mensaje, la respuesta y el estado, con el marco común). Si el correo falla, la respuesta se guarda igual. La descripción y la respuesta tienen como mucho 2000 caracteres.

@@ -33,6 +33,8 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `POST /reenviarCorreoVinculacion` 🔒 | — | **200** `{ mensaje }` · **404** no hay ninguna pendiente · **401** (T005) |
 | `GET /responderVinculacion?token=…&respuesta=si\|no` | — | **200** HTML «¿Vinculamos el sensor?» con un botón · **400** HTML enlace no válido — lo abren los botones del correo (T005) |
 | `POST /responderVinculacion` | formulario `token`, `respuesta` | **200** HTML «Sensor vinculado» o «Vinculación rechazada» · **400** HTML «Enlace no válido» (T005) |
+| `GET /miCuenta` 🔒 | — | **200** `Resumen` (ver `logica_design.md`, T024) · **404** sin sensor vinculado o sin mediciones todavía · **401** — página Mi cuenta de la web |
+| `GET /miExposicion?periodo=semana\|mes\|3meses` 🔒 | — | **200** `[ { fecha, ozono } ]` media de cada día · **400** periodo no válido (`campos: ["periodo"]`) · **404** sin sensor vinculado · **401** — gráfica de Mi cuenta (T024) |
 | `POST /crearIncidencia` 🔒 | `{ tipo, asunto, descripcion, idSensor? }` | **201** `Incidencia` · **400** `{ error, campos }` · **401** — Ayuda de la app y de la web (T041). `tipo`: sensor, datos, cuenta, otra. Sin `idSensor`, las de tipo sensor o datos llevan el sensor del usuario |
 | `GET /misIncidencias` 🔒 | — | **200** `[ Incidencia ]` del usuario, con la respuesta, la más nueva primero · **401** (T041) |
 | `GET /incidencias?estado=…&tipo=…` 🔒👷 | — | **200** `[ IncidenciaGestion ]` · **400** filtro no válido · **401** · **403** — pantalla Incidencias del panel (T041, T044) |
