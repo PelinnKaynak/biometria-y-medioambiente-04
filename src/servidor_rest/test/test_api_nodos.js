@@ -16,8 +16,8 @@ describe('API REST de nodos del panel', function () {
 
     let logica, conexion, url, tokens;
 
-    async function pedir(ruta, token) {
-        const r = await fetch(url + ruta, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    async function pedir(ruta, token, metodo = 'GET') {
+        const r = await fetch(url + ruta, { method: metodo, headers: token ? { Authorization: `Bearer ${token}` } : {} });
         return { codigo: r.status, cuerpo: await r.json() };
     }
 
@@ -106,5 +106,22 @@ describe('API REST de nodos del panel', function () {
         assert.strictEqual(r.codigo, 200);
         assert.deepStrictEqual(r.cuerpo.nodos.map((x) => x.id), ['092021010001']);
         assert.strictEqual(r.cuerpo.total, 1);
+    });
+
+    it('POST /nodos/:numeroSerie/desvincular: solo el administrador, y el nodo deja de salir', async function () {
+        const ruta = '/nodos/092021010001/desvincular';
+        assert.strictEqual((await pedir(ruta, null, 'POST')).codigo, 401);
+        assert.strictEqual((await pedir(ruta, tokens.portador, 'POST')).codigo, 403);
+        assert.strictEqual((await pedir(ruta, tokens.tecnico, 'POST')).codigo, 403);
+
+        const r = await pedir(ruta, tokens.admin, 'POST');
+        assert.strictEqual(r.codigo, 200);
+        assert.deepStrictEqual(r.cuerpo, { numeroSerie: '092021010001' });
+        const lista = await pedir('/nodos', tokens.admin);
+        assert.deepStrictEqual(lista.cuerpo.nodos.map((n) => n.id), ['092021010002']);
+
+        const otraVez = await pedir(ruta, tokens.admin, 'POST');
+        assert.strictEqual(otraVez.codigo, 404);
+        assert.strictEqual((await pedir('/nodos/NOEXISTE/desvincular', tokens.admin, 'POST')).codigo, 404);
     });
 });

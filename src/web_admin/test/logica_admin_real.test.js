@@ -89,3 +89,22 @@ describe("usuarios", () => {
         expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ ids: [3, 4] });
     });
 });
+test("desvincularNodo() pide POST /nodos/:id/desvincular", async () => {
+    fetch.mockReturnValue(respuestaFalsa(200, { numeroSerie: "092021011003" }));
+    const r = await new LogicaAdminReal("").desvincularNodo("092021011003");
+
+    const [url, opciones] = fetch.mock.calls[0];
+    expect(url).toBe("/nodos/092021011003/desvincular");
+    expect(opciones.method).toBe("POST");
+    expect(opciones.headers.Authorization).toBe("Bearer tok123");
+    expect(r).toEqual({ correcto: true, error: "" });
+});
+
+test("desvincularNodo() devuelve el error del servidor (403 y 404)", async () => {
+    fetch.mockReturnValue(respuestaFalsa(403, { error: "Sin permiso" }));
+    expect((await new LogicaAdminReal("").desvincularNodo("X")).error).toBe("Tu cuenta no tiene permiso para hacer esto");
+
+    fetch.mockReturnValue(respuestaFalsa(404, { error: "Ese sensor no existe o no está vinculado a nadie" }));
+    expect(await new LogicaAdminReal("").desvincularNodo("X"))
+        .toEqual({ correcto: false, error: "Ese sensor no existe o no está vinculado a nadie" });
+});

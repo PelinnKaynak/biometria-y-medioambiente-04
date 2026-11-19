@@ -22,7 +22,7 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `POST /iniciarSesion` | `{ correo, contrasena }` | **200** `{ idUsuario, token, rol, nombre }` · **401** correo o contraseña incorrectos |
 | `GET /usuarioActual` 🔒 | — | **200** `{ idUsuario, nombre, apellidos, correo, rol, fechaAlta, alertas, premiumHasta, foto, sensor, numeroSerie }` · **401** — `sensor` (nombre) y `numeroSerie` del sensor vinculado, o `null` (T017) |
 | `GET /miSensor` 🔒 | — | **200** `{ nombre, numeroSerie, bateria, ultimaConexion }` · **404** sin sensor · **401** — información del sensor de la cuenta (T011); batería y última conexión pueden ser `null` |
-| `DELETE /miSensor` 🔒 | — | **204** desvinculado · **404** sin sensor · **401** — quita la asociación y revierte el rol a ciudadano si era el último sensor (T011) |
+| `DELETE /miSensor` 🔒 | — | **204** desvinculado · **404** sin sensor · **401** — quita la asociación y, si era su último sensor, pone `esPortador` a falso (T011) |
 | `POST /cambiarAlertas` 🔒 | `{ alertas: true \| false }` | **204** guardado · **400** valor no válido · **401** — interruptor «Notificaciones» del perfil (T010) |
 | `POST /actualizarDatos` 🔒 | `{ nombre, apellidos, correo }` | **200** `{ nombre, apellidos, correo }` · **400** `{ error, campos }` · **409** el correo es de otra cuenta · **401** — «Editar mis datos» (T010) |
 | `POST /cambiarContrasenya` 🔒 | `{ contrasenaActual, contrasenaNueva }` | **200** `{ idUsuario, token, rol, nombre }` (sesión nueva) · **400** contraseña débil · **403** la contraseña actual no es correcta · **401** (T010) |
@@ -54,9 +54,11 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `GET /nodos/resumen` 🔒👷 | — | **200** `{ total, activos, inactivos24h, inactivos7d, porCalibrar, umbralHoras }` · **401** · **403** — números de arriba de la página Nodos del panel (T021). `inactivos24h` son los que pasan del umbral de inactividad, `UMBRAL_INACTIVO_HORAS` en el `.env` (24 por defecto, T022) |
 | `GET /nodos?busqueda=&estado=todos\|activos\|inactivos\|calibrar&pagina=1&porPagina=20` 🔒👷 | — | **200** `{ nodos: [ Nodo ], total }` (total sin paginar; `porPagina` máx. 100) · **400** filtro no válido (`campos`) · **401** · **403** — lista del panel (T021) |
 | `GET /nodos/mapa?busqueda=&estado=` 🔒👷 | — | **200** `{ nodos: [ Nodo ], total }` sin paginar, solo los que tienen ubicación · **400** · **401** · **403** — mapa del panel (T021) |
+| `POST /nodos/:numeroSerie/desvincular` 🔒👑 | — | **200** `{ numeroSerie }` · **404** el sensor no existe o no está vinculado · **401** · **403** — botón «Desvincular» del panel de Nodos. Quita el sensor a su portador igual que `DELETE /miSensor`; el sensor y sus mediciones se conservan y se puede volver a vincular desde la app |
 | `POST /responderIncidencia` 🔒👷 | `{ idIncidencia, respuesta?, estado? }` | **200** `IncidenciaGestion` · **400** `{ error, campos }` · **404** · **401** · **403** — con respuesta se guarda quién responde (el usuario de la sesión), se manda por correo al usuario y, si no se indica estado, pasa a «resuelta» (T041) |
 
 👷 = solo técnicos y administradores (rol `tecnico` o `administrador`).
+👑 = solo administradores.
 
 `Incidencia = { idIncidencia, tipo, asunto, descripcion, estado, respuesta, responsable: { nombre, rol } | null, fechaCreacion, fechaRespuesta, sensor: { idSensor, numeroSerie } | null }` — `responsable` es quien respondió (para «Respuesta de Marc (técnico)»).
 `IncidenciaGestion = Incidencia + usuario: { idUsuario, nombre, apellidos, correo }`, en `responsable` también `idUsuario` y, en `sensor`, también `nombre, estado, bateria, ultimaConexion, necesitaCalibracion`.

@@ -134,6 +134,29 @@ class LogicaAdminFake {
     }
 
     // --------------------------------------------------------
+    // id: Text --> desvincularNodo() --> r: ResultadoOperacion <--
+    //
+    // Quita el nodo de la lista y deja a su portador sin sensor.
+    // Solo lo puede hacer un administrador (el servidor real
+    // responde 403).
+    // --------------------------------------------------------
+    async desvincularNodo(id) {
+        await esperarAdmin(this.retardo_ms);
+        if (!this.esAdministradorActual()) {
+            return { correcto: false, error: "Tu cuenta no tiene permiso para hacer esto" };
+        }
+        const posicion = this.nodos.findIndex(n => n.id === id);
+        if (posicion === -1) {
+            return { correcto: false, error: "Ese sensor no existe o no está vinculado a nadie" };
+        }
+        this.nodos.splice(posicion, 1);
+        for (const usuario of this.usuarios) {
+            if (usuario.nodo === id) usuario.nodo = null;
+        }
+        return { correcto: true, error: "" };
+    }
+
+    // --------------------------------------------------------
     // filtro: FiltroNodos --> filtrar() --> [ Nodo ]
     //
     // Aplica la búsqueda y el estado y ordena de más a menos
