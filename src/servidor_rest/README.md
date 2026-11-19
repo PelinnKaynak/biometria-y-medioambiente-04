@@ -21,6 +21,12 @@ Diseño: `doc/servidor_rest_design.md`
 
 Con MySQL en marcha: `npm test` aquí y en `src/logica`. Usan la BD `aeris_test`, nunca `aeris`.
 
+Sin MySQL ni Python se pueden ejecutar los tests de la previsión de ozono (T032): `npx mocha --exit test/test_servicio_prediccion.js`.
+
+## Previsión de ozono (T032)
+
+`GET /api/prevision/ozono?zona=Gandia` usa un proceso Python (`src/prevision/worker_prediccion.py`) que **se lanza en la primera petición**, no al arrancar el servidor (la primera tarda unos 5 s). Si Python o el modelo fallan, el resto de la API sigue funcionando y solo la previsión responde 503. El resultado se guarda 5 minutos. Para desactivarla, `PREVISION_ACTIVA=0` en `.env`; para usar otro Python, `PYTHON`. Detalles en `doc/servidor_rest_design.md`.
+
 ## Enviar de verdad el correo de recuperar contraseña
 
 Sin configuración, el enlace aparece en esta consola. Para enviarlo por correo con Gmail:

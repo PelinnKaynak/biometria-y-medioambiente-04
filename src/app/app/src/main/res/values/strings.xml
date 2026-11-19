@@ -140,7 +140,7 @@
     <string name="inicio_vincular_texto">Vincúlalo para medir el aire que respiras en tus recorridos.</string>
     <string name="inicio_vincular">Vincular</string>
     <string name="inicio_prevision_titulo">Mejor hora para salir</string>
-    <string name="inicio_prevision_texto">Consulta la previsión del aire de hoy</string>
+    <string name="inicio_prevision_texto">Previsión de ozono de 48 horas · datos simulados</string>
     <string name="inicio_lugares_titulo">Mis lugares</string>
     <string name="inicio_lugares_texto">Guarda casa, el trabajo y tus sitios</string>
     <string name="inicio_lugar_nivel">%1$s: %2$s</string>
@@ -449,4 +449,43 @@
     <string name="conversacion_enviar">Enviar</string>
     <string name="conversacion_enviar_descripcion">Enviar el mensaje</string>
     <string name="conversacion_no_existe">Esta incidencia ya no está disponible.</string>
+
+    <!-- Previsión de ozono de 48 horas (T032) -->
+    <string name="prevision_titulo">Previsión de ozono</string>
+    <string name="prevision_subtitulo">%1$s · próximas 48 horas</string>
+    <string name="prevision_cargando">Consultando la previsión…</string>
+    <string name="prevision_reintentar">Reintentar</string>
+    <string name="prevision_sin_datos">No hay predicciones disponibles en este momento.</string>
+    <string name="prevision_zona_sin_modelo">Solo hay previsión para %1$s.</string>
+    <string name="prevision_aviso_titulo">Datos simulados</string>
+    <string name="prevision_aviso_no_real">No es una previsión real.</string>
+    <string name="prevision_aviso_defecto">Estos datos son de demostración y no proceden de mediciones actuales.</string>
+    <string name="prevision_pico_titulo">PICO MÁXIMO</string>
+    <string name="prevision_mejor_titulo">MEJOR MOMENTO PARA SALIR</string>
+    <string name="prevision_orientativo">Orientativo, según estos valores.</string>
+    <string name="prevision_valor">%1$d µg/m³</string>
+    <string name="prevision_pico_hora">%1$s a las %2$s</string>
+    <string name="prevision_franja">%1$s %2$s–%3$s</string>
+    <string name="prevision_franja_media">Media %1$d µg/m³ · %2$s</string>
+    <string name="prevision_franja_hora">%1$s a las %2$s</string>
+    <string name="prevision_franja_hora_media">%1$d µg/m³ · %2$s</string>
+    <string name="prevision_dia_hoy">hoy</string>
+    <string name="prevision_dia_manyana">mañana</string>
+    <string name="prevision_dia_pasado">pasado mañana</string>
+    <string-array name="prevision_dias_grafica">
+        <item>Hoy</item>
+        <item>Mañana</item>
+        <item>Pasado</item>
+    </string-array>
+    <string name="prevision_grafica_titulo">Hora a hora</string>
+    <string name="prevision_grafica_ayuda">Toca o arrastra por la gráfica para ver cada hora.</string>
+    <string name="prevision_grafica_seleccion">%1$s %2$s · %3$d µg/m³ · %4$s</string>
+    <string name="prevision_grafica_descripcion">Gráfica de ozono previsto en %1$s para las próximas 48 horas. Pico de %2$d µg/m³, %3$s a las %4$s. Mejor momento para salir: %5$s.</string>
+    <string name="prevision_leyenda_titulo">NIVELES</string>
+    <string name="prevision_pie_modelo">Modelo: %1$s</string>
+    <string name="prevision_pie_observacion">Última observación utilizada: %1$s</string>
+
+    <!-- Resumen de la previsión en la fila «Mejor hora para salir» de Inicio (T032) -->
+    <string name="prevision_inicio_chip">Datos simulados</string>
+    <string name="prevision_inicio_pico">Pico de %1$d µg/m³ %2$s a las %3$s</string>
 </resources>

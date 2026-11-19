@@ -30,4 +30,3 @@ describe('API de predicción de ozono', function () {
         assert.strictEqual(datos.zona_disponible, 'Gandia');
     });
 });
-

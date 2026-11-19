@@ -85,7 +85,7 @@ public class InformacionActivity extends AppCompatActivity {
     };
 
     // Niveles de ozono (en el orden de NivelOzono): nombre, rango, consejo, color
-    private static final int[][] NIVELES_OZONO = {
+    static final int[][] NIVELES_OZONO = {          // de paquete: también los usa la previsión (T032)
             {R.string.info_nivel_bueno, R.string.info_nivel_bueno_rango, R.string.info_nivel_bueno_texto, R.color.nivel_bueno},
             {R.string.info_nivel_moderado, R.string.info_nivel_moderado_rango, R.string.info_nivel_moderado_texto, R.color.nivel_moderado},
             {R.string.info_nivel_malo, R.string.info_nivel_malo_rango, R.string.info_nivel_malo_texto, R.color.nivel_malo},

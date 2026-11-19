@@ -1,0 +1,37 @@
+{
+  "periodo_datos": {
+    "inicio": "2026-10-01 00:00:00",
+    "fin": "2026-10-13 23:00:00"
+  },
+  "periodo_evaluado": {
+    "inicio": "2026-10-03 00:00:00",
+    "fin": "2026-10-12 23:00:00"
+  },
+  "filas_disponibles": 312,
+  "bloques_48h": 5,
+  "horas_evaluadas": 240,
+  "metricas": {
+    "modelo": {
+      "MAE": 11.82447819458664,
+      "RMSE": 15.978779470235148
+    },
+    "baseline": {
+      "MAE": 14.966666666666667,
+      "RMSE": 19.53095833115552
+    }
+  },
+  "mejora_porcentual_modelo_frente_baseline": {
+    "MAE": 20.99457776445453,
+    "RMSE": 18.187427368855655
+  },
+  "advertencias": [
+    "Evaluación experimental con octubre de 2026; el modelo no se reentrena.",
+    "Los objetivos de los bloques de 48 horas no se solapan.",
+    "Las ventanas históricas de entrada sí pueden compartir observaciones.",
+    "La zona horaria de las marcas GVA no está confirmada.",
+    "La unión con Open-Meteo compara etiquetas de fecha/hora sin conversión.",
+    "Los datos GVA son provisionales y pendientes de validación.",
+    "Open-Meteo aporta datos modelizados/reanálisis para una coordenada, no una estación física.",
+    "El número de bloques es reducido; las métricas no constituyen una validación definitiva."
+  ]
+}

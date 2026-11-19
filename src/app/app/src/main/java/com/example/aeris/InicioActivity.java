@@ -108,6 +108,9 @@ public class InicioActivity extends AppCompatActivity {
     private View haloEstadoSensor;
     private TextView textoBateria;
     private TextView textoPrevision;
+    // «Pico de … µg/m³ …» de la previsión simulada (T032); null mientras no se tenga
+    private String resumenPrevision = null;
+    private boolean cargandoPrevision = false;
     private TextView textoLugares;
     private LinearLayout listaLugares;
     private TextView insigniaAvisos;
@@ -178,7 +181,7 @@ public class InicioActivity extends AppCompatActivity {
                 startActivity(new Intent(this, MiSensorActivity.class)));
         findViewById(R.id.botonVerMas).setOnClickListener(vista ->
                 startActivity(new Intent(this, MisDatosActivity.class)));
-        findViewById(R.id.filaPrevision).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.PREVISION));
+        findViewById(R.id.filaPrevision).setOnClickListener(vista -> startActivity(new Intent(this, PrevisionActivity.class)));
         findViewById(R.id.filaLugares).setOnClickListener(vista ->
                 startActivity(new Intent(this, MisLugaresActivity.class)));
         findViewById(R.id.botonReintentar).setOnClickListener(vista -> cargarMediciones());
@@ -241,6 +244,7 @@ public class InicioActivity extends AppCompatActivity {
         cargarMediciones();
         cargarSensor();
         cargarAvisosServidor();
+        cargarResumenPrevision();
         temporizador.postDelayed(refrescarTextos, REFRESCO_TEXTOS);
     }
 
@@ -250,6 +254,72 @@ public class InicioActivity extends AppCompatActivity {
         unregisterReceiver(medicionGuardada);
         temporizador.removeCallbacks(refrescarTextos);
         pararLatido();
+    }
+
+    // -----------------------------------------------------------------------
+    // cargarResumenPrevision() -->
+    // What it does: shows in «Mejor hora para salir» the peak of the 48-hour
+    //               forecast (T032), saying that the data is simulated when
+    //               it is. It uses the forecast received less than 30 minutes
+    //               ago or asks for it (LogicaFakePrevision shares the request
+    //               already on its way). If it cannot be loaded, the row keeps
+    //               its text and PrevisionActivity explains the problem.
+    // -----------------------------------------------------------------------
+    private void cargarResumenPrevision() {
+        if (deEjemplo) {
+            return;
+        }
+        PrevisionOzono vigente = LogicaFakePrevision.vigente();
+        if (vigente != null) {
+            resumenPrevision = resumirPrevision(vigente);
+            textoPrevision.setText(resumenPrevision);
+            return;
+        }
+        if (cargandoPrevision) {
+            return;
+        }
+        cargandoPrevision = true;
+        new LogicaFakePrevision().obtenerPrevision(LogicaFakePrevision.ZONA,
+                new LogicaFakePrevision.RespuestaPrevision() {
+                    @Override
+                    public void previsionObtenida(PrevisionOzono obtenida) {
+                        cargandoPrevision = false;
+                        if (!isDestroyed()) {
+                            resumenPrevision = resumirPrevision(obtenida);
+                            textoPrevision.setText(resumenPrevision);
+                        }
+                    }
+
+                    @Override
+                    public void zonaSinModelo(String zonaDisponible) {
+                        cargandoPrevision = false;
+                    }
+
+                    @Override
+                    public void sinDatos() {
+                        cargandoPrevision = false;
+                    }
+
+                    @Override
+                    public void servicioOcupado() {
+                        cargandoPrevision = false;
+                    }
+
+                    @Override
+                    public void error(String mensaje) {
+                        cargandoPrevision = false;
+                    }
+                });
+    }
+
+    private String resumirPrevision(PrevisionOzono prevision) {
+        PrevisionOzono.Hora pico = prevision.pico;
+        String texto = getString(R.string.prevision_inicio_pico,
+                (int) Math.round(pico.ozono),
+                PrevisionActivity.nombreDia(this, prevision.diasDesdeHoy(pico.fecha)),
+                PrevisionActivity.hora(pico.fecha));
+        boolean simulados = prevision.simulados || !prevision.advertencia.isEmpty();
+        return simulados ? getString(R.string.prevision_inicio_chip) + " · " + texto : texto;
     }
 
     private void abrir(ProximamenteActivity.Seccion seccion) {
@@ -581,6 +651,7 @@ public class InicioActivity extends AppCompatActivity {
     // -----------------------------------------------------------------------
     private void mostrarAccesos() {
         textoPrevision.setText(deEjemplo ? LogicaFakeInicio.MEJOR_HORA_EJEMPLO
+                : resumenPrevision != null ? resumenPrevision
                 : getString(R.string.inicio_prevision_texto));
         listaLugares.removeAllViews();
         listaLugares.setVisibility(deEjemplo ? View.VISIBLE : View.GONE);

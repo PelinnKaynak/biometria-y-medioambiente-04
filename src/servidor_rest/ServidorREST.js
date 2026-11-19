@@ -16,16 +16,32 @@
 const path = require('path');
 const express = require('express');
 const { cargarReglasREST } = require('./ReglasREST');
+const { cargarRutasPrevision } = require('./RutasPrevision');
 
 const CARPETA_WEB_PUBLICA = path.join(__dirname, '..', 'web_publica');
 const CARPETA_WEB_ADMIN = path.join(__dirname, '..', 'web_admin');
 
 // ---------------------------------------------------------------------------
-// logica: Logica, reglasExtra: ( servidor: Express ) --> crearServidor() --> Express
-// What it does: returns the Express app ready to listen. reglasExtra (optional)
-//               lets other tasks or the tests add more routes.
+// previsionActiva: Text | undefined --> estaPrevisionActiva() --x
+// B <--
+// What it does: la previsión de ozono (T032) está activa salvo que PREVISION_ACTIVA
+//               valga 0, false, no u off en el entorno (.env).
 // ---------------------------------------------------------------------------
-function crearServidor(logica, reglasExtra) {
+function estaPrevisionActiva(valor) {
+    return !['0', 'false', 'no', 'off'].includes(String(valor ?? '').trim().toLowerCase());
+}
+
+// ---------------------------------------------------------------------------
+// logica: Logica, reglasExtra: ( servidor: Express ),
+// opciones: { prevision: B, servicioPrevision: ServicioPrediccion } --> crearServidor() --> Express
+// What it does: returns the Express app ready to listen. reglasExtra (optional)
+//               lets other tasks or the tests add more routes. opciones (optional):
+//               prevision = false desactiva la ruta de previsión (por defecto, la
+//               indica PREVISION_ACTIVA); servicioPrevision permite a los tests
+//               sustituir el servicio de predicción. Python no se lanza al crear
+//               el servidor, sino en la primera petición de previsión.
+// ---------------------------------------------------------------------------
+function crearServidor(logica, reglasExtra, opciones = {}) {
     const servidor = express();
     servidor.use(express.json({ limit: '300kb' }));   // 300 KB: cabe la foto de perfil (T010)
 
@@ -39,6 +55,18 @@ function crearServidor(logica, reglasExtra) {
     servidor.use('/web_admin', express.static(CARPETA_WEB_ADMIN));
 
     cargarReglasREST(servidor, logica);
+    // Previsión de ozono (T032): si algo falla al montarla, el resto de la API sigue funcionando
+    try {
+        const activa = opciones.prevision !== undefined
+            ? opciones.prevision !== false
+            : estaPrevisionActiva(process.env.PREVISION_ACTIVA);
+        servidor.locals.servicioPrevision = cargarRutasPrevision(servidor, {
+            activa,
+            servicio: opciones.servicioPrevision
+        });
+    } catch (error) {
+        console.error('No se pudo cargar la previsión de ozono; el resto de la API sigue activo:', error.message);
+    }
     if (reglasExtra) {
         reglasExtra(servidor);
     }
@@ -60,4 +88,4 @@ function crearServidor(logica, reglasExtra) {
     return servidor;
 }
 
-module.exports = { crearServidor };
+module.exports = { crearServidor, estaPrevisionActiva };

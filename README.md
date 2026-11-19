@@ -16,7 +16,7 @@ Servidor REST → lógica de negocio → base de datos
 Web: mapa público, Mi cuenta y panel de administración
 ```
 
-Además, un modelo de aprendizaje automático predice el nivel de ozono de las próximas 48 horas a partir del histórico de las estaciones oficiales y de los datos meteorológicos de AEMET.
+Además, un modelo de aprendizaje automático predice el nivel de ozono de las próximas 48 horas a partir de mediciones históricas de la estación de Gandia de la Red Valenciana de Vigilancia de la Contaminación Atmosférica y de variables meteorológicas históricas obtenidas de Open-Meteo Archive.
 
 ## Tecnologías
 
