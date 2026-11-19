@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Vincular sensor · AERIS</title>
+    <meta name="description" content="Vincula tu sensor AERIS a tu cuenta.">
+    <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="stylesheet" href="css/estilos.css">
+    <link rel="stylesheet" href="css/mi_cuenta.css">
+    <link rel="stylesheet" href="css/vincular.css">
+    <link rel="stylesheet" href="css/pie.css">
+</head>
+<body class="pagina-cuenta pagina-vincular">
+
+<header class="cabecera-cuenta">
+    <a href="index.html" class="logo-cabecera"><img src="img/logo-aeris.svg" alt="AERIS"></a>
+
+    <nav id="menu-cuenta" class="menu-cuenta" aria-label="Menú principal">
+        <a href="mapa.html">Mapa</a>
+        <a href="contaminantes.html">Contaminantes</a>
+        <a href="ayuda.html">Ayuda</a>
+        <a href="../web_admin/panel_nodos.html" id="enlace-panel" class="enlace-panel" hidden>Panel de administración</a>
+        <a href="login.html" class="salir-movil" data-salir>Salir</a>
+    </nav>
+
+    <div class="usuario-cabecera">
+        <span id="avatar" class="avatar" aria-hidden="true"></span>
+        <span id="nombre-cabecera" class="nombre-cabecera"></span>
+        <a href="login.html" class="salir" data-salir>Salir</a>
+        <button id="boton-menu" type="button" class="boton-menu"
+                aria-label="Abrir menú" aria-expanded="false" aria-controls="menu-cuenta">
+            <span></span><span></span><span></span>
+        </button>
+    </div>
+</header>
+
+<main class="contenido-cuenta contenido-vincular">
+    <a class="volver-cuenta" href="mi_cuenta.html">‹ Volver a Mi cuenta</a>
+    <h1>Vincular sensor</h1>
+    <p class="entradilla-vincular">Introduce el código de la etiqueta para asociar el sensor a tu cuenta.</p>
+
+    <section id="paso-entrada" class="tarjeta panel-vincular" aria-labelledby="titulo-codigo">
+        <p class="etiqueta-paso">PASO 1 DE 2</p>
+        <h2 id="titulo-codigo">Lee el código de tu sensor</h2>
+        <p class="texto-ayuda">Busca la etiqueta del sensor y escribe aquí la línea completa. Para escanearla con la cámara, utiliza la app AERIS.</p>
+        <form id="formulario-codigo" novalidate>
+            <label for="codigo-etiqueta">Código del sensor</label>
+            <input id="codigo-etiqueta" class="campo" type="text" autocomplete="off"
+                   autocapitalize="off" spellcheck="false" maxlength="100"
+                   placeholder="092021010920 110406 03 2109 -44.75" required>
+            <p class="ayuda-campo">Escribe la línea completa de números y letras de la etiqueta.</p>
+            <p id="error-codigo" class="mensaje-error oculto" role="alert"></p>
+            <button type="submit" class="boton">Continuar</button>
+        </form>
+    </section>
+
+    <section id="paso-sensor" class="tarjeta panel-vincular sensor-leido oculto"
+             aria-labelledby="titulo-sensor-leido" aria-live="polite">
+        <p class="etiqueta-paso">PASO 2 DE 2</p>
+        <h2 id="titulo-sensor-leido">Sensor leído</h2>
+        <p class="texto-ayuda">Comprueba que los datos coinciden con la etiqueta antes de continuar.</p>
+        <dl class="datos-sensor">
+            <div><dt>Número de serie</dt><dd id="serie-leida"></dd></div>
+            <div><dt>Fecha de fabricación</dt><dd id="fecha-leida"></dd></div>
+            <div id="fila-modelo" class="oculto"><dt>Modelo</dt><dd id="modelo-leido"></dd></div>
+            <div id="fila-gas" class="oculto"><dt>Sensor</dt><dd id="gas-leido"></dd></div>
+        </dl>
+        <p id="error-vincular" class="mensaje-error oculto" role="alert"></p>
+        <div class="acciones-vinculacion">
+            <button id="boton-volver-codigo" type="button" class="boton-borde">Cambiar código</button>
+            <button id="boton-vincular" type="button" class="boton">Vincular</button>
+        </div>
+    </section>
+</main>
+
+<footer class="pie-web">
+    <div class="pie-contenido">
+        <div class="pie-marca">
+            <img src="img/logo-aeris.svg" alt="AERIS" class="pie-logo">
+            <p>El mapa del ozono hecho con los sensores de quienes viven en la ciudad.</p>
+        </div>
+        <nav class="pie-columnas" aria-label="Enlaces del pie">
+            <div>
+                <h2>AERIS</h2>
+                <ul>
+                    <li><a href="mapa.html">Mapa</a></li>
+                    <li><a href="index.html#proyecto">Cómo funciona</a></li>
+                    <li><a href="index.html#sensor">El sensor</a></li>
+                </ul>
+            </div>
+            <div>
+                <h2>Información</h2>
+                <ul>
+                    <li><a href="contaminantes.html">Contaminantes</a></li>
+                    <li><a href="ayuda.html">Ayuda</a></li>
+                </ul>
+            </div>
+            <div>
+                <h2>Tu cuenta</h2>
+                <ul><li><a href="mi_cuenta.html">Mi cuenta</a></li></ul>
+            </div>
+        </nav>
+    </div>
+    <div class="pie-final"><span>© 2026 SenseTech · AERIS</span></div>
+</footer>
+
+<script src="js/logica_cuenta_fake.js"></script>
+<script src="js/logica_cuenta_real.js"></script>
+<script src="js/roles.js"></script>
+<script src="js/configuracion.js"></script>
+<script src="js/vincular.js"></script>
+</body>
+</html>

@@ -6,6 +6,8 @@
 // Ya funcionan con el servidor de T016/T010:
 //   GET  /usuarioActual     datos del perfil
 //   POST /actualizarDatos   editar nombre, apellidos y correo
+// La vinculación del sensor (T045) usa las rutas de T005:
+//   POST /solicitarVinculacion   solicita el vínculo y envía el correo
 // Propuestas para T024 (todavía no están en el servidor):
 //   GET  /miCuenta                     resumen, lugares y últimas mediciones
 //   GET  /miExposicion?periodo=mes     medias diarias de ozono
@@ -153,6 +155,34 @@ class LogicaCuentaReal {
                 caducaEn: fecha ? new Date(fecha.getTime() + 48 * 3600000).toISOString() : null
             }
         };
+    }
+
+    // --------------------------------------------------------
+    // codigo: CodigoSensor --> solicitarVinculacion() --> r: ResultadoSolicitud
+    //
+    // POST /solicitarVinculacion { numeroSerie, sensibilidad? }
+    //   201 pendiente · 200 ya confirmada · 400 · 404 no registrado · 409 ya vinculado · 401
+    // --------------------------------------------------------
+    async solicitarVinculacion(codigo) {
+        const fallo = (error, sinSesion = false) => ({ correcto: false, solicitud: null, error, sinSesion });
+        if (!this.usuarioActual()) return fallo("Inicia sesión para vincular tu sensor", true);
+        if (!codigo || !codigo.numeroSerie) return fallo("El código del sensor no es válido");
+
+        const cuerpo = { numeroSerie: codigo.numeroSerie };
+        if (codigo.sensibilidad !== null && codigo.sensibilidad !== undefined) {
+            cuerpo.sensibilidad = codigo.sensibilidad;
+        }
+
+        const respuesta = await this.pedir("/solicitarVinculacion", "POST", cuerpo);
+        if (respuesta === null) return fallo("No se puede conectar con el servidor");
+        if (respuesta.status === 400) return fallo("El código del sensor no es válido. Revisa la etiqueta.");
+        if (respuesta.status === 401) return fallo("Tu sesión ha caducado. Vuelve a iniciar sesión", true);
+        if (respuesta.status === 404) {
+            return fallo("Este sensor no está registrado. Revisa el código o escríbenos desde Ayuda.");
+        }
+        if (respuesta.status === 409) return fallo("Este sensor ya está vinculado a otra cuenta.");
+        if (!respuesta.ok) return fallo("No se ha podido vincular el sensor. Inténtalo de nuevo");
+        return { correcto: true, solicitud: await respuesta.json(), error: "", sinSesion: false };
     }
 
     // --------------------------------------------------------

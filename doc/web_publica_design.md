@@ -318,6 +318,9 @@ Página `mi_cuenta.html`. Es donde llega el portador después de iniciar sesión
 |---|---|---|
 | `obtenerPerfil()` | `GET /usuarioActual` | Ya está en el servidor (T016, T010) |
 | `actualizarDatos(datos)` | `POST /actualizarDatos { nombre, apellidos, correo }` · 200 · 400 · 409 | Ya está en el servidor (T010) |
+| `obtenerVinculacion()` | `GET /estadoVinculacion` | Ya está en el servidor (T005) |
+| `solicitarVinculacion(codigo)` | `POST /solicitarVinculacion { numeroSerie, sensibilidad? }` · 200 · 201 · 400 · 404 · 409 | Ya está en el servidor (T005, T045) |
+| `reenviarCorreo()` | `POST /reenviarCorreoVinculacion` | Ya está en el servidor (T005) |
 | `obtenerResumen()` | `GET /miCuenta` | Propuesta para T024 |
 | `obtenerExposicion(periodo)` | `GET /miExposicion?periodo=semana, mes o 3meses` | Propuesta para T024 |
 
@@ -336,6 +339,12 @@ Respuesta propuesta de `GET /miCuenta`:
 Respuesta propuesta de `GET /miExposicion`: `[ { fecha, ozono } ]`, una media por día.
 
 Funciones principales de `js/mi_cuenta.js`: `nivelOzono()`, `formatearNumero()`, `formatearFecha()`, `textoHace()`, `textoVariacion()`, `calcularGrafica()`, `cargarCuenta()`, `cambiarPeriodo()`, `validarPerfil()` y `guardarPerfil()`.
+
+#### Vincular sensor (T045 · H019, H037)
+
+La página `vincular.html` se abre desde «Vincular mi sensor» en Mi cuenta. Tanto en escritorio como en móvil, el código de la etiqueta se escribe manualmente; la lectura con cámara corresponde a la app (T005), no a la web.
+
+El flujo es `Mi cuenta · sin sensor` → `Vincular sensor` → `Mi cuenta · esperando confirmación`. Los enlaces «Vincular mi sensor» y «Vincular de nuevo» abren la misma página. `js/vincular.js` valida y muestra el número de serie y la fecha de fabricación antes de solicitar el vínculo. «Vincular» usa `LogicaCuentaReal.solicitarVinculacion()` para llamar a `POST /solicitarVinculacion`; el servidor valida que el sensor exista y no pertenezca a otra cuenta, y envía el correo de confirmación. Si se acepta, la página vuelve a Mi cuenta, que muestra el estado pendiente. Los errores 404 (sensor no registrado) y 409 (vinculado a otra cuenta) se muestran en la página. La lógica fake permite probar los estados de éxito y error sin el servidor.
 
 ### 8. Página de inicio y mapa (T012)
 
@@ -410,7 +419,7 @@ Páginas públicas `contaminantes.html`, `normativa.html` y `consejos.html`, seg
 
 ### 10. Pie común y contraste del texto
 
-- Todas las páginas públicas con cabecera (portada, mapa, Contaminantes, Normativa, Consejos y Mi cuenta) tienen el mismo pie oscuro: logo, frase, tres columnas de enlaces y «© 2026 SenseTech · AERIS». Sus estilos están en `css/pie.css` y cada página lo carga después de su hoja propia.
+- Todas las páginas públicas con cabecera (portada, mapa, Contaminantes, Normativa, Consejos, Mi cuenta y Vincular sensor) tienen el mismo pie oscuro: logo, frase, tres columnas de enlaces y «© 2026 SenseTech · AERIS». Sus estilos están en `css/pie.css` y cada página lo carga después de su hoja propia.
 - En la portada los enlaces del pie a sus secciones son anclas (`#planes`). En el resto de páginas llevan delante `index.html` (`index.html#planes`).
 - En Mi cuenta la columna «Tu cuenta» solo enlaza a Mi cuenta, porque ya hay sesión.
 - Las páginas de acceso (login, registro, recuperar y restablecer) no llevan pie, porque son una tarjeta centrada sin menú.
