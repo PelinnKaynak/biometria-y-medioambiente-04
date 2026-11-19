@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.splashscreen.SplashScreen;
 
 // BienvenidaActivity class: the first screen when nobody is logged in.
 public class BienvenidaActivity extends AppCompatActivity {
@@ -30,6 +31,7 @@ public class BienvenidaActivity extends AppCompatActivity {
     // -----------------------------------------------------------------------
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        SplashScreen.installSplashScreen(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bienvenida);
 
