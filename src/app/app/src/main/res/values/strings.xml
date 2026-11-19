@@ -68,6 +68,10 @@
     <string name="vincular_escanear_de_nuevo">Escanear de nuevo</string>
     <string name="vincular_ayuda_error">¿Crees que es un error? Necesito ayuda</string>
     <string name="vincular_confirmada">¡Sensor vinculado!</string>
+    <string name="vincular_texto_vinculado">Todo listo: ya puedes empezar a medir.</string>
+    <string name="vincular_vinculado_texto">Tu sensor %1$s ya está vinculado a tu cuenta. Empezará a medir en cuanto esté cerca del móvil con el Bluetooth activado.</string>
+    <string name="vincular_continuar_vinculado">Continuar</string>
+    <string name="vincular_esperando_comprobando">Lo comprobamos solo: en cuanto lo confirme, lo verás aquí.</string>
 
     <!-- Permiso de red local (Android 17) -->
     <string name="permiso_red_denegado">AERIS necesita permiso para conectar con dispositivos de la red local (el servidor).</string>
@@ -193,9 +197,14 @@
     <string name="mi_sensor_ultima_sincronizacion">Última sincronización</string>
     <string name="mi_sensor_sin_sincronizacion">Sin sincronización</string>
     <string name="mi_sensor_luz_titulo">Luz del sensor</string>
-    <string name="mi_sensor_luz_encendida">Luz encendida (simulación)</string>
-    <string name="mi_sensor_luz_apagada">Luz apagada (simulación)</string>
-    <string name="mi_sensor_luz_simulada">Simulación local: el firmware actual no recibe órdenes para controlar la luz.</string>
+    <string name="mi_sensor_luz_encendida">Luz de aviso activada</string>
+    <string name="mi_sensor_luz_apagada">Luz de aviso desactivada</string>
+    <string name="mi_sensor_luz_simulada">Con la luz activada, el sensor parpadea más rápido cuanto peor está el aire.</string>
+    <string name="mi_sensor_luz_cambiando">Cambiando la luz del sensor…</string>
+    <string name="mi_sensor_luz_sin_direccion">Todavía no hemos encontrado tu sensor. Acércalo al móvil, espera a que envíe una medición y vuelve a intentarlo.</string>
+    <string name="mi_sensor_luz_bluetooth">Activa el Bluetooth para cambiar la luz del sensor.</string>
+    <string name="mi_sensor_luz_error">No se ha podido cambiar la luz. Acerca el sensor al móvil y vuelve a intentarlo.</string>
+    <string name="mi_sensor_luz_sin_permiso">Sin permiso de Bluetooth no podemos cambiar la luz del sensor.</string>
     <string name="mi_sensor_desvincular">Desvincular sensor</string>
     <string name="mi_sensor_desvincular_titulo">Desvincular sensor</string>
     <string name="mi_sensor_desvincular_confirmacion">El sensor dejará de estar asociado a tu cuenta. ¿Quieres continuar?</string>

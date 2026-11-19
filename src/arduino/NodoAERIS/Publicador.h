@@ -93,7 +93,7 @@ public:
   void publicar(TipoMedicion tipo, int16_t valor, uint8_t contador, long tiempoEspera) {
     const uint16_t major = ((uint16_t) tipo << 8) + contador;
     laEmisora.emitirAnuncioIBeacon(beaconUUID, major, valor, RSSI);
-    esperar(tiempoEspera);
+    Globales::laLuz.esperar(tiempoEspera);      // con la luz de aviso activada, parpadea mientras
     laEmisora.detenerAnuncio();
   } // ()
 

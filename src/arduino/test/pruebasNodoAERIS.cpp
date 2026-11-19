@@ -75,6 +75,8 @@ static void pruebaConversor() {
   comprobar(cerca(ppmOzono(1.65 + M, 1.65, 0, M), 1.0, 1e-4), "Vgas baja M voltios: 1 ppm");
   comprobar(cerca(ppmOzono(1.66 + M, 1.65, 0.01, M), 1.0, 1e-4), "el offset se resta");
   comprobar(cerca(temperatura((25 + 18) * 3.3 / 87, 3.3), 25, 1e-4), "T = 87/V+ × Vtemp − 18");
+  comprobar(temperaturaValida(25, -20, 55) && temperaturaValida(-20, -20, 55), "25 °C y -20 °C son válidas");
+  comprobar(!temperaturaValida(61.1, -20, 55) && !temperaturaValida(-30, -20, 55), "61 °C y -30 °C no");
   comprobar(cerca(microgramosPorM3(1, 25), 1962, 1), "1 ppm a 25 °C ≈ 1962 µg/m³");
   comprobar(cerca(microgramosPorM3(0.1, 0), 214.2, 0.5), "0,1 ppm a 0 °C ≈ 214 µg/m³");
   comprobar(ajustar(-5, 1) == 0, "un valor negativo (ruido) queda en 0");
@@ -129,21 +131,65 @@ static void pruebaMedidor() {
   medidor.iniciarMedidor();
   comprobar(Doble::bitsADC == 14, "usa el ADC a 14 bits");
 
+  // El pin 4 hace de GND del sensor: se pone a 0 V si está bajo al arrancar...
+  comprobar(medidor.gndSensorActivado(), "pin del GND sin tensión: se activa");
+  bool puestoA0 = false;
+  for (auto & e : Doble::escriturasPin) {
+    puestoA0 = puestoA0 || (e.first == Configuracion::PIN_GND_SENSOR && e.second == LOW);
+  }
+  comprobar(puestoA0, "y se pone a LOW (0 V)");
+  // ...y no se toca si ya tiene tensión (el cable no es GND)
+  Doble::escriturasPin.clear();
+  Doble::voltiosPin[Configuracion::PIN_GND_SENSOR] = 3.3;
+  Medidor otro(c);
+  otro.iniciarMedidor();
+  comprobar(!otro.gndSensorActivado() && Doble::escriturasPin.empty(), "pin con 3,3 V: no se toca");
+  Doble::voltiosPin[Configuracion::PIN_GND_SENSOR] = 0;
+
   ponerSensor(0.05, 25);                                   // 0,05 ppm ≈ 98 µg/m³
+  medidor.reiniciarMedia();
   Lectura l = medidor.medir();
   comprobar(cerca(l.vRef, V_REF, 0.001), "lee Vref");
   comprobar(cerca(l.temperatura, 25, 0.2), "temperatura 25 °C");
   comprobar(cerca(l.ozono, 98.1, 16), "0,05 ppm a 25 °C ≈ 98 µg/m³ (±1 paso del ADC)");
+  comprobar(cerca(l.ppm, 0.05, 0.01), "guarda también los ppm");
 
   ponerSensor(0, 20);
+  medidor.reiniciarMedia();
   comprobar(medidor.medir().ozono < 16, "aire limpio: casi 0");
+  comprobar(medidor.medir().temperaturaFija != Configuracion::HAY_VTEMP, "con Vtemp bien, usa su temperatura solo si HAY_VTEMP");
+
+  // Vtemp sin cable o tocando 3V3: satura a 3 V (61 °C). Se usa 25 °C
+  ponerSensor(0.05, 25);
+  medidor.reiniciarMedia();
+  Doble::voltiosPin[Configuracion::PIN_VTEMP] = 3.0;
+  l = medidor.medir();
+  comprobar(l.temperaturaFija, "Vtemp saturado: temperatura fija");
+  comprobar(cerca(l.temperatura, Configuracion::TEMPERATURA_POR_DEFECTO, 1e-6), "usa TEMPERATURA_POR_DEFECTO");
+  comprobar(cerca(l.ozono, 98.1, 16), "y el ozono sale como a 25 °C");
 
   ponerSensor(-0.02, 20);                                  // ruido por debajo de Vref
+  medidor.reiniciarMedia();
   comprobar(medidor.medir().ozono == 0, "nunca da ozono negativo");
 
   ponerSensor(0.05, 25);
+  medidor.reiniciarMedia();
   comprobar(c.ponerReferencia(196.2, medidor.medir().ozonoSinAjustar), "ref: la estación marca 196,2");
   comprobar(cerca(medidor.medir().ozono, 196.2, 0.5), "con el factor de calibración el nodo da lo mismo que la referencia");
+
+  // Media móvil: con ruido alterno (+20 / −20 mV) la media queda en el centro
+  Calibracion sinAjuste;
+  Medidor ruidoso(sinAjuste);
+  for (int i = 0; i < Configuracion::MEDICIONES_MEDIA; i++) {
+    Doble::voltiosPin[Configuracion::PIN_VREF] = V_REF;
+    Doble::voltiosPin[Configuracion::PIN_VGAS] = V_REF + (i % 2 == 0 ? 0.020 : -0.020);
+    l = ruidoso.medir();
+  }
+  comprobar(cerca(l.diferenciaMedia, 0, 0.001), "la media de +20 y −20 mV es casi 0");
+  comprobar(cerca(l.vGas - l.vRef, -0.020, 0.001), "pero la última diferencia sigue siendo −20 mV");
+  // «cero» con la media de varias mediciones
+  Doble::voltiosPin[Configuracion::PIN_VGAS] = V_REF + 0.035;
+  comprobar(cerca(ruidoso.diferenciaParaCero(), 0.035, 0.001), "diferenciaParaCero() da el offset (35 mV)");
 }
 
 // ------------------------------------------------------------
@@ -243,11 +289,55 @@ static void pruebaProgramaCompleto() {
 // main() --> Z
 // What it does: runs all the tests; returns 1 if any check failed.
 // ------------------------------------------------------------
+// ------------------------------------------------------------
+// pruebaLuz() -->
+// What it does: the warning light (H033): blink speed by level, it waits
+//               the same time on or off, and it is kept in flash.
+// ------------------------------------------------------------
+static void pruebaLuz() {
+  printf("LuzAviso\n");
+  reiniciarDoble();
+  comprobar(LuzAviso::periodo(50) == 2000 && LuzAviso::periodo(99.9) == 2000, "bueno: 2 s");
+  comprobar(LuzAviso::periodo(100) == 1000, "moderado (100): 1 s");
+  comprobar(LuzAviso::periodo(200) == 500, "malo (180-240): 0,5 s");
+  comprobar(LuzAviso::periodo(300) == 250, "muy malo: 0,25 s");
+
+  LED led(Configuracion::PIN_LED);
+  LuzAviso luz(led);
+  comprobar(!luz.cargar() && !luz.estaActiva(), "sin nada guardado: apagada");
+
+  Doble::tiempoEsperado = 0;
+  Doble::escriturasPin.clear();
+  luz.esperar(6000);
+  comprobar(Doble::tiempoEsperado == 6000 && Doble::escriturasPin.empty(), "apagada: espera 6 s sin tocar el LED");
+
+  luz.pedir(true);                      // lo pide la app por Bluetooth
+  comprobar(!luz.estaActiva(), "el pedido no se aplica en el callback");
+  comprobar(luz.atenderPedido() && luz.estaActiva(), "atenderPedido() la enciende");
+  comprobar(!luz.atenderPedido(), "un pedido solo se aplica una vez");
+
+  luz.ponerOzono(300);                  // muy malo: parpadeo de 250 ms
+  Doble::tiempoEsperado = 0;
+  Doble::escriturasPin.clear();
+  luz.esperar(6000);
+  comprobar(Doble::tiempoEsperado == 6000, "encendida: espera lo mismo (6 s)");
+  comprobar(Doble::escriturasPin.size() == 48, "y el LED cambia 48 veces (24 parpadeos de 250 ms)");
+
+  LuzAviso otra(led);                   // como si se reiniciara la placa
+  comprobar(otra.cargar() && otra.estaActiva(), "se guarda en la flash");
+  otra.pedir(false);
+  otra.esperar(100);                    // los pedidos también se atienden mientras espera
+  comprobar(!otra.estaActiva(), "la app la apaga");
+  LuzAviso tercera(led);
+  comprobar(tercera.cargar() && !tercera.estaActiva(), "y apagada se guarda también");
+}
+
 int main() {
   pruebaConversor();
   pruebaCalibracion();
   pruebaMedidor();
   pruebaPublicador();
+  pruebaLuz();
   pruebaOrdenes();
   pruebaProgramaCompleto();
   printf("%d comprobaciones, %d fallidas\n", comprobaciones, pruebasFallidas);

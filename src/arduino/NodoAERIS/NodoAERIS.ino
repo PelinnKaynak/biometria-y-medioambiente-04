@@ -35,7 +35,19 @@ namespace Globales {
 
 };
 
+#include "LuzAviso.h"
+
+// --------------------------------------------------------------
+// The warning light (H033): Publicador uses it while it broadcasts.
+// --------------------------------------------------------------
+namespace Globales {
+
+  LuzAviso laLuz ( elLED );
+
+};
+
 #include "EmisoraBLE.h"
+#include "ServicioLuz.h"
 #include "Publicador.h"
 #include "Calibracion.h"
 #include "Medidor.h"
@@ -55,6 +67,8 @@ namespace Globales {
 
   LectorLineas elLector;
 
+  ServicioLuz elServicioLuz;
+
 }; // namespace
 
 // --------------------------------------------------------------
@@ -67,17 +81,24 @@ namespace Loop {
 
 // ------------------------------------------------------------
 // l: Lectura --> escribirLectura() -->
-// What it does: writes one line with the measurement on the serial monitor.
+// What it does: writes one line with the measurement on the serial monitor:
+//               the voltages, Vgas − Vref (mV; stable when the sensor is
+//               ready) and its moving average, the temperature, the ozone that is sent and, in
+//               brackets, the value before clamping it at 0 (µg/m³ and ppm).
 // ------------------------------------------------------------
 void escribirLectura( const Lectura & l ) {
   using namespace Globales;
   elPuerto.escribir( "Vgas=" );     elPuerto.escribir( l.vGas, 4 );
   elPuerto.escribir( " V  Vref=" ); elPuerto.escribir( l.vRef, 4 );
-  elPuerto.escribir( " V  Vtemp=" ); elPuerto.escribir( l.vTemp, 4 );
+  elPuerto.escribir( " V  Vgas-Vref=" ); elPuerto.escribir( (l.vGas - l.vRef) * 1000.0, 1 );
+  elPuerto.escribir( " mV (media " ); elPuerto.escribir( l.diferenciaMedia * 1000.0, 1 );
+  elPuerto.escribir( " mV)  Vtemp=" ); elPuerto.escribir( l.vTemp, 4 );
   elPuerto.escribir( " V  T=" );    elPuerto.escribir( l.temperatura, 1 );
-  elPuerto.escribir( " C  O3=" );   elPuerto.escribir( l.ozono, 1 );
+  elPuerto.escribir( l.temperaturaFija ? " C (fija)  O3=" : " C  O3=" );
+  elPuerto.escribir( l.ozono, 1 );
   elPuerto.escribir( " ug/m3 (sin ajustar " ); elPuerto.escribir( l.ozonoSinAjustar, 1 );
-  elPuerto.escribir( ")\n" );
+  elPuerto.escribir( " ug/m3 = " ); elPuerto.escribir( l.ppm, 3 );
+  elPuerto.escribir( " ppm)\n" );
 } // ()
 
 // ------------------------------------------------------------
@@ -106,11 +127,11 @@ void ejecutarOrden( const Orden & orden ) {
   case VER:
 	escribirLectura( elMedidor.medir() );
 	break;
-  case CERO: {
-	const Lectura l = elMedidor.medir();
-	ok = laCalibracion.ponerCero( l.vGas - l.vRef );
+  case CERO:
+	elPuerto.escribir( "Midiendo el cero (unos segundos)...\n" );
+	ok = laCalibracion.ponerCero( elMedidor.diferenciaParaCero() );
+	elMedidor.reiniciarMedia();
 	break;
-  }
   case REFERENCIA: {
 	const Lectura l = elMedidor.medir();
 	ok = laCalibracion.ponerReferencia( orden.valor, l.ozonoSinAjustar );
@@ -142,6 +163,31 @@ void atenderOrdenes() {
 } // ()
 
 // ------------------------------------------------------------
+// conn: N, chr: BLECharacteristic, datos: [N], largo: N --> alEscribirLuz() -->
+// What it does: the phone has written the light characteristic: 1 turns
+//               the warning light on, 0 off. (Bluetooth thread: it only
+//               notes it; loop() applies it.)
+// ------------------------------------------------------------
+void alEscribirLuz( uint16_t conn, BLECharacteristic * chr, uint8_t * datos, uint16_t largo ) {
+  if ( largo >= 1 ) {
+	Globales::laLuz.pedir( datos[0] != 0 );
+  }
+} // ()
+
+// ------------------------------------------------------------
+// atenderLuz() -->
+// What it does: applies what the phone asked about the light and says it
+//               on the serial monitor.
+// ------------------------------------------------------------
+void atenderLuz() {
+  using namespace Globales;
+  if ( laLuz.atenderPedido() ) {
+	elServicioLuz.mostrar( laLuz.estaActiva() );
+	elPuerto.escribir( laLuz.estaActiva() ? "Luz de aviso: activada\n" : "Luz de aviso: desactivada\n" );
+  }
+} // ()
+
+// ------------------------------------------------------------
 // setup() -->
 // What it does: runs ONCE when the board starts: waits a little for the
 //               serial port (not forever: on battery there is no USB),
@@ -157,7 +203,21 @@ void setup() {
 	elPuerto.escribir( "Sin calibracion guardada: offset 0 y factor 1\n" );
   }
   elMedidor.iniciarMedidor();
+  if ( elMedidor.gndSensorActivado() ) {
+	elPuerto.escribir( "GND del sensor en el pin " );
+	elPuerto.escribir( Configuracion::PIN_GND_SENSOR );
+	elPuerto.escribir( ": activado (0 V)\n" );
+  } else {
+	elPuerto.escribir( "AVISO: el pin " );
+	elPuerto.escribir( Configuracion::PIN_GND_SENSOR );
+	elPuerto.escribir( " tiene " );
+	elPuerto.escribir( elMedidor.voltiosPinGnd(), 2 );
+	elPuerto.escribir( " V: no parece el GND del sensor y no se toca. Revisa los cables\n" );
+  }
   elPublicador.encenderEmisora();
+  laLuz.cargar();
+  elServicioLuz.activar( alEscribirLuz, laLuz.estaActiva() );
+  elPuerto.escribir( laLuz.estaActiva() ? "Luz de aviso: activada\n" : "Luz de aviso: desactivada\n" );
 
   escribirCalibracion();
   elPuerto.escribir( "---- setup(): fin ----\n" );
@@ -179,7 +239,11 @@ void loop() {
 
   const Lectura l = elMedidor.medir();
   escribirLectura( l );
-  elLED.brillar( 100 );
+  laLuz.ponerOzono( l.ozono );
+  atenderLuz();
+  if ( !laLuz.estaActiva() ) {
+	elLED.brillar( 100 );       // con la luz de aviso ya parpadea mientras emite
+  }
 
   elPublicador.publicar( Publicador::OZONO,
 						 ConversorOzono::valorParaTrama( l.ozono ),

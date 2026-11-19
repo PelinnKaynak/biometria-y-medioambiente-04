@@ -156,6 +156,8 @@ inline SerialDoble Serial;
 
 // ------------------------------- Bluefruit --------------------------------
 #define BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE 0x06
+#define CHR_PROPS_READ 0x02
+#define CHR_PROPS_WRITE 0x08
 #define BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA 0xFF
 
 class BLEBeacon {
@@ -207,6 +209,19 @@ public:
   // What it does: nothing.
   // ------------------------------------------------------------
   void setMaxLen(uint8_t) {}
+
+  // ------------------------------------------------------------
+  // tam: N --> setFixedLen() -->
+  // What it does: nothing.
+  // ------------------------------------------------------------
+  void setFixedLen(uint8_t) {}
+
+  // ------------------------------------------------------------
+  // v: N --> write8() --> N
+  // What it does: keeps the value in valor8 (the tests read it).
+  // ------------------------------------------------------------
+  uint16_t write8(uint8_t v) { valor8 = v; return 1; }
+  uint8_t valor8 = 0;
 
   // ------------------------------------------------------------
   // s: Text --> write() --> N

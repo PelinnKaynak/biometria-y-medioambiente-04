@@ -224,7 +224,8 @@ public class ServicioMediciones extends Service {
             }
             TramaAERIS trama = TramaAERIS.leer(registro.getManufacturerSpecificData(TramaAERIS.ID_FABRICANTE));
             if (trama != null) {
-                principal.post(() -> recibir(trama));
+                String direccion = resultado.getDevice() == null ? null : resultado.getDevice().getAddress();
+                principal.post(() -> recibir(trama, direccion));
             }
         }
 
@@ -251,15 +252,17 @@ public class ServicioMediciones extends Service {
     };
 
     // -----------------------------------------------------------------------
-    // trama: TramaAERIS --> recibir() -->          (en el hilo principal)
+    // trama: TramaAERIS, direccion: Text --> recibir() -->   (en el hilo principal)
     // What it does: keeps the packets of the user's sensor that
     //               ReceptorMediciones takes as new, with the place and the
-    //               hour, in the queue, and sends them.
+    //               hour, in the queue, and sends them. It also remembers the
+    //               sensor's Bluetooth address (LuzSensor connects to it).
     // -----------------------------------------------------------------------
-    private void recibir(TramaAERIS trama) {
+    private void recibir(TramaAERIS trama, String direccion) {
         if (numeroSerie == null || !numeroSerie.equals(trama.numeroSerie)) {
             return;         // es de otro sensor AERIS
         }
+        LuzSensor.guardarDireccion(this, direccion);
         long ahora = System.currentTimeMillis();
         if (!receptor.esNueva(trama, ahora)) {
             return;
