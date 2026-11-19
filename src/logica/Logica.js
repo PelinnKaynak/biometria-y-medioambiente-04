@@ -705,7 +705,7 @@ class Logica {
     // idUsuario: N --> desvincularMiSensor() --> { numeroSerie }
     // What it does: removes the user's association with their first linked
     //               sensor in a transaction. If no other sensor remains,
-    //               the user returns to the citizen role.
+    //               it removes the carrier permission and preserves other roles.
     // -----------------------------------------------------------------------
     async desvincularMiSensor(idUsuario) {
         const conexion = await this.conexion.getConnection();
@@ -738,10 +738,9 @@ class Logica {
             if (Number(cuenta.restantes) === 0) {
                 await conexion.execute(
                     `UPDATE Usuarios
-                        SET esPortador = FALSE,
-                            role = CASE WHEN role = ? THEN 'ciudadano' ELSE role END
+                        SET esPortador = FALSE
                       WHERE idUsuario = ?`,
-                    [ROL_PORTADOR, idUsuario]);
+                    [idUsuario]);
             }
 
             await conexion.commit();

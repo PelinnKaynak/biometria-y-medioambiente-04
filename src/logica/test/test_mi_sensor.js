@@ -53,7 +53,7 @@ describe('Logica (Mi sensor)', function () {
 
     it('desvincularMiSensor elimina la asociación y revierte el rol si era el único sensor', async function () {
         await logica.conexion.execute(
-            "UPDATE Usuarios SET role = 'portador', esPortador = TRUE WHERE idUsuario = ?",
+            'UPDATE Usuarios SET esPortador = TRUE WHERE idUsuario = ?',
             [usuario.idUsuario]);
 
         const resultado = await logica.desvincularMiSensor(usuario.idUsuario);
@@ -66,9 +66,9 @@ describe('Logica (Mi sensor)', function () {
         assert.strictEqual(sensor.estadoSolicitud, null);
         assert.strictEqual(Boolean(sensor.luzActiva), false);
         const [[actualizado]] = await logica.conexion.execute(
-            'SELECT role, esPortador FROM Usuarios WHERE idUsuario = ?', [usuario.idUsuario]);
-        assert.strictEqual(actualizado.role, 'ciudadano');
+            'SELECT esPortador FROM Usuarios WHERE idUsuario = ?', [usuario.idUsuario]);
         assert.strictEqual(Boolean(actualizado.esPortador), false);
+        assert.strictEqual((await logica.comprobarSesion(usuario.token)).rol, 'ciudadano');
         await assert.rejects(logica.obtenerMiSensor(usuario.idUsuario), { codigo: 'SIN_SENSOR' });
         await assert.rejects(logica.desvincularMiSensor(usuario.idUsuario), { codigo: 'SIN_SENSOR' });
     });
@@ -76,13 +76,13 @@ describe('Logica (Mi sensor)', function () {
     it('mantiene el rol portador si el usuario conserva otro sensor', async function () {
         await anadirSensor('092021010921', usuario.idUsuario);
         await logica.conexion.execute(
-            "UPDATE Usuarios SET role = 'portador', esPortador = TRUE WHERE idUsuario = ?",
+            'UPDATE Usuarios SET esPortador = TRUE WHERE idUsuario = ?',
             [usuario.idUsuario]);
 
         await logica.desvincularMiSensor(usuario.idUsuario);
         const [[actualizado]] = await logica.conexion.execute(
-            'SELECT role, esPortador FROM Usuarios WHERE idUsuario = ?', [usuario.idUsuario]);
-        assert.strictEqual(actualizado.role, 'portador');
+            'SELECT esPortador FROM Usuarios WHERE idUsuario = ?', [usuario.idUsuario]);
         assert.strictEqual(Boolean(actualizado.esPortador), true);
+        assert.strictEqual((await logica.comprobarSesion(usuario.token)).rol, 'portador');
     });
 });
