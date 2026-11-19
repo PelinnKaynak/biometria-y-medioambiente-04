@@ -140,8 +140,9 @@ public class InicioActivity extends AppCompatActivity {
         findViewById(R.id.botonVincular).setOnClickListener(vista ->
                 startActivity(new Intent(this, VincularSensorActivity.class)
                         .putExtra(VincularSensorActivity.EXTRA_DESDE_PERFIL, true)));
-        // «Mi sensor», «Mis datos», la previsión y «Mis lugares» son otras tareas
-        findViewById(R.id.botonVerSensor).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.MI_SENSOR));
+        // «Mi sensor» abre su pantalla; «Mis datos» y la previsión siguen pendientes.
+        findViewById(R.id.botonVerSensor).setOnClickListener(vista ->
+                startActivity(new Intent(this, MiSensorActivity.class)));
         findViewById(R.id.botonVerMas).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.MIS_DATOS));
         findViewById(R.id.filaPrevision).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.PREVISION));
         findViewById(R.id.filaLugares).setOnClickListener(vista ->
@@ -176,8 +177,7 @@ public class InicioActivity extends AppCompatActivity {
     // sensorRecordado() --x
     // B | null <--
     // What it does: if the user had a sensor the last time the server
-    //               answered (saved on the phone), or true with the example
-    //               sensor (until T017). null if it is not known yet.
+    //               answered (saved on the phone). null if it is not known yet.
     // -----------------------------------------------------------------------
     private Boolean sensorRecordado() {
         if (LogicaFakeInicio.SENSOR_DE_EJEMPLO) {
@@ -258,7 +258,7 @@ public class InicioActivity extends AppCompatActivity {
     // cargarSensor() -->
     // What it does: asks GET /usuarioActual to know if the user has a linked
     //               sensor, and shows «Mi sensor» or the card to link one.
-    //               Without connection, it keeps what it showed (or nothing).
+    //               Without connection, it keeps the last known state.
     // -----------------------------------------------------------------------
     private void cargarSensor() {
         logicaPerfil.obtenerUsuario(Sesion.token(this), new LogicaFakePerfil.RespuestaUsuario() {
@@ -278,7 +278,7 @@ public class InicioActivity extends AppCompatActivity {
 
             @Override
             public void error(String mensaje) {
-                // sin conexión: con el sensor de ejemplo (hasta T017) se enseña igual
+                // Sin conexión se conserva el último estado conocido.
                 if (tieneSensor == null && LogicaFakeInicio.SENSOR_DE_EJEMPLO) {
                     tieneSensor = true;
                     mostrarSensor(true);
@@ -448,10 +448,9 @@ public class InicioActivity extends AppCompatActivity {
     // -----------------------------------------------------------------------
     // aparecer: B --> mostrarSensor() -->
     // What it does: with sensor, the card «Mi sensor» with «Conectado» (green
-    //               dot with a beating halo) or «Desconectado» (grey, last
-    //               measurement older than 1 hour) and the battery (only with
-    //               the example data until T017); without sensor, the card to
-    //               link one. With aparecer, the card comes in with a fade.
+    //               dot with a beating halo) or «Desconectado» (grey, based on
+    //               the latest measurement); without sensor, the card to link
+    //               one. With aparecer, the card comes in with a fade.
     // -----------------------------------------------------------------------
     private void mostrarSensor(boolean aparecer) {
         View visible = Boolean.TRUE.equals(tieneSensor) ? tarjetaMiSensor : tarjetaVincular;

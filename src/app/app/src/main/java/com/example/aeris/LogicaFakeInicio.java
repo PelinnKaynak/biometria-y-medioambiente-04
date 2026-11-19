@@ -31,10 +31,8 @@ public class LogicaFakeInicio {
     // Resto de datos de ejemplo del Figma (sin servidor que los dé aún):
     // batería del sensor (%), mejor hora para salir y el nivel de Mis lugares
     static final int BATERIA_EJEMPLO = 78;
-    // T017: el servidor aún no envía el sensor del usuario (GET /usuarioActual),
-    // así que se da por vinculado un sensor de ejemplo para ver «Mi sensor».
-    // Para ver la tarjeta «Vincular» (sin sensor), poner a false.
-    static final boolean SENSOR_DE_EJEMPLO = true;
+    // T017: el estado del sensor ya se consulta al servidor.
+    static final boolean SENSOR_DE_EJEMPLO = false;
     static final String MEJOR_HORA_EJEMPLO = "Hoy de 8:00 a 10:00 · pico a las 14:00";
     static final String[] LUGARES_EJEMPLO = {"Casa", "Trabajo"};
     static final double[] VALORES_LUGARES_EJEMPLO = {84, 150};
@@ -91,8 +89,8 @@ public class LogicaFakeInicio {
     // -----------------------------------------------------------------------
     // tieneSensorServidor: B --> tieneSensor() --x
     // B <--
-    // What it does: true if the server says the user has a sensor or, until
-    //               T017, if SENSOR_DE_EJEMPLO is on.
+    // What it does: true if the server says the user has a sensor or if
+    //               SENSOR_DE_EJEMPLO is enabled for a local demo.
     // -----------------------------------------------------------------------
     static boolean tieneSensor(boolean tieneSensorServidor) {
         return tieneSensorServidor || SENSOR_DE_EJEMPLO;

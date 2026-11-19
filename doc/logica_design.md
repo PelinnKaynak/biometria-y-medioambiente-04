@@ -207,6 +207,7 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   Solicitud = ( numeroSerie, correoComprador (oculto: «p•••••@upv.edu.es»), estado, fecha )
 ```
 
+- **Mi sensor (T011):** `obtenerMiSensor()` lee nombre, número de serie, batería y `Sensores.ultimaConexion`, incluso si el sensor aún no ha enviado mediciones. `desvincularMiSensor()` libera el sensor en una transacción, limpia la solicitud y el estado de luz; si no quedan otros sensores del usuario, también desactiva `esPortador` y devuelve el rol a `ciudadano`.
 - **Datos de Mi cuenta (T024 · H035):** `resumenCuenta()` y `exposicion()` calculan lo que enseña la página Mi cuenta de la web, con las mismas claves que `LogicaCuentaFake`. Se usan las mediciones del usuario (`Mediciones.idUsuario`) y, para los valores de ozono, solo las del contaminante `O3` de `Contaminantes` (también se acepta el nombre `Ozono`). Los cálculos que no necesitan la BD están en `MiCuenta.js`.
   - `medicionesMes` y `medicionesMesAnterior`: mes natural, en UTC.
   - `exposicionMedia`: media de ozono de los últimos 30 días, redondeada; `null` si no hay ninguna.

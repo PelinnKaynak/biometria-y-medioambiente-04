@@ -67,6 +67,23 @@ function cargarReglasREST(servidor, logica) {
         respuesta.status(200).json(await logica.obtenerUsuario(peticion.usuario.idUsuario));
     }));
 
+    // GET /miSensor (Authorization: Bearer <token>)
+    //   200 { nombre, numeroSerie, bateria, ultimaConexion } · 404 sin sensor · 401
+    servidor.get('/miSensor', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        const sensor = await logica.obtenerMiSensor(peticion.usuario.idUsuario);
+        respuesta.status(200).json({
+            ...sensor,
+            ultimaConexion: sensor.ultimaConexion ? new Date(sensor.ultimaConexion).toISOString() : null
+        });
+    }));
+
+    // DELETE /miSensor (Authorization: Bearer <token>)
+    //   204 desvinculado · 404 sin sensor · 401
+    servidor.delete('/miSensor', requiereSesion(logica), envolver(async (peticion, respuesta) => {
+        await logica.desvincularMiSensor(peticion.usuario.idUsuario);
+        respuesta.status(204).end();
+    }));
+
     // POST /cambiarAlertas  { alertas: true | false }  (Authorization: Bearer <token>)
     //   204 guardado · 400 alertas no es true ni false · 401 sin sesión      (T010)
     servidor.post('/cambiarAlertas', requiereSesion(logica), envolver(async (peticion, respuesta) => {

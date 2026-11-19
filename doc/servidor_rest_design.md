@@ -21,6 +21,8 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `POST /registrarUsuario` | `{ nombre, apellidos, correo, contrasena }` | **201** `{ idUsuario, token, rol, nombre }` · **400** `{ error, campos }` · **409** correo ya registrado |
 | `POST /iniciarSesion` | `{ correo, contrasena }` | **200** `{ idUsuario, token, rol, nombre }` · **401** correo o contraseña incorrectos |
 | `GET /usuarioActual` 🔒 | — | **200** `{ idUsuario, nombre, apellidos, correo, rol, fechaAlta, alertas, premiumHasta, foto, sensor, numeroSerie }` · **401** — `sensor` (nombre) y `numeroSerie` del sensor vinculado, o `null` (T017) |
+| `GET /miSensor` 🔒 | — | **200** `{ nombre, numeroSerie, bateria, ultimaConexion }` · **404** sin sensor · **401** — información del sensor de la cuenta (T011); batería y última conexión pueden ser `null` |
+| `DELETE /miSensor` 🔒 | — | **204** desvinculado · **404** sin sensor · **401** — quita la asociación y revierte el rol a ciudadano si era el último sensor (T011) |
 | `POST /cambiarAlertas` 🔒 | `{ alertas: true \| false }` | **204** guardado · **400** valor no válido · **401** — interruptor «Notificaciones» del perfil (T010) |
 | `POST /actualizarDatos` 🔒 | `{ nombre, apellidos, correo }` | **200** `{ nombre, apellidos, correo }` · **400** `{ error, campos }` · **409** el correo es de otra cuenta · **401** — «Editar mis datos» (T010) |
 | `POST /cambiarContrasenya` 🔒 | `{ contrasenaActual, contrasenaNueva }` | **200** `{ idUsuario, token, rol, nombre }` (sesión nueva) · **400** contraseña débil · **403** la contraseña actual no es correcta · **401** (T010) |
