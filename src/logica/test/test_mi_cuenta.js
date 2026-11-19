@@ -87,7 +87,7 @@ describe('Logica (datos de Mi cuenta)', function () {
 
     it('el script de la BD da de alta el ozono', async function () {
         await crearBDPruebas();
-        const [filas] = await logica.conexion.execute("SELECT unidad, umbralMalo FROM Contaminantes WHERE nombre = 'Ozono'");
+        const [filas] = await logica.conexion.execute("SELECT unidad, umbralMalo FROM Contaminantes WHERE nombre = 'O3'");
         assert.deepStrictEqual(filas.map((f) => [f.unidad, f.umbralMalo]), [['µg/m³', 180]]);
     });
 
@@ -167,7 +167,7 @@ describe('Logica (datos de Mi cuenta)', function () {
 
     it('resumenCuenta() solo ve las mediciones del usuario', async function () {
         await medir(laura, 80, HORA);
-        await medir(ana, 300, HORA);
+        await medir(ana, 300, 2 * HORA);      // mismo sensor: otra hora (uk_mediciones_unica)
         const r = await logica.resumenCuenta(laura.idUsuario, AHORA);
         assert.strictEqual(r.puntos, 1);
         assert.strictEqual(r.exposicionMedia, 80);

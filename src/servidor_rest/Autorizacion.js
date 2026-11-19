@@ -10,6 +10,15 @@
 // ---------------------------------------------------------------------------
 'use strict';
 
+
+const CAMPOS_ROL = {
+    administrador: 'esAdministrador',
+    tecnico: 'esTecnico',
+    portador: 'esPortador',
+    ciudadano: 'esPortador'
+};
+
+
 // ---------------------------------------------------------------------------
 // cabecera: Texto --> extraerToken() --> Texto | null
 // What it does: returns the token of "Bearer <token>", or null.
@@ -34,9 +43,19 @@ function requiereSesion(logica, rolesPermitidos = []) {
             if (!usuario) {
                 return respuesta.status(401).json({ error: 'Hay que iniciar sesión' });
             }
-            if (rolesPermitidos.length > 0 && !rolesPermitidos.includes(usuario.rol)) {
-                return respuesta.status(403).json({ error: 'Tu rol no tiene permiso' });
+
+            const tienePermiso = rolesPermitidos.length === 0 ||
+                rolesPermitidos.some(rol => {
+                    const campo = CAMPOS_ROL[rol];
+                    return campo && usuario[campo] === true;
+                });
+
+            if (!tienePermiso) {
+                return respuesta.status(403).json({
+                    error: 'No tienes permisos para acceder'
+                });
             }
+
             peticion.usuario = usuario;
             peticion.token = token;
             siguiente();

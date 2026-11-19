@@ -642,6 +642,100 @@ ProximamenteActivity (NUEVA, provisional): onCreate(), intentPara(), seccionDe()
 - **Entrada:** las tarjetas aparecen una detrás de otra (fundido y desplazamiento, 70 ms entre cada una); la de Mi sensor / Vincular entra a la vez que las demás con lo que se sabía (lo que respondió el servidor la última vez, guardado en el teléfono; hasta T017, el sensor de ejemplo) y luego el servidor la confirma o la cambia.
 - **ProximamenteActivity:** título, icono, etiqueta «Próximamente» y un texto de la sección, con la barra de navegación (la pestaña marcada si se abrió desde la barra; desde un acceso de Inicio no se marca ninguna y tiene flecha de volver).
 
+## 3d. Pantalla Mis lugares (T019 · H034)
+
+Pantalla completa de «Mis lugares» (Figma: «mis lugares»). Permite al usuario guardar y gestionar hasta 5 ubicaciones habituales (casa, trabajo, colegio...), consultar en cada una el nivel de ozono actual (obtenido del modelo de mapa interpolado) y activar o desactivar los avisos de calidad del aire asociados a cada ubicación. Se abre desde el acceso «Mis lugares» de `InicioActivity` o desde la opción «Mis lugares» de `PerfilActivity`.
+
+```text
+InicioActivity («filaLugares»)   --> MisLugaresActivity
+PerfilActivity («opcionMisLugares») --> MisLugaresActivity
+MisLugaresActivity --> LogicaFakeMisLugares.obtenerLugares()
+MisLugaresActivity --> LogicaFakeMisLugares.anadirLugar()
+MisLugaresActivity --> LogicaFakeMisLugares.cambiarAvisos()
+MisLugaresActivity --> LogicaFakeMisLugares.eliminarLugar()
+MisLugaresActivity --(«atrás»)--> finish()
+```
+
+### Tipos
+
+```text
+Lugar: (
+    id: Z,
+    idUsuario: Z,
+    nombre: Texto,
+    direccion: Texto,
+    latitud: R,
+    longitud: R,
+    ozonoActual: R,
+    avisosActivos: B
+)
+```
+
+### Clase Lugar (NUEVA)
+
+```text
+                                    --------- Lugar --------------------------------
+                                    |
+  id: Z, idUsuario: Z,              --> Lugar() -->
+  nombre: Texto, direccion: Texto,      |
+  lat: R, lon: R, ozono: R, avisos: B   |
+                                    |
+                                    --> nivelOzono() --x
+  NivelOzono                        <-- |     desdeValor(ozonoActual)
+                                    |
+                                    --> textoOzono() --x
+  Texto                             <-- |     "%.0f µg/m³"
+                                    |
+  json: JSONObject                  --> desdeJSON() --x
+  Lugar | null                      <-- |
+                                    |
+                                    --> aJSON() --x
+  JSONObject                        <-- |
+                                    ------------------------------------------------
+```
+
+### Clase LogicaFakeMisLugares (NUEVA)
+
+```text
+                                    --------- LogicaFakeMisLugares -----------------
+                                    |
+  token: Texto,                     --> obtenerLugares() -->
+  callback: CallbackLugares             |     200 -> lugaresObtenidos(lista)
+                                        |     401 -> sesionCaducada()
+                                    |
+  token: Texto, nombre: Texto,      --> anadirLugar() -->
+  direccion: Texto,                     |     nombre/dirección vacíos -> error()
+  callback: CallbackOperacionLugar      |     tamaño >= 5 -> limiteAlcanzado()
+                                        |     ok -> calcula ozono interpolado y guarda
+                                    |
+  token: Texto, idLugar: Z,         --> cambiarAvisos() -->
+  avisosActivos: B,                     |     actualiza estado del interruptor
+  callback: CallbackOperacionLugar      |
+                                    |
+  token: Texto, idLugar: Z,         --> eliminarLugar() -->
+  callback: CallbackEliminarLugar       |     elimina de la cuenta del usuario
+                                    |
+  token: Texto                      --> esTokenValido() --x
+  B                                 <-- |     comprueba sesión
+                                    |
+  direccion: Texto                  --> interpolarOzonoParaDireccion() --x
+  R                                 <-- |     ozono actual estimado del mapa (µg/m³)
+                                    ------------------------------------------------
+```
+
+### Pantalla
+
+```text
+MisLugaresActivity (NUEVA): onCreate(), onResume(), cargarLugares(), mostrarLugares(),
+                            guardarNuevoLugar(), confirmarEliminarLugar(), colorDe(), nombreDe()
+```
+
+- **Aislamiento por usuario:** Los lugares guardados solo los ve el usuario con sesión activa (`token`). `LogicaFakeMisLugares` indexa los almacenes por usuario.
+- **Límite de 5 lugares:** La tarjeta de contador muestra `X de 5 lugares guardados`. Si se alcanza el límite (5 lugares), se muestra el aviso de límite y se bloquea la adición hasta que se elimine algún lugar.
+- **Ozono del mapa interpolado:** Cada lugar muestra la concentración actual en µg/m³ y el nivel de ozono correspondiente (`NivelOzono`: Bueno, Moderado, Malo o Muy Malo) con su indicador visual de color.
+- **Interruptor de avisos:** Cada tarjeta de lugar incluye un `MaterialSwitch` que activa o desactiva las alertas de esa ubicación específica.
+- **Eliminación:** Cada tarjeta dispone de un botón de papelera que solicita confirmación antes de borrar el lugar.
+
 ## 4. Aclaraciones del diseño
 
 - **Petición REST:** `POST /registrarUsuario` con el cuerpo `{"nombre": ..., "apellidos": ..., "correo": ..., "contrasena": ...}`. Respuestas: `201` cuenta creada, `409` el correo ya tiene cuenta, `400` datos incorrectos, `500` error del servidor. Si no hay conexión el código es `0`.
@@ -660,7 +754,7 @@ ProximamenteActivity (NUEVA, provisional): onCreate(), intentPara(), seccionDe()
 - **Recuperar contraseña:** `POST /solicitarRecuperacion` con `{"correo"}`. `200` → el servidor ha enviado un enlace que caduca a los 30 minutos y se abre «Revisa tu correo»; `404` → el correo no tiene cuenta: no se envía nada y la app muestra «No hay ninguna cuenta con este correo.» debajo del campo. «¿No te ha llegado? Reenviar» pide otro enlace.
 - **Tras el registro** se abre `VincularSensorActivity`: escanear (o escribir) el código y vincular el sensor. Abajo hay un enlace gris «Ahora no, lo vincularé más tarde» que abre el inicio (igual que la flecha de volver); solo sale tras el registro, no desde Perfil ni Inicio. No está en Figma: se añadió para poder seguir sin sensor (por ejemplo, en la demo). El sensor se puede vincular luego desde Inicio o Perfil.
 - **Desde el perfil** (extra `desdePerfil`): volver (o vincular el sensor) cierra la pantalla y se vuelve al perfil, que recarga sus datos en `onResume()`. Todo pasa por `salir()`.
-- **Vincular sensor (T005):** el sensor se vincula escaneando con la cámara el código (DataMatrix) de la etiqueta del sensor de ozono, p. ej. `092021010920 110406 03 2109 -44.75`. «Escanear código» abre el escáner de Google (`play-services-code-scanner`, no hace falta el permiso `CAMERA`). `CodigoSensor.desdeTexto()` separa el texto en número de serie (12 cifras), modelo (6), gas (2, `03` = ozono), fecha AAMM y sensibilidad (nA/ppm); si no tiene esa forma devuelve `null` y se enseña «Este código no es el de un sensor AERIS…» debajo del botón. Si la cámara no funciona, «¿No funciona la cámara? Escribe el código» enseña un campo, «Código de la etiqueta», donde se escribe la misma línea de números que da el escáner y que aparece en la etiqueta debajo del código (`092021010920 110406 03 2109 -44.75`, con los espacios; la sensibilidad puede llevar coma o punto). Se lee igual que el código escaneado, con `CodigoSensor.desdeTexto()`; si no tiene los 5 grupos sale el error debajo del campo y «Volver a escanear» vuelve al botón. Con un código válido se enseña la tarjeta «Sensor leído» (número de serie, tipo de sensor y fecha) con «Vincular», la nota «Enviaremos un correo a quien compró el sensor…» y «Escanear otro código».
+- **Vincular sensor (T005):** el sensor se vincula escaneando con la cámara el código (DataMatrix) de la etiqueta del sensor de ozono, p. ej. `092021010920 110406 03 2109 -44.75`. «Escanear código» abre el escáner de Google (`play-services-code-scanner`, no hace falta el permiso `CAMERA`). `CodigoSensor.desdeTexto()` separa el texto en número de serie (12 cifras), modelo (6), gas (2 o 3 letras o cifras: en las etiquetas reales `O3`, con la letra O), fecha AAMM y sensibilidad (nA/ppm); si no tiene esa forma devuelve `null` y se enseña «Este código no es el de un sensor AERIS…» debajo del botón. Si la cámara no funciona, «¿No funciona la cámara? Escribe el código» enseña un campo, «Código de la etiqueta», donde basta con escribir el número de serie (las 12 primeras cifras, `092021010920`) o la línea entera que da el escáner y que aparece en la etiqueta debajo del código (`092021010920 110406 O3 2109 -44.75`, con los espacios; la sensibilidad puede llevar coma o punto). El campo admite letras (el gas de las etiquetas reales es `O3`, con la letra O). Se lee igual que el código escaneado, con `CodigoSensor.desdeTexto()`; con solo el número de serie, `sensibilidad` es `null` y `POST /solicitarVinculacion` se envía sin ella (el servidor ya la tiene, T039). La flecha de arriba y el botón «atrás» del teléfono vuelven al paso anterior: de «a mano» a «escanear» y de «Sensor leído», «Esperando la confirmación» o «Vinculación rechazada» a donde se metió el código (escáner, o el campo a mano con el código todavía escrito); desde el primer paso se sale de la pantalla. Volver atrás no cancela la solicitud pendiente. Si no es ni el número de serie ni los 5 grupos, sale el error debajo del campo y «Volver a escanear» vuelve al botón. Con un código válido se enseña la tarjeta «Sensor leído» (número de serie, tipo de sensor y fecha) con «Vincular», la nota «Enviaremos un correo a quien compró el sensor…» y «Escanear otro código».
 - **Confirmación por correo (T005):** cada sensor está ligado al correo de quien lo compró (puede no ser el usuario, si se lo han regalado). «Vincular» llama a `LogicaFakeVincular.solicitarVinculacion()` (`POST /solicitarVinculacion` con `{"numeroSerie", "sensibilidad"}`); el servidor envía a ese correo un enlace para confirmar o rechazar y responde con la solicitud (`SolicitudVinculacion`: `{"numeroSerie", "correoComprador" (ya oculto, «m•••••@gmail.com»), "estado": "pendiente" | "confirmada" | "rechazada", "fecha"}`). Pendiente: «Esperando la confirmación» (aviso amarillo con el correo oculto, «Reenviar correo» → `POST /reenviarCorreoVinculacion`, y «Estado de la vinculación» con los 3 pasos: sensor escaneado con la hora, confirmación por correo, sensor vinculado). Al abrir la pantalla y cada vez que se vuelve a ella mientras espera, `GET /estadoVinculacion` dice cómo va: confirmada → «¡Sensor vinculado!» y se sale (Inicio o Perfil); rechazada o caducada (48 h) → «Vinculación rechazada» con «Escanear de nuevo». Errores: `404` al pedirla → «Este sensor no está registrado…»; `409` → «Este sensor ya está vinculado a otra cuenta.»; `404` al consultar = no hay solicitud. «Necesito ayuda» abre, hasta T043, la pantalla provisional «Ayuda». El servidor ya tiene las rutas, así que `LogicaFakeVincular.USAR_DATOS_DE_EJEMPLO = false` y el correo se envía de verdad al comprador (el sensor de prueba `092021010920` está ligado a `pkaynak@upv.edu.es`, el correo fijo que hace de comprador en la demo: no hay compra en la app). Para ver las pantallas sin servidor, ponerlo a `true`: responde con una solicitud de ejemplo y `ESTADO_DE_EJEMPLO` (`PENDIENTE`; cambiarlo a `CONFIRMADA` o `RECHAZADA`). Diseños de Figma: «vincular sensor · código leído», «· esperando confirmación» y «· vinculación rechazada»; mismo flujo que «Mi cuenta · esperando confirmación» de la web.
 - **Inicio (T006):** ver la sección 3c.
 - **Perfil (T010):** al abrirse muestra el nombre y el correo guardados en `Sesion` y pide `GET /usuarioActual` (con `Authorization: Bearer <token>`) para mostrar el nombre completo, el correo y el interruptor «Notificaciones». El interruptor sale ya en su posición, sin animación: se recuerda el último valor en `Sesion` (`alertas()` / `guardarAlertas()`) y, cuando llega la respuesta, se coloca con `jumpDrawablesToCurrentState()`. Solo se anima cuando el usuario lo toca.

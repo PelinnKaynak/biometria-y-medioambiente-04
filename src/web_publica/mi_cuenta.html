@@ -19,6 +19,7 @@
     <nav id="menu-cuenta" class="menu-cuenta" aria-label="Menú principal">
         <a href="mapa.html">Mapa</a>
         <a href="contaminantes.html">Contaminantes</a>
+        <a href="ayuda.html">Ayuda</a>
         <a href="../web_admin/panel_nodos.html" id="enlace-panel" class="enlace-panel" hidden>Panel de administración</a>
         <a href="login.html" class="salir-movil" data-salir>Salir</a>
     </nav>
@@ -44,10 +45,100 @@
         <h1 id="saludo">Hola</h1>
         <p id="estado-nodo" class="estado-nodo"></p>
 
+        <!-- Sin sensor vinculado (T040) -->
+        <section id="vista-sin-sensor" class="tarjeta vincular oculto" aria-labelledby="titulo-vincular">
+            <div class="vincular-texto">
+                <h2 id="titulo-vincular">Vincula tu sensor para empezar a medir</h2>
+                <p class="vincular-intro">Tu cuenta está creada, pero todavía no hay ningún sensor asociado. Hasta que lo vincules no verás mediciones, exposición ni avisos.</p>
+                <ol class="pasos-vincular">
+                    <li class="activo">
+                        <span class="numero" aria-hidden="true">1</span>
+                        <div><strong>Ten a mano tu sensor</strong><p>Vas a necesitar el código que lleva en la etiqueta.</p></div>
+                    </li>
+                    <li>
+                        <span class="numero" aria-hidden="true">2</span>
+                        <div><strong>Escribe el código de la etiqueta</strong><p>En la web, escribe la línea de números de la etiqueta. Desde la app también puedes escanearlo con la cámara.</p></div>
+                    </li>
+                    <li>
+                        <span class="numero" aria-hidden="true">3</span>
+                        <div><strong>Confirma la vinculación</strong><p>Enviamos un correo al correo con el que se compró el sensor. Cuando lo confirme (tú o quien te lo regaló), verás aquí tus datos.</p></div>
+                    </li>
+                </ol>
+                <div class="botones-vincular">
+                    <a href="vincular.html" class="boton">Vincular mi sensor</a>
+                    <a href="ayuda.html" class="boton-borde">Necesito ayuda</a>
+                </div>
+            </div>
+            <figure class="ilustracion-codigo">
+                <svg viewBox="0 0 150 150" width="150" height="150" aria-hidden="true">
+                    <g fill="none" stroke="#7958A7" stroke-width="7" stroke-linecap="round">
+                        <path d="M6 40V14a8 8 0 0 1 8-8h26"/><path d="M110 6h26a8 8 0 0 1 8 8v26"/>
+                        <path d="M144 110v26a8 8 0 0 1-8 8h-26"/><path d="M40 144H14a8 8 0 0 1-8-8v-26"/>
+                    </g>
+                    <g fill="#432E60">
+                        <rect x="44" y="44" width="16" height="16"/><rect x="68" y="44" width="10" height="10"/><rect x="86" y="44" width="20" height="10"/>
+                        <rect x="44" y="66" width="10" height="20"/><rect x="62" y="62" width="14" height="14"/><rect x="88" y="62" width="18" height="18"/>
+                        <rect x="44" y="92" width="18" height="14"/><rect x="70" y="84" width="10" height="22"/><rect x="88" y="90" width="10" height="16"/>
+                    </g>
+                    <path d="M28 75h94" stroke="#4E9C83" stroke-width="4"/>
+                </svg>
+                <figcaption>El código está en la etiqueta del sensor</figcaption>
+            </figure>
+        </section>
+
+        <!-- Esperando la confirmación, rechazada o caducada (T040) -->
+        <section id="aviso-vinculacion" class="aviso-vinculacion oculto" aria-labelledby="titulo-aviso">
+            <span id="icono-aviso" class="icono-aviso" aria-hidden="true">!</span>
+            <div class="texto-aviso">
+                <h2 id="titulo-aviso"></h2>
+                <p id="texto-aviso"></p>
+                <p id="resultado-reenvio" class="resultado-reenvio oculto" role="status"></p>
+            </div>
+            <button id="boton-reenviar" type="button" class="boton-borde oculto">Reenviar correo</button>
+            <a id="boton-vincular-de-nuevo" href="vincular.html" class="boton-borde oculto">Vincular de nuevo</a>
+        </section>
+
+        <section id="tarjeta-estado" class="tarjeta estado-vinculacion oculto">
+            <h2>Estado de la vinculación</h2>
+            <ol class="pasos-estado">
+                <li class="hecho">
+                    <span class="numero" aria-hidden="true">✓</span>
+                    <div><strong>Sensor escaneado</strong><span id="fecha-escaneo"></span></div>
+                </li>
+                <li class="actual">
+                    <span class="numero" aria-hidden="true">2</span>
+                    <div><strong>Confirmación por correo</strong><span id="estado-correo"></span></div>
+                </li>
+                <li>
+                    <span class="numero" aria-hidden="true">3</span>
+                    <div><strong>Sensor vinculado</strong><span>Verás tus mediciones aquí y en la app</span></div>
+                </li>
+            </ol>
+            <p class="nota">Si te lo ha regalado alguien, avísale para que mire su correo. Si no lo confirma a tiempo o lo rechaza, podrás volver a escribir el código o escribirnos desde Ayuda.</p>
+        </section>
+
+        <section id="accesos" class="accesos oculto" aria-label="Mientras tanto">
+            <article class="tarjeta acceso">
+                <h2>Consulta el mapa</h2>
+                <p>Mira la calidad del aire de tu zona con los datos de otros portadores y las estaciones oficiales.</p>
+                <a href="mapa.html">Ver el mapa ›</a>
+            </article>
+            <article class="tarjeta acceso">
+                <h2>Aprende sobre el ozono</h2>
+                <p>Qué es, por qué sube en verano y cómo protegerte cuando está alto.</p>
+                <a href="contaminantes.html">Contaminantes ›</a>
+            </article>
+            <article class="tarjeta acceso">
+                <h2>¿Algún problema?</h2>
+                <p>Si el código no se lee o el sensor no se conecta, cuéntanoslo y te ayudamos.</p>
+                <a href="ayuda.html">Ir a Ayuda ›</a>
+            </article>
+        </section>
+
         <!-- Sin sensor o sin datos todavía -->
         <section id="sin-datos" class="tarjeta sin-datos oculto">
             <h2>Todavía no hay mediciones</h2>
-            <p>Vincula tu sensor desde la app de AERIS. Cuando envíe sus primeras mediciones, aquí verás tu exposición al ozono, tus lugares y tus puntos.</p>
+            <p>Cuando tu sensor envíe sus primeras mediciones desde la app, aquí verás tu exposición al ozono, tus lugares y tus puntos.</p>
         </section>
 
         <section id="indicadores" class="indicadores oculto" aria-label="Resumen">
@@ -73,7 +164,7 @@
             </article>
         </section>
 
-        <div class="rejilla-cuenta">
+        <div id="rejilla-cuenta" class="rejilla-cuenta">
 
             <section id="tarjeta-grafica" class="tarjeta grafica oculto">
                 <div class="cabecera-tarjeta">

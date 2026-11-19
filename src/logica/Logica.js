@@ -5,9 +5,11 @@
 //              recuperación de la contraseña, y el aviso de alertas del
 //              perfil, la edición de los datos y la foto (T010), y la
 //              vinculación de sensores confirmada por correo (T005), y los
-//              datos de la página Mi cuenta (T024). Es la única parte que
-//              habla con la base de datos (MySQL, tablas Usuarios, Sensores,
-//              Contaminantes y Mediciones). Las sesiones y los enlaces de
+//              datos de la página Mi cuenta (T024). Las incidencias (T041)
+//              están en Incidencias.js y las mediciones (T017) en
+//              Mediciones.js. Es la única parte que habla con la base de
+//              datos (MySQL, tablas Usuarios, Sensores, Contaminantes y
+//              Mediciones). Las sesiones y los enlaces de
 //              recuperación y de vinculación son tokens firmados: no usan tablas.
 //              Diseño en doc/logica_design.md. Tarea T016 · H001, H002.
 // Autores:     Equipo 04 – SenseTech
@@ -22,9 +24,20 @@ const Validador = require('./ValidadorUsuario');
 const { crearCorreoBienvenida } = require('./CorreoBienvenida');
 const { crearCorreoRecuperacion } = require('./CorreoRecuperacion');
 const { crearCorreoVinculacion } = require('./CorreoVinculacion');
+const { Incidencias } = require('./Incidencias');
+const { Mediciones } = require('./Mediciones');
 const MiCuenta = require('./MiCuenta');
 
-const ROL_PORTADOR = 'portador';        // rol de quien se registra desde la app
+const ROL_PORTADOR = 'portador';
+
+function obtenerRoles(usuario) {
+    return {
+        esAdministrador: Boolean(usuario.esAdministrador),
+        esTecnico: Boolean(usuario.esTecnico),
+        esPortador: Boolean(usuario.esPortador)
+    };
+}
+// rol de quien se registra desde la app
 const DURACION_SESION_SEGUNDOS = 30 * 24 * 60 * 60;      // 30 días
 const DURACION_RECUPERACION_SEGUNDOS = 30 * 60;          // 30 minutos (criterio de T003)
 const TIPO_SESION = 'sesion';
@@ -40,7 +53,7 @@ const ESTADO_RECHAZADA = 'rechazada';
 //   codigo ∈ { DATOS_NO_VALIDOS, CORREO_YA_REGISTRADO, CORREO_NO_REGISTRADO,
 //              CREDENCIALES_INCORRECTAS, TOKEN_NO_VALIDO,
 //              SENSOR_NO_REGISTRADO, SENSOR_YA_VINCULADO, SIN_SOLICITUD,
-//              SIN_SENSOR, SIN_MEDICIONES }
+//              INCIDENCIA_NO_EXISTE, SENSOR_NO_ES_TUYO, SIN_SENSOR, SIN_MEDICIONES }
 // ---------------------------------------------------------------------------
 class ErrorLogica extends Error {
     constructor(codigo, mensaje, campos = []) {
@@ -99,6 +112,8 @@ class Logica {
         this.urlRestablecer = urlRestablecer;
         this.claveTokens = claveTokens;
         this.urlVinculacion = urlVinculacion || `${new URL(urlRestablecer).origin}/responderVinculacion`;
+        this.incidencias = new Incidencias(this);     // T041: logica.incidencias.crear(…), …
+        this.mediciones = new Mediciones(this);       // T017: logica.mediciones.guardar(…), …
     }
 
     // -----------------------------------------------------------------------
@@ -205,26 +220,41 @@ class Logica {
     // -----------------------------------------------------------------------
     async comprobarSesion(token) {
         const usuario = await this.leerTokenDeUsuario(token, TIPO_SESION);
-        return usuario ? { idUsuario: usuario.idUsuario, rol: usuario.role } : null;
+
+        return usuario ? {
+            idUsuario: usuario.idUsuario,
+            rol: usuario.role,
+            ...obtenerRoles(usuario)
+        } : null;
+
     }
 
     // -----------------------------------------------------------------------
     // idUsuario: N --> obtenerUsuario() --> DatosUsuario | null
-    // What it does: returns the user's data (never the password hash).
+    // What it does: returns the user's data (never the password hash) and
+    //               his linked sensor: sensor (its name) and numeroSerie,
+    //               that the app needs to keep only the Bluetooth packets of
+    //               that sensor (T017). Both null if he has no sensor.
     // -----------------------------------------------------------------------
     async obtenerUsuario(idUsuario) {
         const [filas] = await this.conexion.execute(
-            `SELECT idUsuario, nombre, apellidos, email, role, fechaAlta, alertas, premiumHasta, foto
-               FROM Usuarios WHERE idUsuario = ?`,
+            `SELECT idUsuario, nombre, apellidos, email, role, esAdministrador, esTecnico, esPortador, fechaAlta, alertas, premiumHasta, foto
+            FROM Usuarios WHERE idUsuario = ?`,
             [idUsuario]);
         if (filas.length !== 1) {
             return null;
         }
         const f = filas[0];
+        const [sensores] = await this.conexion.execute(
+            'SELECT nombre, numeroSerie FROM Sensores WHERE idUsuario = ? ORDER BY idSensor LIMIT 1', [idUsuario]);
+        const sensor = sensores[0];
         return {
             idUsuario: f.idUsuario, nombre: f.nombre, apellidos: f.apellidos,
-            correo: f.email, rol: f.role, fechaAlta: f.fechaAlta,
-            alertas: Boolean(f.alertas), premiumHasta: f.premiumHasta, foto: f.foto
+
+            correo: f.email, rol: f.role, ...obtenerRoles(f), fechaAlta: f.fechaAlta,
+
+            alertas: Boolean(f.alertas), premiumHasta: f.premiumHasta, foto: f.foto,
+            sensor: sensor ? sensor.nombre : null, numeroSerie: sensor ? sensor.numeroSerie : null
         };
     }
 
@@ -398,8 +428,10 @@ class Logica {
         }
         const sensor = filas[0];
         if (sensor.idUsuario === idUsuario) {
-            return { numeroSerie: serie, correoComprador: ocultarCorreo(sensor.correoCompra),
-                estado: ESTADO_CONFIRMADA, fecha: new Date() };
+            return {
+                numeroSerie: serie, correoComprador: ocultarCorreo(sensor.correoCompra),
+                estado: ESTADO_CONFIRMADA, fecha: new Date()
+            };
         }
         if (sensor.idUsuario !== null) {
             throw new ErrorLogica('SENSOR_YA_VINCULADO', 'Este sensor ya está vinculado a otra cuenta');
@@ -410,8 +442,10 @@ class Logica {
                     estadoSolicitud = ?, fechaSolicitud = ? WHERE idSensor = ?`,
             [typeof sensibilidad === 'number' ? sensibilidad : null, idUsuario, ESTADO_PENDIENTE, fecha, sensor.idSensor]);
         await this.enviarCorreoVinculacion(sensor, idUsuario, fecha);
-        return { numeroSerie: serie, correoComprador: ocultarCorreo(sensor.correoCompra),
-            estado: ESTADO_PENDIENTE, fecha };
+        return {
+            numeroSerie: serie, correoComprador: ocultarCorreo(sensor.correoCompra),
+            estado: ESTADO_PENDIENTE, fecha
+        };
     }
 
     // -----------------------------------------------------------------------
@@ -429,8 +463,10 @@ class Logica {
         if (estado === ESTADO_PENDIENTE && this.haCaducado(sensor.fechaSolicitud)) {
             estado = ESTADO_RECHAZADA;
         }
-        return { numeroSerie: sensor.numeroSerie, correoComprador: ocultarCorreo(sensor.correoCompra),
-            estado, fecha: sensor.fechaSolicitud };
+        return {
+            numeroSerie: sensor.numeroSerie, correoComprador: ocultarCorreo(sensor.correoCompra),
+            estado, fecha: sensor.fechaSolicitud
+        };
     }
 
     // -----------------------------------------------------------------------
@@ -482,8 +518,10 @@ class Logica {
             await this.conexion.execute('UPDATE Sensores SET estadoSolicitud = ? WHERE idSensor = ?',
                 [ESTADO_RECHAZADA, sensor.idSensor]);
         }
-        return { estado: acepta ? ESTADO_CONFIRMADA : ESTADO_RECHAZADA,
-            numeroSerie: sensor.numeroSerie, nombreSolicitante: `${sensor.nombre} ${sensor.apellidos}` };
+        return {
+            estado: acepta ? ESTADO_CONFIRMADA : ESTADO_RECHAZADA,
+            numeroSerie: sensor.numeroSerie, nombreSolicitante: `${sensor.nombre} ${sensor.apellidos}`
+        };
     }
 
     // -----------------------------------------------------------------------
@@ -677,10 +715,14 @@ class Logica {
     // -----------------------------------------------------------------------
     async crearSesion(idUsuario) {
         const [filas] = await this.conexion.execute(
-            'SELECT idUsuario, nombre, role, passwordHash FROM Usuarios WHERE idUsuario = ?', [idUsuario]);
+
+            `SELECT idUsuario, nombre, role, esAdministrador, esTecnico, esPortador, passwordHash
+            FROM Usuarios WHERE idUsuario = ?`, [idUsuario]);
         const usuario = filas[0];
         const token = this.crearToken(usuario, TIPO_SESION, DURACION_SESION_SEGUNDOS);
-        return { idUsuario, token, rol: usuario.role, nombre: usuario.nombre };
+
+        return { idUsuario, token, rol: usuario.role, ...obtenerRoles(usuario), nombre: usuario.nombre };
+
     }
 
     // -----------------------------------------------------------------------
@@ -709,7 +751,8 @@ class Logica {
             return null;
         }
         const [filas] = await this.conexion.execute(
-            'SELECT idUsuario, role, passwordHash FROM Usuarios WHERE idUsuario = ?', [datos.u]);
+            `SELECT idUsuario, role, esAdministrador, esTecnico, esPortador, passwordHash
+            FROM Usuarios WHERE idUsuario = ?`, [datos.u]);
         if (filas.length !== 1 || Seguridad.huellaContrasenya(filas[0].passwordHash) !== datos.h) {
             return null;
         }

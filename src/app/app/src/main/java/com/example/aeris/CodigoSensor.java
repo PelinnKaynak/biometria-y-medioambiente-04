@@ -4,8 +4,9 @@
 //              p. ej. «092021010920 110406 03 2109 -44.75»: número de serie,
 //              modelo, gas, fecha de fabricación (AAMM) y sensibilidad
 //              (nA/ppm). Lo usa «Vincular sensor», tanto con la cámara como
-//              cuando la línea de números se escribe a mano.
-//              Diseño en doc/app_design.md. T005.
+//              cuando la línea de números se escribe a mano. A mano también
+//              vale solo el número de serie: la sensibilidad ya la tiene el
+//              servidor (T039). Diseño en doc/app_design.md. T005.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       11/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -17,15 +18,15 @@ public class CodigoSensor {
 
     public final String numeroSerie;    // 12 cifras, distinto en cada sensor
     public final String modelo;         // 6 cifras
-    public final String gas;            // 2 cifras («03» en los sensores de ozono)
-    public final String fecha;          // AAMM, p. ej. «2109» = septiembre de 2021
-    public final double sensibilidad;   // nA/ppm, sirve para calcular el ozono
+    public final String gas;            // «O3» (o «03») en los sensores de ozono; "" si no se sabe
+    public final String fecha;          // AAMM, p. ej. «2109» = septiembre de 2021; "" si no se sabe
+    public final Double sensibilidad;   // nA/ppm, sirve para calcular el ozono; null si no se sabe
 
     // -----------------------------------------------------------------------
-    // numeroSerie: Text, modelo: Text, gas: Text, fecha: Text, sensibilidad: R
+    // numeroSerie: Text, modelo: Text, gas: Text, fecha: Text, sensibilidad: R | null
     // --> constructor()
     // -----------------------------------------------------------------------
-    public CodigoSensor(String numeroSerie, String modelo, String gas, String fecha, double sensibilidad) {
+    public CodigoSensor(String numeroSerie, String modelo, String gas, String fecha, Double sensibilidad) {
         this.numeroSerie = numeroSerie;
         this.modelo = modelo;
         this.gas = gas;
@@ -38,19 +39,28 @@ public class CodigoSensor {
     // CodigoSensor | null <--
     // What it does: splits the text read from the code by spaces. It must
     //               have 5 parts: serial (12 digits), model (6 digits), gas
-    //               (2 digits), date (4 digits) and sensitivity (a number).
+    //               (2 or 3 letters or digits: the real labels say «O3»,
+    //               with a letter O; some printed examples say «03»), date
+    //               (4 digits) and sensitivity (a number).
     //               The sensitivity can have a comma or a dot (written by
-    //               hand). If not, it is not the label of a sensor: null.
+    //               hand). Only the serial (12 digits) is also valid: then
+    //               the other fields are "" and the sensitivity null (the
+    //               server already has it). If not, it is not the label of a
+    //               sensor: null.
     // -----------------------------------------------------------------------
     public static CodigoSensor desdeTexto(String texto) {
         if (texto == null) {
             return null;
         }
-        String[] partes = texto.trim().split("\\s+");
+        String limpio = texto.trim();
+        if (limpio.matches("\\d{12}")) {
+            return new CodigoSensor(limpio, "", "", "", null);
+        }
+        String[] partes = limpio.split("\\s+");
         if (partes.length != 5
                 || !partes[0].matches("\\d{12}")
                 || !partes[1].matches("\\d{6}")
-                || !partes[2].matches("\\d{2}")
+                || !partes[2].matches("[A-Za-z0-9]{2,3}")
                 || !partes[3].matches("\\d{4}")) {
             return null;
         }

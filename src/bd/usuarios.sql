@@ -2,7 +2,7 @@
 -- usuarios.sql
 -- Proyecto AERIS - SenseTech (Equipo 04)
 -- Crea la base de datos del proyecto y sus tablas: Usuarios,
--- Contaminantes, Sensores y Mediciones.
+-- Contaminantes, Sensores, Mediciones e Incidencias.
 -- Sigue el diagrama de la BD en Figma. Diseño en doc/bd_design.md.
 -- Motor: MySQL / MariaDB (XAMPP)
 -- ---------------------------------------------------------------
@@ -20,9 +20,16 @@ USE aeris;
 -- Quien se registra desde la app es 'portador'.
 -- ---------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS Usuarios (
-  idUsuario     INT           NOT NULL AUTO_INCREMENT,
-  role          VARCHAR(20)   NOT NULL DEFAULT 'portador',
-  nombre        VARCHAR(50)   NOT NULL,
+  
+  idUsuario       INT NOT NULL AUTO_INCREMENT,
+  role            VARCHAR(20) NOT NULL DEFAULT 'portador',
+
+  -- Roles múltiples (nuevo sistema)
+  esAdministrador BOOLEAN NOT NULL DEFAULT FALSE,
+  esTecnico       BOOLEAN NOT NULL DEFAULT FALSE,
+  esPortador      BOOLEAN NOT NULL DEFAULT TRUE,
+
+  nombre          VARCHAR(50) NOT NULL,
   apellidos     VARCHAR(100)  NOT NULL,
   email         VARCHAR(255)  NOT NULL,
   passwordHash  VARCHAR(255)  NOT NULL,
@@ -124,16 +131,66 @@ CREATE TABLE IF NOT EXISTS Mediciones (
     CONSTRAINT fk_mediciones_contaminantes
         FOREIGN KEY (idContaminante)
         REFERENCES Contaminantes(idContaminante)
-        ON DELETE RESTRICT
+        ON DELETE RESTRICT,
+
+    -- Una medición se guarda una sola vez aunque la app la reenvíe (T017)
+    CONSTRAINT uk_mediciones_unica
+        UNIQUE (idSensor, idContaminante, fechaHora)
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------
--- Sensor de prueba (T005). En la app no hay compra: este sensor
--- se da de alta como si lo hubiera comprado pkaynak@upv.edu.es.
+-- Tabla: Incidencias (T036/T041)
+-- Las que el usuario envía desde Ayuda (app y web). Las reciben y
+-- las responden los técnicos y los administradores.
+-- idSensor puede ser NULL (por ejemplo, una incidencia de la cuenta).
+-- idResponsable es el técnico o administrador que respondió (sale
+-- su nombre junto a la respuesta); NULL mientras no hay respuesta.
+-- ---------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS Incidencias (
+    idIncidencia INT NOT NULL AUTO_INCREMENT,
+    idUsuario INT NOT NULL,
+    idSensor INT NULL,
+    tipo VARCHAR(10) NOT NULL,
+    asunto VARCHAR(120) NOT NULL,
+    descripcion TEXT NOT NULL,
+    estado VARCHAR(10) NOT NULL DEFAULT 'abierta',
+    respuesta TEXT NULL,
+    idResponsable INT NULL,
+    fechaCreacion DATETIME NOT NULL DEFAULT (UTC_TIMESTAMP()),
+    fechaRespuesta DATETIME NULL,
+    PRIMARY KEY (idIncidencia),
+    CONSTRAINT fk_incidencias_usuarios
+        FOREIGN KEY (idUsuario)
+        REFERENCES Usuarios(idUsuario)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_incidencias_sensores
+        FOREIGN KEY (idSensor)
+        REFERENCES Sensores(idSensor)
+        ON DELETE SET NULL,
+    CONSTRAINT fk_incidencias_responsable
+        FOREIGN KEY (idResponsable)
+        REFERENCES Usuarios(idUsuario)
+        ON DELETE SET NULL,
+    CONSTRAINT ck_incidencias_tipo
+        CHECK (tipo IN ('sensor', 'datos', 'cuenta', 'otra')),
+    CONSTRAINT ck_incidencias_estado
+        CHECK (estado IN ('abierta', 'en curso', 'resuelta'))
+) ENGINE = InnoDB;
+
+-- ---------------------------------------------------------------
+-- Contaminantes (T017). Los nodos AERIS miden ozono. Umbrales en
+-- µg/m³: valor guía de la OMS (100), umbral de información (180) y
+-- umbral de alerta (240), los mismos que el mapa y la app.
+-- ---------------------------------------------------------------
+INSERT IGNORE INTO Contaminantes (nombre, unidad, umbralModerado, umbralMalo, umbralMuyMalo)
+VALUES ('O3', 'µg/m³', 100, 180, 240);
+
+-- ---------------------------------------------------------------
+-- Sensores de prueba (T005, T004). En la app no hay compra: se dan
+-- de alta como si los hubiera comprado pkaynak@upv.edu.es.
 -- Número de serie y sensibilidad del código de su etiqueta.
+-- 092021011003 es el sensor del nodo montado (src/arduino).
 -- ---------------------------------------------------------------
 INSERT IGNORE INTO Sensores (numeroSerie, sensibilidad, correoCompra)
-VALUES ('092021010920', -44.75, 'pkaynak@upv.edu.es');
-
-INSERT IGNORE INTO Contaminantes (nombre, unidad, umbralModerado, umbralMalo, umbralMuyMalo)
-VALUES ('Ozono', 'µg/m³', 100, 180, 240);
+VALUES ('092021010920', -44.75, 'pkaynak@upv.edu.es'),
+       ('092021011003', -38.11, 'pkaynak@upv.edu.es');

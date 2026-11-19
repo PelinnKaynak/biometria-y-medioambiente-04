@@ -181,6 +181,8 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   - `test_seguridad_validador.js`: hash, tokens firmados y validación (sin BD).
   - `test_logica.js`: registro, inicio de sesión, tokens caducados o modificados, roles, recuperación de contraseña.
   - `test_vinculacion.js`: vinculación del sensor por correo (T005).
+  - `test_incidencias.js`: incidencias (T041).
+  - `test_mediciones.js`: mediciones (T017).
 - **Foto de perfil (T010):** se guarda en la columna `foto` de `Usuarios` como texto base64 (la app la reduce antes a un JPEG de 256×256, unos 30 KB), para que se vea en cualquier teléfono. No hace falta otra tabla.
 - **Cambiar la contraseña (T010):** pide la contraseña actual. Como el token lleva una huella del hash, al cambiarla se cierran todas las sesiones; por eso se devuelve un token nuevo para el teléfono que la ha cambiado.
 - **Correo de bienvenida (T002/T016):** al registrarse, `registrarUsuario()` llama a `enviarBienvenida()` sin esperarla: el registro responde enseguida y, si el correo falla (por ejemplo, Gmail no responde), la cuenta se crea igual y el error solo se escribe en la consola del servidor. El correo lo monta `CorreoBienvenida.crearCorreoBienvenida(nombre)` en español: texto plano y HTML con los colores de la app, el logo de AERIS arriba, una presentación general de la app y algunas de sus funciones (mapa, alertas, historial, previsión de ozono, rutas limpias, lugares, puntos…) y el logo de SenseTech al pie. Los logos (`src/logica/img/`) van incrustados en el correo (`cid:`), así se ven aunque el servidor no esté en internet. El nombre se escapa (`escaparHTML()`) para que no pueda meter HTML.
@@ -191,7 +193,7 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
 ```
 - **Correo de recuperación (T003/T016):** `solicitarRecuperacion()` envía el correo de `CorreoRecuperacion.crearCorreoRecuperacion(nombre, enlace, minutos)`, con el mismo diseño que el de bienvenida: botón «Crear contraseña nueva» con el enlace y aviso de que caduca en 30 minutos y solo sirve una vez (el enlace escrito solo va en la versión de texto del correo, para las apps que no muestran HTML). Los dos correos usan el marco común `PlantillaCorreo.marcoCorreo()` (logo de AERIS arriba, pie con el logo de SenseTech).
 - **Contraseña nueva igual a la actual:** `restablecerContrasenya()` (enlace del correo) y `cambiarContrasenya()` (Editar mis datos) la rechazan con `DATOS_NO_VALIDOS` y el mensaje «La contraseña nueva tiene que ser distinta de la actual» (`campos: ["contrasena"]` / `["contrasenaNueva"]`). En el enlace se compara con el hash guardado; quien tiene el enlace ya puede cambiar la contraseña, así que decirle que es la misma no revela nada. La página `restablecer.html` muestra el mensaje debajo del campo y el enlace sigue valiendo para otro intento.
-- **Vinculación del sensor por correo (T005):** el sensor está ligado al correo de quien lo compró (`Sensores.correoCompra`). La solicitud se guarda en la misma fila (`idSolicitante`, `estadoSolicitud`, `fechaSolicitud`), sin tabla nueva. El correo lo monta `CorreoVinculacion.crearCorreoVinculacion()` con el marco común: quién lo pide (nombre y correo), el número de serie, la fecha, y dos botones, «Sí, vincular el sensor» y «No conozco a esta persona». Los enlaces llevan un token firmado de tipo `"vinculacion"` con el sensor, el usuario y la fecha de la solicitud, válido 48 horas. El token solo vale si la fila sigue pendiente con esa misma fecha y ese solicitante: si se reenvía el correo, otra persona pide el sensor o ya se ha respondido, el enlace viejo deja de valer. Una solicitud pendiente de más de 48 horas cuenta como rechazada. Si el correo falla, la solicitud se guarda igual y el error solo sale en la consola.
+- **Vinculación del sensor por correo (T005, diseño T038):** el sensor está ligado al correo de quien lo compró (`Sensores.correoCompra`). La solicitud se guarda en la misma fila (`idSolicitante`, `estadoSolicitud`, `fechaSolicitud`), sin tabla nueva. El correo lo monta `CorreoVinculacion.crearCorreoVinculacion()` con el marco común: quién lo pide (nombre y correo), el número de serie, la fecha, y dos botones, «Sí, vincular el sensor» y «No conozco a esta persona». El HTML del correo usa tablas e estilos en línea para adaptarse a clientes de correo y pantallas estrechas. Los enlaces llevan un token firmado de tipo `"vinculacion"` con el sensor, el usuario y la fecha de la solicitud, válido 48 horas. El token solo vale si la fila sigue pendiente con esa misma fecha y ese solicitante: si se reenvía el correo, otra persona pide el sensor o ya se ha respondido, el enlace viejo deja de valer. Una solicitud pendiente de más de 48 horas cuenta como rechazada. Si el correo falla, la solicitud se guarda igual y el error solo sale en la consola.
 
 ```text
   idUsuario: N, numeroSerie: Texto, sensibilidad: R
@@ -201,4 +203,33 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   token: Texto, acepta: V/F
                     --> responderVinculacion() --> ( estado, numeroSerie, nombreSolicitante )   | TOKEN_NO_VALIDO
   Solicitud = ( numeroSerie, correoComprador (oculto: «p•••••@upv.edu.es»), estado, fecha )
+```
+
+- **Incidencias (T041):** están en `Incidencias.js` (clase `Incidencias`), para no hacer más grande `Logica.js`. Se usan como `logica.incidencias.crear(…)`. Tabla `Incidencias` (ver `bd_design.md`). `tipo`: sensor, datos, cuenta, otra. `estado`: abierta, en curso, resuelta. Una incidencia nueva está «abierta» y lleva un `asunto` (como mucho 120 caracteres). Si es de tipo sensor o datos y no se dice qué sensor, se pone el del usuario (o ninguno si no tiene). Al responder, si no se indica el estado pasa a «resuelta», se guardan `fechaRespuesta` e `idResponsable` (el técnico o administrador de la sesión, que sale como `responsable: { nombre, rol }`) y se manda al usuario el correo de `CorreoRespuestaIncidencia.crearCorreoRespuestaIncidencia()` (su mensaje, la respuesta y el estado, con el marco común). Si el correo falla, la respuesta se guarda igual. La descripción y la respuesta tienen como mucho 2000 caracteres.
+
+```text
+  idUsuario: N, tipo: Texto, asunto: Texto, descripcion: Texto, idSensor: N (opcional)
+                         --> incidencias.crear() --> Incidencia                  | DATOS_NO_VALIDOS
+  idUsuario: N           --> incidencias.listarDeUsuario() --> Lista<Incidencia>
+  { estado?, tipo? }     --> incidencias.listar() --> Lista<IncidenciaGestion>   | DATOS_NO_VALIDOS
+  idIncidencia: N        --> incidencias.obtener() --> IncidenciaGestion         | INCIDENCIA_NO_EXISTE
+                         --> incidencias.contarAbiertas() --> N
+  idIncidencia: N, { respuesta?, estado? }, idResponsable: N
+                         --> incidencias.responder() --> IncidenciaGestion       | DATOS_NO_VALIDOS, INCIDENCIA_NO_EXISTE
+  Incidencia = ( idIncidencia, tipo, asunto, descripcion, estado, respuesta, responsable ( nombre, rol ) | null, fechaCreacion, fechaRespuesta, sensor | null )
+  IncidenciaGestion = Incidencia + usuario ( idUsuario, nombre, apellidos, correo ) + datos del sensor
+```
+
+- **Mediciones (T017):** están en `Mediciones.js` (clase `Mediciones`), como las incidencias. Se usan como `logica.mediciones.guardar(…)`. Tablas `Mediciones`, `Sensores` y `Contaminantes`. Solo se guarda la medición del sensor vinculado al usuario (el `numeroSerie` de la trama iBeacon). `contaminante` es `O3` si no se indica y tiene que existir en `Contaminantes`. Se comprueba que no falte nada y que esté en rango: valor de 0 a 2000 µg/m³, latitud −90..90, longitud −180..180 y fecha (ISO o milisegundos) de los últimos 7 días, con 5 minutos de margen hacia el futuro; si no, `DATOS_NO_VALIDOS` con los campos y un aviso en la consola. La clave única `(idSensor, idContaminante, fechaHora)` hace que una medición reenviada por la app no se guarde dos veces: `nueva` = false. Al guardar, el sensor pasa a `activo` y `ultimaConexion` es la fecha más reciente recibida. `obtenerUsuario()` devuelve también `sensor` (nombre) y `numeroSerie` del sensor vinculado, o `null`.
+
+```text
+  idUsuario: N, { numeroSerie, contaminante?, valor, latitud, longitud, fecha }
+                         --> mediciones.guardar() --> ( medicion: Medicion, nueva: V/F )
+                                                   | DATOS_NO_VALIDOS, SENSOR_NO_REGISTRADO, SENSOR_NO_ES_TUYO
+  idUsuario: N, cantidad: N (5, máx. 100), contaminante: Texto ("O3")
+                         --> mediciones.ultimasDeUsuario() --> Lista<Medicion> | DATOS_NO_VALIDOS
+  contaminante: Texto ("O3")
+                         --> mediciones.ultima() --> Medicion                 | SIN_MEDICIONES
+  fecha: Texto | N       --> leerFecha() --> Date | null                       (sin milisegundos)
+  Medicion = ( idMedicion, contaminante, valor, unidad, fecha, latitud, longitud )
 ```

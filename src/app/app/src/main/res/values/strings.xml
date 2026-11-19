@@ -30,10 +30,10 @@
     <string name="vincular_detalle">%1$s · fabricado en %2$s</string>
     <string name="vincular_escanear_otro">Escanear otro código</string>
     <string name="vincular_enlace_a_mano">¿No funciona la cámara? Escribe el código</string>
-    <string name="vincular_a_mano_texto">Escribe la línea de números que aparece en la etiqueta, debajo del código, con los espacios.</string>
+    <string name="vincular_a_mano_texto">Escribe el número de serie del sensor (las 12 primeras cifras de la etiqueta) o la línea entera, con los espacios.</string>
     <string name="vincular_codigo_etiqueta">Código de la etiqueta</string>
-    <string name="vincular_codigo_pista">092021010920 110406 03 2109 -44.75</string>
-    <string name="vincular_error_codigo_a_mano">Escribe los 5 grupos de números separados por espacios, como en el ejemplo.</string>
+    <string name="vincular_codigo_pista">092021010920</string>
+    <string name="vincular_error_codigo_a_mano">Escribe las 12 cifras del número de serie, o la línea entera de la etiqueta con los espacios.</string>
     <string name="vincular_continuar">Continuar</string>
     <string name="vincular_volver_escanear">Volver a escanear</string>
     <string name="vincular_error_codigo">Este código no es el de un sensor AERIS. Escanea el código de la etiqueta del sensor.</string>
@@ -286,4 +286,27 @@
     <string name="info_limite_oms_valor">100 µg/m³ en 8 horas</string>
     <string name="info_limites_nota">Directiva 2008/50/CE y Real Decreto 102/2011. AERIS usa el valor de la OMS como límite de «Bueno».</string>
     <string name="info_fuentes">Fuentes: Directiva 2008/50/CE, Real Decreto 102/2011, OMS (2021) y SPEC Sensors.</string>
+
+    <!-- Mis lugares (T019 · H034) -->
+    <string name="mis_lugares_titulo">Mis lugares</string>
+    <string name="mis_lugares_subtitulo">Guarda tus ubicaciones habituales y gestiona sus avisos</string>
+    <string name="mis_lugares_contador">%1$d de %2$d lugares guardados</string>
+    <string name="mis_lugares_anadir_titulo">Añadir nuevo lugar</string>
+    <string name="mis_lugares_campo_nombre">Nombre (ej. Casa, Trabajo, Colegio)</string>
+    <string name="mis_lugares_campo_direccion">Dirección o municipio</string>
+    <string name="mis_lugares_boton_guardar">Guardar lugar</string>
+    <string name="mis_lugares_boton_anadir">Añadir lugar</string>
+    <string name="mis_lugares_error_nombre">Escribe un nombre para el lugar</string>
+    <string name="mis_lugares_error_direccion">Escribe una dirección para el lugar</string>
+    <string name="mis_lugares_error_limite">Has alcanzado el límite máximo de 5 lugares. Elimina uno para añadir otro.</string>
+    <string name="mis_lugares_sin_lugares">Aún no tienes lugares guardados</string>
+    <string name="mis_lugares_sin_lugares_desc">Guarda tus lugares habituales para consultar su nivel de ozono actual y activar alertas personalizadas.</string>
+    <string name="mis_lugares_avisos_activos">Avisos activados</string>
+    <string name="mis_lugares_avisos_inactivos">Avisos desactivados</string>
+    <string name="mis_lugares_eliminar_titulo">¿Eliminar lugar?</string>
+    <string name="mis_lugares_eliminar_mensaje">¿Seguro que deseas eliminar «%1$s» de tus lugares habituales?</string>
+    <string name="mis_lugares_eliminar_confirmar">Eliminar</string>
+    <string name="mis_lugares_eliminar_cancelar">Cancelar</string>
+    <string name="mis_lugares_icono_eliminar_desc">Eliminar lugar</string>
+    <string name="mis_lugares_nivel_formato">%1$.0f µg/m³ · %2$s</string>
 </resources>

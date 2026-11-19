@@ -86,9 +86,9 @@ describe("enlaces", () => {
 describe("portada (index.html)", () => {
     beforeEach(() => cargar("index.html"));
 
-    test("el menú tiene Inicio, Mapa y Contaminantes, con Inicio marcado", () => {
+    test("el menú tiene Inicio, Mapa, Contaminantes, Ayuda y Planes, con Inicio marcado", () => {
         const enlaces = [...document.querySelectorAll("#menu-inicio a")];
-        expect(enlaces.map(a => a.getAttribute("href"))).toEqual(["index.html", "mapa.html", "contaminantes.html", "#planes"]);
+        expect(enlaces.map(a => a.getAttribute("href"))).toEqual(["index.html", "mapa.html", "contaminantes.html", "ayuda.html", "#planes"]);
         expect(enlaces[0].getAttribute("aria-current")).toBe("page");
     });
 
@@ -109,9 +109,9 @@ describe("portada (index.html)", () => {
 });
 
 describe("menú en las demás páginas", () => {
-    test.each(["mapa.html", "contaminantes.html", "normativa.html", "consejos.html"])("%s enlaza a Inicio, Mapa, Contaminantes y Planes", pagina => {
+    test.each(["mapa.html", "contaminantes.html", "normativa.html", "consejos.html"])("%s enlaza a Inicio, Mapa, Contaminantes, Ayuda y Planes", pagina => {
         cargar(pagina);
         const enlaces = [...document.querySelectorAll("#menu-inicio a")].map(a => a.getAttribute("href"));
-        expect(enlaces).toEqual(["index.html", "mapa.html", "contaminantes.html", "index.html#planes"]);
+        expect(enlaces).toEqual(["index.html", "mapa.html", "contaminantes.html", "ayuda.html", "index.html#planes"]);
     });
 });

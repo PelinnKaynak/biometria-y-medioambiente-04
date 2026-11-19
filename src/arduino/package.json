@@ -1,0 +1,12 @@
+{
+  "name": "aeris-arduino",
+  "version": "1.0.0",
+  "description": "Tests del programa del nodo sensor AERIS (SenseTech · Equipo 04)",
+  "private": true,
+  "scripts": {
+    "test": "mocha --timeout 60000 test/"
+  },
+  "devDependencies": {
+    "mocha": "^10.7.0"
+  }
+}
