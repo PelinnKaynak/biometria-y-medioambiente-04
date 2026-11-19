@@ -35,14 +35,14 @@ namespace Configuracion {
   // analógicas) el 2, 3, 4, 5, 28, 29, 30 y 31: el 15 o el 17 no sirven.
   // Montaje (cables): gris = Vgas (pin 1 del ULPSM) -> 28; morado = Vref
   // (pin 2) -> 5; blanco = GND (pin 6) -> 4; naranja = V+ (pin 7) -> 3V3
-  const int PIN_VGAS = 28;     // salida del gas          (AIN4)
-  const int PIN_VREF = 5;      // referencia (≈ V+/2)     (AIN3)
+const int PIN_VGAS = 28;
+const int PIN_VREF = 5;    // referencia (≈ V+/2)     (AIN3)
   const int PIN_VTEMP = 29;    // temperatura             (AIN5)
 
   // GND del sensor: la placa no tiene pin GND soldado, así que el cable GND
   // del ULPSM va al pin 4 y el programa lo pone a 0 V (salida a LOW). El
   // sensor gasta unos µA: un pin de salida los aguanta de sobra.
-  const int PIN_GND_SENSOR = 4;
+  const int PIN_GND_SENSOR = 2;
   // Seguridad: si al arrancar ese pin ya tiene más de esto, no es el GND del
   // sensor (¿será V+?) y no se toca
   const float V_MAXIMA_PIN_GND = 2.0;

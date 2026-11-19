@@ -162,7 +162,9 @@ public:
     Lectura l;
     l.vGas = leerVoltios(Configuracion::PIN_VGAS);
     l.vRef = leerVoltios(Configuracion::PIN_VREF);
-    l.vTemp = leerVoltios(Configuracion::PIN_VTEMP);
+    l.vTemp = Configuracion::HAY_VTEMP
+      ? leerVoltios(Configuracion::PIN_VTEMP)
+      : 0.0f;
     l.temperatura = ConversorOzono::temperatura(l.vTemp, Configuracion::V_ALIMENTACION);
     l.temperaturaFija = !Configuracion::HAY_VTEMP || !ConversorOzono::temperaturaValida(l.temperatura,
         Configuracion::TEMPERATURA_MINIMA, Configuracion::TEMPERATURA_MAXIMA);
