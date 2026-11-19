@@ -235,6 +235,84 @@ describe('Logica (usuarios y autenticación)', function () {
         await assert.rejects(logica.iniciarSesion('', ''), { codigo: 'CREDENCIALES_INCORRECTAS' });
     });
 
+    it('usuarios.crear() crea cuentas solo de técnico o administrador y protege el hash', async function () {
+        const usuario = await logica.usuarios.crear({
+            nombre: 'Aina', apellidos: 'Núñez', correo: 'Aina@aeris.es',
+            contrasena: 'tecnico2026', rol: 'tecnico'
+        });
+        assert.strictEqual(usuario.rol, 'tecnico');
+        assert.strictEqual(usuario.estado, 'activo');
+
+        const [filas] = await logica.conexion.execute(
+            'SELECT email, passwordHash, esAdministrador, esTecnico FROM Usuarios WHERE idUsuario = ?',
+            [usuario.idUsuario]);
+        assert.strictEqual(filas[0].email, 'aina@aeris.es');
+        assert.ok(!filas[0].passwordHash.includes('tecnico2026'));
+        assert.strictEqual(Boolean(filas[0].esAdministrador), false);
+        assert.strictEqual(Boolean(filas[0].esTecnico), true);
+
+        const admin = await logica.usuarios.crear({
+            nombre: 'Alba', apellidos: 'Admin', correo: 'alba@aeris.es',
+            contrasena: 'admin2026', rol: 'administrador'
+        });
+        assert.strictEqual(admin.rol, 'administrador');
+
+        await assert.rejects(logica.usuarios.crear({
+            nombre: 'Aina', apellidos: 'Núñez', correo: 'aina@aeris.es',
+            contrasena: 'tecnico2026', rol: 'ciudadano'
+        }), { codigo: 'DATOS_NO_VALIDOS' });
+        await assert.rejects(logica.usuarios.crear({
+            nombre: 'Otra', apellidos: 'Persona', correo: 'AINA@aeris.es',
+            contrasena: 'tecnico2026', rol: 'administrador'
+        }), { codigo: 'CORREO_YA_REGISTRADO' });
+    });
+
+    it('usuarios.buscar() filtra por nombre, rol y estado y pagina sin exponer credenciales', async function () {
+        const tecnica = await logica.usuarios.crear({
+            nombre: 'Aina', apellidos: 'Núñez', correo: 'aina@aeris.es',
+            contrasena: 'tecnico2026', rol: 'tecnico'
+        });
+        await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        const encontrados = await logica.usuarios.buscar({
+            busqueda: 'Aina Núñez', rol: 'tecnico', estado: 'activo', pagina: 1, porPagina: 1
+        });
+        assert.strictEqual(encontrados.total, 1);
+        assert.strictEqual(encontrados.usuarios[0].idUsuario, tecnica.idUsuario);
+        assert.strictEqual(encontrados.usuarios[0].correo, 'aina@aeris.es');
+        assert.strictEqual(Object.prototype.hasOwnProperty.call(encontrados.usuarios[0], 'passwordHash'), false);
+
+        await logica.usuarios.darDeBaja(tecnica.idUsuario);
+        assert.strictEqual((await logica.usuarios.buscar({ rol: 'tecnico', estado: 'activo' })).total, 0);
+        assert.strictEqual((await logica.usuarios.buscar({ rol: 'tecnico', estado: 'inactivo' })).total, 1);
+        await assert.rejects(logica.usuarios.buscar({ rol: 'invalido' }), { codigo: 'DATOS_NO_VALIDOS' });
+    });
+
+    it('usuarios.cambiarRol() aplica el rol y no permite al administrador quitarse el suyo', async function () {
+        const admin = await logica.registrarUsuario('Ana', 'Admin', 'ana@aeris.es', 'admin2026');
+        const usuario = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.conexion.execute(
+            'UPDATE Usuarios SET esAdministrador = TRUE WHERE idUsuario = ?', [admin.idUsuario]);
+
+        const actualizado = await logica.usuarios.cambiarRol(usuario.idUsuario, 'portador', admin.idUsuario);
+        assert.strictEqual(actualizado.rol, 'portador');
+        await assert.rejects(
+            logica.usuarios.cambiarRol(admin.idUsuario, 'tecnico', admin.idUsuario),
+            { codigo: 'NO_PUEDE_QUITAR_ADMIN_PROPIO' });
+        await assert.rejects(
+            logica.usuarios.cambiarRol(999999, 'tecnico', admin.idUsuario),
+            { codigo: 'USUARIO_NO_EXISTE' });
+    });
+
+    it('darDeBaja() impide nuevos inicios de sesión e invalida las sesiones existentes', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.usuarios.darDeBaja(sesion.idUsuario);
+
+        await assert.rejects(
+            logica.iniciarSesion('pelin@aeris.es', 'aire2026'),
+            { codigo: 'CREDENCIALES_INCORRECTAS' });
+        assert.strictEqual(await logica.comprobarSesion(sesion.token), null);
+    });
+
     it('comprobarSesion() devuelve los permisos actuales con el mismo token', async function () {
         const sesion = await logica.registrarUsuario('Ana', 'Admin', 'ana@aeris.es', 'admin2026');
 

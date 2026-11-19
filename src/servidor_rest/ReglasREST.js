@@ -6,7 +6,8 @@
 //              T010, T005 (vinculación del sensor confirmada por correo),
 //              T041 (incidencias), T017 (mediciones), T007 (Mis datos),
 //              T024 (datos de la
-//              página Mi cuenta), T021 (nodos del panel) y T046 (lugares).
+//              página Mi cuenta), T021 (nodos del panel), T027 (usuarios)
+//              y T046 (lugares).
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -39,7 +40,9 @@ const CODIGOS_HTTP = {
     SIN_SENSOR: 404,
     LIMITE_LUGARES: 409,
     CORREO_YA_REGISTRADO: 409,
-    SENSOR_YA_VINCULADO: 409
+    SENSOR_YA_VINCULADO: 409,
+    USUARIO_NO_EXISTE: 404,
+    NO_PUEDE_QUITAR_ADMIN_PROPIO: 403
 };
 
 // ---------------------------------------------------------------------------
@@ -180,6 +183,37 @@ function cargarReglasREST(servidor, logica) {
         const conSitio = nodos.filter((n) => n.latitud !== null && n.longitud !== null);
         respuesta.status(200).json({ nodos: conSitio, total: conSitio.length });
     }));
+
+    // ---- Gestión de usuarios del panel (T027) ----
+
+    // GET /usuarios?busqueda=&rol=todos|administrador|tecnico|portador|ciudadano&estado=todos|activo|inactivo
+    //   &pagina=1&porPagina=20  🔒 solo administrador
+    //   200 { usuarios: [ UsuarioAdmin ], total } · 400 filtro no válido · 401 · 403
+    servidor.get('/usuarios', requiereSesion(logica, ['administrador']), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.usuarios.buscar(peticion.query));
+    }));
+
+    // POST /usuarios { nombre, apellidos, correo, contrasena, rol: administrador|tecnico } 🔒 solo administrador
+    //   201 UsuarioAdmin · 400 datos no válidos · 409 correo ya registrado · 401 · 403
+    servidor.post('/usuarios', requiereSesion(logica, ['administrador']), envolver(async (peticion, respuesta) => {
+        respuesta.status(201).json(await logica.usuarios.crear(peticion.body));
+    }));
+
+    // PATCH /usuarios/:idUsuario/rol { rol } 🔒 solo administrador
+    //   200 UsuarioAdmin · 400 datos no válidos · 403 no puede quitarse el rol de admin · 404 · 401
+    servidor.patch('/usuarios/:idUsuario/rol', requiereSesion(logica, ['administrador']),
+        envolver(async (peticion, respuesta) => {
+            respuesta.status(200).json(await logica.usuarios.cambiarRol(
+                peticion.params.idUsuario, peticion.body && peticion.body.rol, peticion.usuario.idUsuario));
+        }));
+
+    // DELETE /usuarios/:idUsuario 🔒 solo administrador
+    //   204 baja lógica · 400 identificador no válido · 404 · 401 · 403
+    servidor.delete('/usuarios/:idUsuario', requiereSesion(logica, ['administrador']),
+        envolver(async (peticion, respuesta) => {
+            await logica.usuarios.darDeBaja(peticion.params.idUsuario);
+            respuesta.status(204).end();
+        }));
 
     // GET /miCuenta  🔒                                                   (T024)
     //   200 Resumen (ver Logica.resumenCuenta) · 404 sin sensor vinculado o sin mediciones · 401

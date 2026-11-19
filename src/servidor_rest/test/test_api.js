@@ -36,6 +36,14 @@ describe('API REST de usuarios y autenticación', function () {
 
     const PELIN = { nombre: 'Pelin', apellidos: 'Kaynak', correo: 'pelin@aeris.es', contrasena: 'aire2026' };
 
+    async function crearAdmin() {
+        const { cuerpo } = await peticion('POST', '/registrarUsuario',
+            { ...PELIN, correo: 'admin@aeris.es' });
+        await logica.conexion.execute(
+            'UPDATE Usuarios SET esAdministrador = TRUE WHERE idUsuario = ?', [cuerpo.idUsuario]);
+        return cuerpo;
+    }
+
 
 
     before(async function () {
@@ -168,6 +176,72 @@ describe('API REST de usuarios y autenticación', function () {
         assert.strictEqual(conPermiso.cuerpo.usuario.esAdministrador, true);
         assert.strictEqual(conPermiso.cuerpo.usuario.esTecnico, true);
         assert.strictEqual(conPermiso.cuerpo.usuario.esPortador, false);
+    });
+
+    it('GET y POST /usuarios deniegan el acceso a quien no es administrador', async function () {
+        assert.strictEqual((await peticion('GET', '/usuarios')).codigo, 401);
+        const { cuerpo } = await peticion('POST', '/registrarUsuario', PELIN);
+        assert.strictEqual((await peticion('GET', '/usuarios', undefined, cuerpo.token)).codigo, 403);
+        assert.strictEqual((await peticion('POST', '/usuarios', {
+            ...PELIN, correo: 'tecnico@aeris.es', rol: 'tecnico'
+        }, cuerpo.token)).codigo, 403);
+        await logica.conexion.execute(
+            'UPDATE Usuarios SET esTecnico = TRUE WHERE idUsuario = ?', [cuerpo.idUsuario]);
+        assert.strictEqual((await peticion('GET', '/usuarios', undefined, cuerpo.token)).codigo, 403);
+    });
+
+    it('la API permite gestionar cuentas, protege el rol propio e impide login tras la baja', async function () {
+        const admin = await crearAdmin();
+        const alta = await peticion('POST', '/usuarios', {
+            nombre: 'Teo', apellidos: 'Técnico', correo: 'teo@aeris.es',
+            contrasena: 'tecnico2026', rol: 'tecnico'
+        }, admin.token);
+        assert.strictEqual(alta.codigo, 201);
+        assert.strictEqual(alta.cuerpo.rol, 'tecnico');
+        assert.strictEqual(alta.cuerpo.estado, 'activo');
+
+        const altaAdmin = await peticion('POST', '/usuarios', {
+            nombre: 'Alba', apellidos: 'Admin', correo: 'alba@aeris.es',
+            contrasena: 'admin2026', rol: 'administrador'
+        }, admin.token);
+        assert.strictEqual(altaAdmin.codigo, 201);
+        assert.strictEqual(altaAdmin.cuerpo.rol, 'administrador');
+        assert.ok(!JSON.stringify(altaAdmin.cuerpo).includes('passwordHash'));
+
+        const lista = await peticion('GET', '/usuarios?busqueda=Teo&rol=tecnico&estado=activo',
+            undefined, admin.token);
+        assert.strictEqual(lista.codigo, 200);
+        assert.strictEqual(lista.cuerpo.total, 1);
+        assert.strictEqual(lista.cuerpo.usuarios[0].correo, 'teo@aeris.es');
+
+        const propia = await peticion('PATCH', `/usuarios/${admin.idUsuario}/rol`,
+            { rol: 'tecnico' }, admin.token);
+        assert.strictEqual(propia.codigo, 403);
+
+        const cambioAdmin = await peticion('PATCH', `/usuarios/${altaAdmin.cuerpo.idUsuario}/rol`,
+            { rol: 'tecnico' }, admin.token);
+        assert.strictEqual(cambioAdmin.codigo, 200);
+        assert.strictEqual(cambioAdmin.cuerpo.rol, 'tecnico');
+        const inicioAdmin = await peticion('POST', '/iniciarSesion',
+            { correo: 'alba@aeris.es', contrasena: 'admin2026' });
+        assert.strictEqual(inicioAdmin.codigo, 200);
+        assert.strictEqual(inicioAdmin.cuerpo.rol, 'tecnico');
+
+        const sesion = await peticion('POST', '/iniciarSesion',
+            { correo: 'teo@aeris.es', contrasena: 'tecnico2026' });
+        assert.strictEqual(sesion.codigo, 200);
+        assert.strictEqual(sesion.cuerpo.rol, 'tecnico');
+
+        const cambio = await peticion('PATCH', `/usuarios/${alta.cuerpo.idUsuario}/rol`,
+            { rol: 'administrador' }, admin.token);
+        assert.strictEqual(cambio.codigo, 200);
+        assert.strictEqual(cambio.cuerpo.rol, 'administrador');
+
+        const baja = await peticion('DELETE', `/usuarios/${alta.cuerpo.idUsuario}`, undefined, admin.token);
+        assert.strictEqual(baja.codigo, 204);
+        assert.strictEqual((await peticion('POST', '/iniciarSesion',
+            { correo: 'teo@aeris.es', contrasena: 'tecnico2026' })).codigo, 401);
+        assert.strictEqual((await peticion('GET', '/usuarios', undefined, sesion.cuerpo.token)).codigo, 401);
     });
 
     // --- alertas del perfil (T010) -------------------------------------------

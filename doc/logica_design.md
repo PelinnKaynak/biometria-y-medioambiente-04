@@ -12,6 +12,7 @@ La lógica es la única parte que habla con la base de datos. El servidor REST (
 ServidorREST --> Logica --> MySQL (tabla Usuarios)
                    |--> Seguridad         (hash de contraseñas y tokens firmados)
                    |--> ValidadorUsuario  (mismas reglas que la app)
+                   |--> Usuarios.js      (gestión administrativa, T027)
                    |--> enviarCorreo()    (la crea EnviadorCorreo en el servidor)
 ```
 
@@ -163,7 +164,8 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
 - **Sesiones sin tabla (token firmado):** al registrarse o iniciar sesión el servidor devuelve un token `datos.firma`. Los datos son `{ u: idUsuario, t: "sesion", exp, h }` y la firma es HMAC-SHA256 con la clave secreta del servidor (`CLAVE_TOKENS`), así que nadie puede fabricarlo ni cambiarlo. El cliente lo envía en la cabecera `Authorization: Bearer <token>`. Duración: 30 días. No se guarda nada en la BD: así no hacen falta tablas de sesiones.
 - **Huella de la contraseña (`h`):** el token lleva 16 caracteres del SHA-256 de `passwordHash`. Si la contraseña cambia, la huella ya no coincide y todos los tokens anteriores dejan de valer.
 - **Cerrar sesión:** la app o la web borran su token. El servidor no guarda sesiones, así que no hay ruta para cerrarla.
-- **Rol al registrarse:** quien se registra desde la app es **portador** (columna `role` de `Usuarios`). Los demás roles los asigna el administrador (T030). Premium no es un rol: depende de `premiumHasta`.
+- **Roles (T027):** quien se registra desde la app empieza como ciudadano; la vinculación de un sensor activa el rol de portador. El administrador puede crear cuentas de técnico o administrador y asignar a cualquier usuario uno de los roles administrador, técnico, portador o ciudadano. Premium no es un rol: depende de `premiumHasta`.
+- **Baja de cuentas (T027):** la baja es lógica (`Usuarios.estado = 'inactivo'`), conserva los datos y bloquea tanto nuevos inicios de sesión como sesiones ya emitidas.
 - **Mismo error de acceso:** `iniciarSesion()` lanza `CREDENCIALES_INCORRECTAS` tanto si el correo no existe como si la contraseña es incorrecta, para no revelar qué correos tienen cuenta.
 - **Correo no registrado en la recuperación:** decisión del equipo: si el correo no tiene cuenta, `solicitarRecuperacion()` lanza `CORREO_NO_REGISTRADO`, no se envía ningún correo y la app avisa al usuario. (Revela qué correos tienen cuenta, igual que el registro con `CORREO_YA_REGISTRADO`.)
 - **Recuperación de contraseña sin tabla:** el enlace lleva un token firmado de tipo `"recuperacion"` válido 30 minutos: `urlRestablecer?token=...` (la página la hará la web). Al usarlo cambia la contraseña y, con ella, la huella: el mismo enlace ya no se puede volver a usar y todas las sesiones abiertas se cierran. Un token de recuperación no sirve como sesión (se comprueba el tipo).
@@ -173,13 +175,17 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
 
 ---
 
-## 3. Reglas generales
+## 3. Gestión administrativa de usuarios (T027 · H018)
+
+`Usuarios.js` (clase `Usuarios`, accesible como `logica.usuarios`) implementa la consulta con búsqueda por nombre, apellidos o correo, filtros por rol y estado, paginación, creación de cuentas de técnico o administrador, cambio de rol y baja lógica. Los resultados incluyen nombre, apellidos, correo, rol efectivo, estado y fecha de alta, nunca la contraseña ni su hash. Cambiar el rol asigna una sola de las opciones administrador, técnico, portador o ciudadano; el usuario administrador autenticado no puede quitarse su propio permiso de administrador. Las rutas que usan este módulo están protegidas para administradores en `ReglasREST.js`. El estado inactivo bloquea tanto el inicio de sesión como los tokens de sesión ya emitidos.
+
+## 4. Reglas generales
 
 - **Lenguaje:** JavaScript (Node.js 18 o superior), CommonJS, `async/await`.
 - **Cabecera de fichero** y **cabecera de cada función** con su diseño lógico y una línea `What it does:`.
 - **Tests automáticos (mocha):** `npm test` desde `src/logica`. Necesitan MySQL de XAMPP en marcha; crean y usan la BD `aeris_test` con el mismo script `src/bd/usuarios.sql` (nunca tocan `aeris`).
   - `test_seguridad_validador.js`: hash, tokens firmados y validación (sin BD).
-  - `test_logica.js`: registro, inicio de sesión, tokens caducados o modificados, roles, recuperación de contraseña.
+  - `test_logica.js`: registro, inicio de sesión, tokens caducados o modificados, roles, gestión administrativa de cuentas (T027) y recuperación de contraseña.
   - `test_vinculacion.js`: vinculación del sensor por correo (T005).
   - `test_mi_cuenta.js`: datos de la página Mi cuenta (T024).
   - `test_lugares.js`: CRUD, privacidad, límite e interpolación de lugares (T046).

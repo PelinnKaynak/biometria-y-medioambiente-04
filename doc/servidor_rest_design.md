@@ -4,7 +4,7 @@
 
 ---
 
-## 1. API de usuarios y autenticación (T016 · H001, H002)
+## 1. API de usuarios y autenticación (T016 · H001, H002; T027 · H018)
 
 ```text
 App / Web --HTTP JSON--> ServidorREST (Express) --> ReglasREST --> Logica (logica_design.md)
@@ -54,12 +54,20 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `GET /nodos/resumen` 🔒👷 | — | **200** `{ total, activos, inactivos24h, inactivos7d, porCalibrar, umbralHoras }` · **401** · **403** — números de arriba de la página Nodos del panel (T021). `inactivos24h` son los que pasan del umbral de inactividad, `UMBRAL_INACTIVO_HORAS` en el `.env` (24 por defecto, T022) |
 | `GET /nodos?busqueda=&estado=todos\|activos\|inactivos\|calibrar&pagina=1&porPagina=20` 🔒👷 | — | **200** `{ nodos: [ Nodo ], total }` (total sin paginar; `porPagina` máx. 100) · **400** filtro no válido (`campos`) · **401** · **403** — lista del panel (T021) |
 | `GET /nodos/mapa?busqueda=&estado=` 🔒👷 | — | **200** `{ nodos: [ Nodo ], total }` sin paginar, solo los que tienen ubicación · **400** · **401** · **403** — mapa del panel (T021) |
+| `GET /usuarios?busqueda=&rol=todos\|administrador\|tecnico\|portador\|ciudadano&estado=todos\|activo\|inactivo&pagina=1&porPagina=20` 🔒👑 | — | **200** `{ usuarios: [ UsuarioAdmin ], total }` (máx. 100 por página) · **400** filtro no válido · **401** · **403** — gestión de cuentas (T027) |
+| `POST /usuarios` 🔒👑 | `{ nombre, apellidos, correo, contrasena, rol: administrador\|tecnico }` | **201** `UsuarioAdmin` · **400** datos no válidos · **409** correo ya registrado · **401** · **403** (T027) |
+| `PATCH /usuarios/:idUsuario/rol` 🔒👑 | `{ rol: administrador\|tecnico\|portador\|ciudadano }` | **200** `UsuarioAdmin` · **400** datos no válidos · **403** no puede quitarse el rol de administrador · **404** usuario no existe · **401** (T027) |
+| `DELETE /usuarios/:idUsuario` 🔒👑 | — | **204** baja lógica · **400** identificador no válido · **404** usuario no existe · **401** · **403** (T027) |
 | `POST /responderIncidencia` 🔒👷 | `{ idIncidencia, respuesta?, estado? }` | **200** `IncidenciaGestion` · **400** `{ error, campos }` · **404** · **401** · **403** — con respuesta se guarda quién responde (el usuario de la sesión), se manda por correo al usuario y, si no se indica estado, pasa a «resuelta» (T041) |
 
 👷 = solo técnicos y administradores (rol `tecnico` o `administrador`).
+👑 = solo administradores.
+
+Los tests automáticos de las rutas REST están en `src/servidor_rest/test/test_api.js`; usan la base de pruebas `aeris_test` y no envían correos.
 
 `Incidencia = { idIncidencia, tipo, asunto, descripcion, estado, respuesta, responsable: { nombre, rol } | null, fechaCreacion, fechaRespuesta, sensor: { idSensor, numeroSerie } | null }` — `responsable` es quien respondió (para «Respuesta de Marc (técnico)»).
 `IncidenciaGestion = Incidencia + usuario: { idUsuario, nombre, apellidos, correo }`, en `responsable` también `idUsuario` y, en `sensor`, también `nombre, estado, bateria, ultimaConexion, necesitaCalibracion`.
+`UsuarioAdmin = { idUsuario, nombre, apellidos, correo, rol, estado, fechaAlta }` — nunca incluye el hash de contraseña. El filtro por rol usa el rol efectivo con prioridad administrador, técnico, portador y ciudadano. Una baja cambia `estado` a `inactivo` y anula las sesiones existentes.
 `Medicion = { idMedicion, contaminante, valor, unidad, fecha, latitud, longitud }` — `fecha` en ISO (UTC); nunca dice quién la tomó.
 `Lugar = { id, idLugar, idUsuario, nombre, tipo, direccion, zona, latitud, longitud, avisosActivos, ozonoActual, ozono }`. La exposición usa la interpolación inversa al cuadrado de la distancia de mediciones O3 de las últimas 24 horas; si no hay, devuelve `null`. Todas las operaciones filtran por el usuario de la sesión.
 
