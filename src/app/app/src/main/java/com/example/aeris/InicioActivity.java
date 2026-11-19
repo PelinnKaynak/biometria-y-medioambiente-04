@@ -7,7 +7,10 @@
 //              tocar una pasa al arco), la tarjeta «Mi sensor» o, sin sensor,
 //              la de vincularlo, los accesos a la previsión y a «Mis lugares»
 //              y el panel de notificaciones de la campana. Las mediciones
-//              salen de LogicaFakeInicio (de ejemplo hasta T017). Diseño en
+//              salen de LogicaFakeInicio (GET /ultimasMediciones, T017). Si
+//              el usuario tiene sensor, pide los permisos y arranca
+//              ServicioMediciones, que recibe sus mediciones por Bluetooth
+//              (T023); cuando guarda una, la pantalla se recarga. Diseño en
 //              doc/app_design.md. Tarea T006.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       12/11/2026
@@ -18,9 +21,13 @@ package com.example.aeris;
 import android.animation.ObjectAnimator;
 import android.animation.PropertyValuesHolder;
 import android.animation.ValueAnimator;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -31,8 +38,11 @@ import android.view.animation.DecelerateInterpolator;
 import android.view.animation.OvershootInterpolator;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -56,6 +66,25 @@ public class InicioActivity extends AppCompatActivity {
     private final LogicaFakePerfil logicaPerfil = new LogicaFakePerfil();
     private final Handler temporizador = new Handler(Looper.getMainLooper());
     private final Runnable refrescarTextos = this::refrescarTextos;
+
+    // Los permisos para medir se piden una vez cada vez que se abre la app
+    private static boolean permisosPedidos = false;
+    private final ActivityResultLauncher<String[]> pedirPermisos =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), respuesta -> {
+                if (PermisosMedicion.concedidos(this)) {
+                    ServicioMediciones.iniciar(this);
+                } else {
+                    Toast.makeText(this, R.string.inicio_sin_permisos_medicion, Toast.LENGTH_LONG).show();
+                }
+            });
+
+    // ServicioMediciones ha guardado una medición: se vuelven a pedir
+    private final BroadcastReceiver medicionGuardada = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context contexto, Intent intent) {
+            cargarMediciones();
+        }
+    };
 
     private IndicadorCalidad indicador;
     private TextView tituloCalidad;
@@ -202,6 +231,8 @@ public class InicioActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        ContextCompat.registerReceiver(this, medicionGuardada,
+                new IntentFilter(ServicioMediciones.ACCION_MEDICION_GUARDADA), ContextCompat.RECEIVER_NOT_EXPORTED);
         cargarMediciones();
         cargarSensor();
         temporizador.postDelayed(refrescarTextos, REFRESCO_TEXTOS);
@@ -210,6 +241,7 @@ public class InicioActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        unregisterReceiver(medicionGuardada);
         temporizador.removeCallbacks(refrescarTextos);
         pararLatido();
     }
@@ -266,6 +298,8 @@ public class InicioActivity extends AppCompatActivity {
             public void usuarioObtenido(DatosUsuario datos) {
                 boolean primeraRespuesta = tieneSensor == null;
                 recordarSensor(datos.tieneSensor());
+                Sesion.guardarNumeroSerie(InicioActivity.this, datos.numeroSerie);
+                empezarAMedir(datos.tieneSensor() && !datos.numeroSerie.isEmpty());
                 tieneSensor = LogicaFakeInicio.tieneSensor(datos.tieneSensor());
                 mostrarSensor(primeraRespuesta);
                 actualizarAvisos();
@@ -286,6 +320,23 @@ public class InicioActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    // -----------------------------------------------------------------------
+    // conSensor: B --> empezarAMedir() -->
+    // What it does: with a linked sensor, starts ServicioMediciones (T023),
+    //               asking the permissions first if they are missing (only
+    //               once each time the app is opened); without sensor, stops it.
+    // -----------------------------------------------------------------------
+    private void empezarAMedir(boolean conSensor) {
+        if (!conSensor) {
+            ServicioMediciones.parar(this);
+        } else if (PermisosMedicion.concedidos(this)) {
+            ServicioMediciones.iniciar(this);
+        } else if (!permisosPedidos) {
+            permisosPedidos = true;
+            pedirPermisos.launch(PermisosMedicion.aPedir(Build.VERSION.SDK_INT));
+        }
     }
 
     // -----------------------------------------------------------------------

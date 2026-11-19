@@ -2,9 +2,9 @@
 // Fichero:     LogicaFakeInicio.java
 // Descripción: Lógica fake del teléfono para la pantalla de inicio. Pide las
 //              últimas mediciones (GET /ultimasMediciones) al servidor REST
-//              con el token de la sesión. Ese recurso es la tarea T017; hasta
-//              entonces USAR_DATOS_DE_EJEMPLO = true y devuelve mediciones de
-//              ejemplo. Cuando exista T017, basta con ponerlo a false.
+//              con el token de la sesión (T017). Con USAR_DATOS_DE_EJEMPLO =
+//              true devuelve mediciones de ejemplo (para probar la pantalla
+//              sin servidor). Las mediciones las envía ServicioMediciones (T023).
 //              Diseño en doc/app_design.md. Tarea T006.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       12/11/2026
@@ -18,8 +18,8 @@ import java.util.List;
 // LogicaFakeInicio class: the phone's fake logic for the Inicio screen.
 public class LogicaFakeInicio {
 
-    // T017: poner a false cuando el servidor tenga GET /ultimasMediciones
-    static final boolean USAR_DATOS_DE_EJEMPLO = true;
+    // true: mediciones de ejemplo, sin pedirlas al servidor (solo para probar la pantalla)
+    static final boolean USAR_DATOS_DE_EJEMPLO = false;
 
     // Cuántas mediciones pide Inicio: la de ahora (arco) y 4 anteriores (cajas)
     static final int CANTIDAD = 5;
@@ -31,10 +31,9 @@ public class LogicaFakeInicio {
     // Resto de datos de ejemplo del Figma (sin servidor que los dé aún):
     // batería del sensor (%), mejor hora para salir y el nivel de Mis lugares
     static final int BATERIA_EJEMPLO = 78;
-    // T017: el servidor aún no envía el sensor del usuario (GET /usuarioActual),
-    // así que se da por vinculado un sensor de ejemplo para ver «Mi sensor».
-    // Para ver la tarjeta «Vincular» (sin sensor), poner a false.
-    static final boolean SENSOR_DE_EJEMPLO = true;
+    // true: se da por vinculado un sensor de ejemplo para ver «Mi sensor» sin
+    // servidor. Con false manda lo que dice GET /usuarioActual.
+    static final boolean SENSOR_DE_EJEMPLO = false;
     static final String MEJOR_HORA_EJEMPLO = "Hoy de 8:00 a 10:00 · pico a las 14:00";
     static final String[] LUGARES_EJEMPLO = {"Casa", "Trabajo"};
     static final double[] VALORES_LUGARES_EJEMPLO = {84, 150};

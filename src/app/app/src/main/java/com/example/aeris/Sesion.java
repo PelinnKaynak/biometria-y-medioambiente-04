@@ -22,6 +22,7 @@ public class Sesion {
     private static final String CLAVE_ROL = "rol";
     private static final String CLAVE_NOMBRE = "nombre";
     private static final String CLAVE_ALERTAS = "alertas";
+    private static final String CLAVE_NUMERO_SERIE = "numeroSerie";
 
     // -----------------------------------------------------------------------
     // contexto: Context, correo: Text, datos: DatosSesion --> iniciar() --x
@@ -98,11 +99,30 @@ public class Sesion {
     }
 
     // -----------------------------------------------------------------------
+    // contexto: Context, numeroSerie: Text --> guardarNumeroSerie() --x
+    // contexto: Context --> numeroSerie() --x
+    // Text | null <--
+    // What it does: remembers the serial number of the linked sensor ("" or
+    //               null: none). ServicioMediciones only keeps the packets of
+    //               that sensor (T023).
+    // -----------------------------------------------------------------------
+    public static void guardarNumeroSerie(Context contexto, String numeroSerie) {
+        preferencias(contexto).edit().putString(CLAVE_NUMERO_SERIE, numeroSerie).apply();
+    }
+
+    public static String numeroSerie(Context contexto) {
+        String serie = preferencias(contexto).getString(CLAVE_NUMERO_SERIE, null);
+        return serie == null || serie.isEmpty() ? null : serie;
+    }
+
+    // -----------------------------------------------------------------------
     // contexto: Context --> cerrar() --x
-    // What it does: forgets the session (log out). The server keeps nothing,
-    //               so deleting the token is enough.
+    // What it does: forgets the session (log out) and stops receiving the
+    //               sensor's measurements. The server keeps nothing, so
+    //               deleting the token is enough.
     // -----------------------------------------------------------------------
     public static void cerrar(Context contexto) {
+        ServicioMediciones.parar(contexto);
         preferencias(contexto).edit().clear().apply();
     }
 

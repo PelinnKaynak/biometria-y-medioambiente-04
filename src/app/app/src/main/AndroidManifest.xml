@@ -10,6 +10,22 @@
         android:required="false" />
     <!-- Android 17: permiso para conectar con el servidor en la red local -->
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+    <!-- Recibir las mediciones del sensor por Bluetooth con la ubicación (T023) -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -96,6 +112,12 @@
             android:name=".EditarDatosActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
+
+        <!-- Recibe las mediciones del sensor por Bluetooth y las envía al servidor (T023) -->
+        <service
+            android:name=".ServicioMediciones"
+            android:exported="false"
+            android:foregroundServiceType="location" />
 
         <!-- Comparte con la app de cámara el fichero donde guarda la foto de perfil (T010) -->
         <provider

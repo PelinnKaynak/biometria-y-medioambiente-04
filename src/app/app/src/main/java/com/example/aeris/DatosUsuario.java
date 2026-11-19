@@ -23,13 +23,14 @@ public class DatosUsuario {
     public final boolean alertas;
     public final String foto;      // JPEG en base64, o "" si no tiene foto
     public final String sensor;    // nombre del sensor vinculado, o "" si no tiene (T005/T017)
+    public final String numeroSerie;   // número de serie de ese sensor, o "" (la app filtra las tramas con él, T023)
 
     // -----------------------------------------------------------------------
     // nombre: Text, apellidos: Text, correo: Text, rol: Text, alertas: B,
-    // foto: Text, sensor: Text --> constructor()
+    // foto: Text, sensor: Text, numeroSerie: Text --> constructor()
     // -----------------------------------------------------------------------
     public DatosUsuario(String nombre, String apellidos, String correo, String rol, boolean alertas,
-                        String foto, String sensor) {
+                        String foto, String sensor, String numeroSerie) {
         this.nombre = nombre;
         this.apellidos = apellidos;
         this.correo = correo;
@@ -37,6 +38,7 @@ public class DatosUsuario {
         this.alertas = alertas;
         this.foto = foto;
         this.sensor = sensor;
+        this.numeroSerie = numeroSerie;
     }
 
     // -----------------------------------------------------------------------
@@ -69,13 +71,12 @@ public class DatosUsuario {
     // cuerpo: Text --> desdeJSON() --x
     // DatosUsuario | null <--
     // What it does: reads {"nombre", "apellidos", "correo", "rol", "alertas", "foto",
-    //               "sensor"}
+    //               "sensor", "numeroSerie"}
     //               from the answer of GET /usuarioActual. Returns null if the
     //               text is not valid JSON or has no correo. If "alertas" is
     //               missing it is true (the default value in the BD); if
     //               "foto" is missing or null it is "" (no photo). The same
-    //               with "sensor": the server will send it when sensors can
-    //               be linked (T017); until then the user has no sensor.
+    //               with "sensor" and "numeroSerie" (null: no sensor).
     // -----------------------------------------------------------------------
     static DatosUsuario desdeJSON(String cuerpo) {
         if (cuerpo == null || cuerpo.isEmpty()) {
@@ -94,7 +95,8 @@ public class DatosUsuario {
                     json.optString("rol", ""),
                     json.optBoolean("alertas", true),
                     textoONada(json, "foto"),
-                    textoONada(json, "sensor"));
+                    textoONada(json, "sensor"),
+                    textoONada(json, "numeroSerie"));
         } catch (JSONException error) {
             return null;
         }
