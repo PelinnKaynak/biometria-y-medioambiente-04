@@ -520,7 +520,9 @@ InicioActivity --(«Ver más»)--> MisDatosActivity
 InicioActivity --(«Ver»)--> MiSensorActivity
 InicioActivity --(«Mejor hora para salir»)--> ProximamenteActivity
 InicioActivity --(«Mis lugares»)--> MisLugaresActivity
-InicioActivity --(campana)--> panel de notificaciones (Aviso.calcular() o los de ejemplo)
+InicioActivity --(campana)--> panel de notificaciones (avisos del servidor + «Sensor desconectado», o los de ejemplo)
+InicioActivity --(onResume)--> LogicaFakeAvisos.obtenerAvisos()           (GET /avisos?desdeId=, T008)
+InicioActivity --(pulsar un aviso con zona)--> MapaAvisoActivity            (OpenStreetMap centrado en el aviso, T008)
 InicioActivity --(tocar una de las últimas mediciones)--> elegir() (esa medición pasa al arco)
 barra «Mapa» --> ProximamenteActivity
 barra «Mis datos» --> MisDatosActivity
@@ -531,7 +533,8 @@ barra «Mis datos» --> MisDatosActivity
 ```text
 Medicion: { valor: R (µg/m³), momento: Z (ms desde 1970, UTC) }
 Seccion ∈ { MAPA, PREVISION, MIS_LUGARES, MI_SENSOR }                // secciones provisionales
-Aviso: { tipo ∈ { CONTAMINACION, BATERIA, DESCONECTADO }, titulo: Text, texto: Text, momento: Z, clave: Text }
+Aviso: { tipo ∈ { CONTAMINACION, BATERIA, DESCONECTADO }, titulo: Text, texto: Text, momento: Z, clave: Text,
+         zona: Text | null, latitud: R | null, longitud: R | null }       // T008: los del servidor llevan zona y coordenadas
 ```
 
 ### Clase Medicion (NUEVA)
@@ -578,6 +581,24 @@ Aviso: { tipo ∈ { CONTAMINACION, BATERIA, DESCONECTADO }, titulo: Text, texto:
   tieneSensor: B, ahora: Z      --> calcular() --x
   [Aviso]                       <--       última > 180 µg/m³ → «Contaminación alta»;
                                           con sensor y última de más de 1 h → «Sensor desconectado»
+                                          (desde T008 Inicio solo usa «Sensor desconectado»: los de contaminación vienen del servidor)
+
+  cuerpo: Text                  --> listaDesdeJSON() --x      [Aviso] | null <--   (T008) lee la respuesta de GET /avisos; salta las filas sin
+                                                              idAviso, valor o fecha; sin coordenadas válidas el aviso se conserva pero tieneZona() es false
+                                --> tieneZona() --x            B <--   true si tiene latitud y longitud válidas (puede abrir el mapa)
+```
+
+### Clase LogicaFakeAvisos (NUEVA · T008)
+
+```text
+  token: Text                   --> obtenerAvisos() -->        GET /avisos?desdeId=0 y, mientras la página venga llena (100), la siguiente con desdeId = mayor idAviso;
+  RespuestaAvisos               <-- |                          se queda con los 20 más recientes (del más nuevo al más antiguo)
+  pagina, desdeId, pedidas      --> hayOtraPagina() --x        B <--   página llena Y el cursor avanza Y menos de 50 llamadas (nunca hace bucle)
+  [Aviso], maximo               --> masRecientes() --x         [Aviso] <--   sin repetir clave, del más nuevo al más antiguo
+  servidor, locales             --> combinar() --x             [Aviso] <--   los del servidor + los locales que no son de contaminación
+  codigo: Z, cuerpo: Text       --> notificarAvisos() --x      200 → página · 401 → sesionCaducada() · 0 → sin conexión · otro → error()
+
+RespuestaAvisos: avisosObtenidos(avisos: [Aviso]), sesionCaducada(), error(mensaje: Text)
 ```
 
 ### Clase AvisosLeidos (NUEVA)
@@ -627,11 +648,12 @@ RespuestaMediciones: medicionesObtenidas(mediciones: [Medicion], deEjemplo: B), 
 ### Pantallas
 
 ```text
-InicioActivity (MODIFICADA): onCreate(), onResume(), onPause(), cargarMediciones(), cargarSensor(),
+InicioActivity (MODIFICADA): onCreate(), onResume(), onPause(), cargarMediciones(), cargarSensor(), cargarAvisosServidor(),
                              mostrarMediciones(), elegir(), refrescarTextos(), mostrarSensor(), mostrarAccesos(),
                              actualizarAvisos(), abrirAvisos(), cerrarAvisos(), mostrarError(), contarHasta(),
                              animarEntrada(), colorDe(), nombreDe(), mensajeDe(), marcarLeidos(), cerrarSesion()
 ProximamenteActivity (NUEVA, provisional): onCreate(), intentPara(), seccionDe()
+MapaAvisoActivity (NUEVA, T008): onCreate(), intentPara(), userAgent(), onResume(), onPause(), onDestroy()
 ```
 
 - **Cabecera:** «Bienvenido», «Así está el aire que respiras ahora.» y la campana con el número de avisos (insignia violeta). Cuando hay avisos nuevos la insignia aparece con un rebote y la campana se balancea.
@@ -639,7 +661,7 @@ ProximamenteActivity (NUEVA, provisional): onCreate(), intentPara(), seccionDe()
 - **Últimas mediciones:** se piden 5: la última va en el arco («ahora») y las 4 anteriores en cajas (valor y hora) que entran una detrás de otra con un pequeño rebote. Al tocar una, se marca (borde violeta y una rayita del color de su nivel) y el arco, el número, la calidad y «Medido hace…» pasan a esa medición; el título cambia de «Calidad del aire ahora» a «Calidad del aire a las 15:19» (con un fundido) y aparece el botón «Ahora» arriba a la derecha; «Ahora» o tocar otra vez la caja vuelve a la última. Con sensor el título es «Últimas mediciones (µg/m³)»; sin sensor, «Últimas horas en tu zona (µg/m³)». «Ver más» abrirá «Mis datos».
 - **Mi sensor / Vincular:** `GET /usuarioActual` determina si hay sensor. «Ver» y la fila «Mi sensor» del perfil abren `MiSensorActivity`, que consulta `GET /miSensor` para mostrar el identificador, la última sincronización y la batería de `Sensores.bateria`; si la batería es `null`, enseña «No disponible». El estado se deriva de `ultimaConexion` (conectado si la última sincronización fue en las últimas 24 horas). El interruptor de luz de aviso (H033) cambia de verdad el LED del sensor: `LuzSensor` se conecta por Bluetooth a la dirección que guardó `ServicioMediciones` al recibir la última trama del sensor, escribe 1/0 en la característica `AERIS-LUZ-ACTIVA` del servicio `AERIS-SERVICIO-1` (UUID con `UuidAERIS`) y se desconecta. Mientras tanto el interruptor queda desactivado con «Cambiando la luz del sensor…»; si el sensor no responde en 15 s, no hay Bluetooth o todavía no se conoce su dirección, el interruptor vuelve a su posición y se explica el motivo. En Android 12+ pide el permiso `BLUETOOTH_CONNECT`. «Desvincular sensor» llama a `DELETE /miSensor`; al volver a consultar el estado, la pantalla permite vincular otro. Sin sensor, Inicio muestra «¿Tienes un sensor AERIS?» con «Vincular». Para datos de muestra (sensor AERIS, batería al 78 %), se puede poner `LogicaFakeMiSensor.USAR_DATOS_DE_EJEMPLO = true`; el valor predeterminado usa la API real.
 - **Accesos:** «Mejor hora para salir» (con los datos de ejemplo: «Hoy de 8:00 a 10:00 · pico a las 14:00») y «Mis lugares» (con los de ejemplo: «● Casa: Buena  ● Trabajo: Moderada») abren `ProximamenteActivity` hasta que se hagan sus tareas.
-- **Notificaciones:** la campana abre el panel de Figma: velo oscuro, el panel crece desde la campana y los avisos entran uno detrás de otro (título, texto y hora o «Ayer»). Los no leídos llevan un punto violeta a la izquierda y la insignia de la campana cuenta solo esos. Tocar un aviso lo marca como leído (el punto se encoge y se va); al cerrar el panel (tocar fuera o «atrás») se marcan todos. Lo leído se guarda en el teléfono por la clave de cada aviso (`AvisosLeidos`, SharedPreferences); los 3 avisos de ejemplo no se guardan, así que al volver a abrir la app salen otra vez sin leer. Con los datos de ejemplo son los 3 avisos del Figma; con datos reales, `Aviso.calcular()`.
+- **Notificaciones (T006 + T008):** la campana abre el panel de Figma, arriba a la derecha: velo oscuro, el panel crece desde la campana y los avisos entran uno detrás de otro (título, texto y hora o «Ayer»). Tocar fuera del panel o «atrás» lo cierra **sin marcar nada como leído**. Los no leídos llevan un punto violeta a la izquierda y la insignia de la campana cuenta solo esos. Con muchos avisos, la lista se desplaza dentro del panel. **Origen:** `GET /avisos` del servidor (tabla `Avisos`: contaminación de tu sensor y de tus lugares, con su zona y coordenadas), pedido en `onResume()` y al guardarse una medición, más el aviso local «Sensor desconectado» (`Aviso.calcular()`); se enseñan los 20 más recientes. Si la petición falla, se quedan los últimos avisos. Un aviso del servidor se muestra aunque no tenga coordenadas, pero entonces no se puede abrir el mapa; el que no tiene `idAviso`, `valor` o `fecha` válidos se descarta. **Leído:** el servidor no guarda si un aviso se ha leído (no hay columna ni ruta, y no hace falta migración SQL); se recuerda en el teléfono por la clave `AVISO:<idAviso>` (`AvisosLeidos`, SharedPreferences). **Solo se marca como leído el aviso que se pulsa** (el punto se encoge y la insignia baja de uno en uno); no se sincroniza entre dispositivos. Los 3 avisos de ejemplo (`USAR_DATOS_DE_EJEMPLO`) no se guardan y salen otra vez sin leer. **Mapa:** los avisos con coordenadas llevan «Ver en el mapa ›»; al pulsarlos se marca ese aviso, se cierra el panel y se abre `MapaAvisoActivity`: un mapa mínimo de OpenStreetMap (osmdroid, ya usado en «Mis lugares»), centrado en las coordenadas del aviso (zoom 15), con un marcador con el nombre de la zona, el texto del aviso y la atribución. No es el mapa completo de la pestaña «Mapa» (otra tarea). Para que OpenStreetMap sirva los mapas, la pantalla identifica la app con el `User-Agent` `AERIS/<versión> (<applicationId>)`; sin él devuelve «403 Access blocked».
 - **Pulsar:** las filas, las cajas y los botones se hunden un poco al pulsarlos (`EfectoPulsar`).
 - **Textos de tiempo:** «hace X min» se actualiza cada minuto mientras la pantalla se ve (`onResume()` / `onPause()`).
 - **Datos reales (T017 + T023):** `LogicaFakeInicio.USAR_DATOS_DE_EJEMPLO = false` y `SENSOR_DE_EJEMPLO = false`: las mediciones salen de `GET /ultimasMediciones?cantidad=5` y la tarjeta del sensor de `GET /usuarioActual` (`sensor`, `numeroSerie`). Respuesta esperada: `200` con `[{"valor": 84, "fecha": "2026-11-12T17:42:00Z"}, ...]`; `401` sesión caducada. Para ver la pantalla sin servidor, poner los dos a `true`: datos del Figma (5 mediciones 84, 90, 102, 96 y 88 µg/m³, una cada 20 min, la batería, la mejor hora, Mis lugares y los 3 avisos). Si el usuario tiene sensor, Inicio guarda su número de serie (`Sesion.guardarNumeroSerie`), pide los permisos que falten (una vez cada vez que se abre la app) y arranca `ServicioMediciones` (sección 3e); al recibir `ACCION_MEDICION_GUARDADA` vuelve a pedir las mediciones.
