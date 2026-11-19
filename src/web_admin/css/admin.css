@@ -148,6 +148,71 @@
     font-weight: 500;
 }
 
+.aviso-ok-panel {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: rgba(78, 156, 131, 0.12);
+    color: #2F6F5B;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* ---------- Diálogos de confirmación (Usuarios y Nodos) ---------- */
+
+.fondo-dialogo {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(67, 46, 96, 0.35);
+}
+.fondo-dialogo.oculto { display: none; }
+
+.dialogo {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 440px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    padding: 28px;
+    border-radius: 14px;
+    background: var(--blanco);
+    box-shadow: 0 12px 40px rgba(67, 46, 96, 0.25);
+}
+
+.dialogo h2 { margin: 0 0 8px; font-size: 22px; }
+
+.texto-dialogo {
+    margin: 0 0 20px;
+    color: var(--texto-suave);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.botones-dialogo {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.boton-secundario {
+    padding: 12px 20px;
+    border: 1px solid var(--borde);
+    border-radius: var(--radio);
+    background: var(--blanco);
+    color: var(--texto);
+    font: 600 15px "Inter", sans-serif;
+    cursor: pointer;
+}
+
+.boton-peligro { background: var(--malo); }
+
 
 /* ---------- Cabecera, buscador y filtros (todas las pantallas) ---------- */
 

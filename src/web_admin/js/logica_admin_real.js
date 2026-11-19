@@ -107,6 +107,19 @@ class LogicaAdminReal {
     }
 
     // --------------------------------------------------------
+    // id: Text --> desvincularNodo() --> r: ResultadoOperacion <--
+    //
+    // POST /nodos/:numeroSerie/desvincular   (solo administrador)
+    //   200 { numeroSerie } · 403 · 404 { error }
+    // --------------------------------------------------------
+    async desvincularNodo(id) {
+        const { respuesta, error } =
+            await this.pedir("/nodos/" + encodeURIComponent(id) + "/desvincular", "POST");
+        if (respuesta) return { correcto: true, error: "" };
+        return { correcto: false, error };
+    }
+
+    // --------------------------------------------------------
     // ruta: Text, filtro: FiltroNodos --> pedirNodos() -->
     //       r: ResultadoNodos <--
     // --------------------------------------------------------

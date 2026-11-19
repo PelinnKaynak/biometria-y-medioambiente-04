@@ -700,24 +700,54 @@ class Logica {
 
     // -----------------------------------------------------------------------
     // idUsuario: N --> desvincularMiSensor() --> { numeroSerie }
-    // What it does: removes the user's association with their first linked
-    //               sensor in a transaction. If no other sensor remains,
-    //               the user returns to the citizen role.
+    // What it does: the user unlinks their first linked sensor. If no other
+    //               sensor remains, they stop being a carrier
+    //               (esPortador = FALSE). Throws SIN_SENSOR if they have none.
     // -----------------------------------------------------------------------
     async desvincularMiSensor(idUsuario) {
+        return this.desvincularEnTransaccion(
+            `SELECT idSensor, numeroSerie, idUsuario FROM Sensores
+              WHERE idUsuario = ? ORDER BY idSensor LIMIT 1 FOR UPDATE`,
+            [idUsuario], 'No tienes ningún sensor vinculado');
+    }
+
+    // -----------------------------------------------------------------------
+    // numeroSerie: Texto --> desvincularSensor() --> { numeroSerie, idUsuario }
+    // What it does: an administrator unlinks a sensor from whoever has it,
+    //               from the Nodos panel. The sensor and its measurements
+    //               stay in the database, so it can be linked again (to that
+    //               person or another) and the history is kept. If it was the
+    //               user's only sensor, they stop being a carrier. Throws
+    //               SIN_SENSOR if that sensor does not exist or is not linked
+    //               to anybody.
+    // -----------------------------------------------------------------------
+    async desvincularSensor(numeroSerie) {
+        return this.desvincularEnTransaccion(
+            `SELECT idSensor, numeroSerie, idUsuario FROM Sensores
+              WHERE numeroSerie = ? AND idUsuario IS NOT NULL FOR UPDATE`,
+            [String(numeroSerie || '')], 'Ese sensor no existe o no está vinculado a nadie');
+    }
+
+    // -----------------------------------------------------------------------
+    // sqlSensor: Texto, valores: [ ], mensajeSinSensor: Texto
+    //     --> desvincularEnTransaccion() --> { numeroSerie, idUsuario }
+    // What it does: the common part of the two unlinks. In one transaction
+    //               it clears the owner and the link request of the sensor
+    //               found with sqlSensor (and turns its light off) and, if
+    //               the user has no other sensor, sets esPortador = FALSE.
+    // -----------------------------------------------------------------------
+    async desvincularEnTransaccion(sqlSensor, valores, mensajeSinSensor) {
         const conexion = await this.conexion.getConnection();
         let transaccionIniciada = false;
         try {
             await conexion.beginTransaction();
             transaccionIniciada = true;
-            const [sensores] = await conexion.execute(
-                `SELECT idSensor, numeroSerie FROM Sensores
-                  WHERE idUsuario = ? ORDER BY idSensor LIMIT 1 FOR UPDATE`,
-                [idUsuario]);
+            const [sensores] = await conexion.execute(sqlSensor, valores);
             const sensor = sensores[0];
             if (!sensor) {
-                throw new ErrorLogica('SIN_SENSOR', 'No tienes ningún sensor vinculado');
+                throw new ErrorLogica('SIN_SENSOR', mensajeSinSensor);
             }
+            const idUsuario = sensor.idUsuario;
 
             await conexion.execute(
                 'SELECT idUsuario FROM Usuarios WHERE idUsuario = ? FOR UPDATE',
@@ -729,21 +759,18 @@ class Logica {
                 `UPDATE Sensores
                     SET idUsuario = NULL, idSolicitante = NULL, estadoSolicitud = NULL,
                         fechaSolicitud = NULL, luzActiva = FALSE
-                  WHERE idSensor = ? AND idUsuario = ?`,
-                [sensor.idSensor, idUsuario]);
+                  WHERE idSensor = ?`,
+                [sensor.idSensor]);
 
             if (Number(cuenta.restantes) === 0) {
                 await conexion.execute(
-                    `UPDATE Usuarios
-                        SET esPortador = FALSE,
-                            role = CASE WHEN role = ? THEN 'ciudadano' ELSE role END
-                      WHERE idUsuario = ?`,
-                    [ROL_PORTADOR, idUsuario]);
+                    'UPDATE Usuarios SET esPortador = FALSE WHERE idUsuario = ?',
+                    [idUsuario]);
             }
 
             await conexion.commit();
             transaccionIniciada = false;
-            return { numeroSerie: sensor.numeroSerie };
+            return { numeroSerie: sensor.numeroSerie, idUsuario };
         } catch (error) {
             if (transaccionIniciada) await conexion.rollback();
             throw error;

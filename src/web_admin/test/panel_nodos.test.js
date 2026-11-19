@@ -160,3 +160,97 @@ describe("mostrarVistaMovil()", () => {
         expect(document.querySelector('.pestana[data-vista="mapa"]').classList.contains("activa")).toBe(true);
     });
 });
+describe("desvincular un sensor (solo administrador)", () => {
+    const ADMIN = { id: 1, rol: "administrador", esAdministrador: true };
+    const TECNICO = { id: 3, rol: "tecnico", esTecnico: true };
+
+    function entrarComo(usuario) {
+        sessionStorage.setItem("aeris_usuario", JSON.stringify(usuario));
+        panelNodos.prepararDesvincular(usuario);
+    }
+
+    afterEach(() => {
+        panelNodos.prepararDesvincular(null);
+        panelNodos.mostrarDialogoDesvincular(false);
+    });
+
+    test("el técnico no ve la columna ni los botones", async () => {
+        entrarComo(TECNICO);
+        await panelNodos.cargarNodos(new LogicaAdminFake(5, AHORA, 0), AHORA);
+
+        expect(document.querySelector(".caja-lista").classList.contains("con-acciones")).toBe(false);
+        expect(document.querySelectorAll(".boton-desvincular")).toHaveLength(0);
+    });
+
+    test("el administrador ve un botón «Desvincular» en cada nodo", async () => {
+        entrarComo(ADMIN);
+        await panelNodos.cargarNodos(new LogicaAdminFake(5, AHORA, 0), AHORA);
+
+        expect(document.querySelector(".caja-lista").classList.contains("con-acciones")).toBe(true);
+        const botones = document.querySelectorAll(".boton-desvincular");
+        expect(botones).toHaveLength(5);
+        expect(botones[0].dataset.id).toBe(panelNodos.panel.nodos[0].id);
+    });
+
+    test("pide confirmación con el sensor y el portador", async () => {
+        entrarComo(ADMIN);
+        await panelNodos.cargarNodos(new LogicaAdminFake(5, AHORA, 0), AHORA);
+        const nodo = panelNodos.panel.nodos[0];
+
+        expect(panelNodos.pedirConfirmacionDesvincular(nodo.id)).toBe(true);
+        expect(document.getElementById("dialogo-desvincular").classList.contains("oculto")).toBe(false);
+        expect(document.getElementById("texto-desvincular").textContent).toContain(nodo.id);
+        expect(document.getElementById("texto-desvincular").textContent).toContain(nodo.portador);
+        expect(document.getElementById("texto-desvincular").textContent).toContain("mediciones se conservan");
+
+        panelNodos.mostrarDialogoDesvincular(false);
+        expect(document.getElementById("dialogo-desvincular").classList.contains("oculto")).toBe(true);
+        expect(panelNodos.panel.nodoADesvincular).toBeNull();
+    });
+
+    test("al confirmar, el nodo desaparece y bajan los totales", async () => {
+        entrarComo(ADMIN);
+        const logica = new LogicaAdminFake(5, AHORA, 0);
+        await panelNodos.cargarPanel(logica, AHORA);
+        const nodo = panelNodos.panel.nodos[0];
+
+        panelNodos.pedirConfirmacionDesvincular(nodo.id);
+        expect(await panelNodos.confirmarDesvincular(logica, AHORA)).toBe(true);
+
+        expect(document.getElementById("dialogo-desvincular").classList.contains("oculto")).toBe(true);
+        expect(document.getElementById("dato-total").textContent).toBe("4");
+        expect(document.querySelectorAll(".fila-nodo")).toHaveLength(4);
+        expect(panelNodos.panel.nodos.some(n => n.id === nodo.id)).toBe(false);
+        expect(document.getElementById("aviso-ok").textContent)
+            .toBe("Sensor " + nodo.id + " desvinculado de " + nodo.portador + ".");
+    });
+
+    test("si el servidor lo rechaza, enseña el error y no recarga", async () => {
+        entrarComo(ADMIN);
+        const logica = new LogicaAdminFake(5, AHORA, 0);
+        await panelNodos.cargarNodos(logica, AHORA);
+        logica.desvincularNodo = async () => ({ correcto: false, error: "Ese sensor no existe o no está vinculado a nadie" });
+
+        panelNodos.pedirConfirmacionDesvincular(panelNodos.panel.nodos[0].id);
+        expect(await panelNodos.confirmarDesvincular(logica, AHORA)).toBe(false);
+
+        expect(document.getElementById("aviso-error").textContent).toBe("Ese sensor no existe o no está vinculado a nadie");
+        expect(document.getElementById("aviso-ok").classList.contains("oculto")).toBe(true);
+        expect(document.querySelectorAll(".fila-nodo")).toHaveLength(5);
+    });
+
+    test("la lógica fake solo deja desvincular al administrador", async () => {
+        const logica = new LogicaAdminFake(5, AHORA, 0);
+        const id = logica.nodos[0].id;
+
+        sessionStorage.setItem("aeris_usuario", JSON.stringify(TECNICO));
+        expect((await logica.desvincularNodo(id)).correcto).toBe(false);
+        expect(logica.nodos).toHaveLength(5);
+
+        sessionStorage.setItem("aeris_usuario", JSON.stringify(ADMIN));
+        expect(await logica.desvincularNodo(id)).toEqual({ correcto: true, error: "" });
+        expect(logica.nodos).toHaveLength(4);
+        expect(logica.usuarios.some(u => u.nodo === id)).toBe(false);
+        expect((await logica.desvincularNodo(id)).error).toBe("Ese sensor no existe o no está vinculado a nadie");
+    });
+});
