@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Un mensaje de la conversación de una incidencia: autor, texto y fecha. IncidenciaActivity pone
+     el lado (el del usuario a la derecha, el del equipo a la izquierda) y los colores. T043 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="10dp"
+    android:orientation="vertical"
+    android:paddingStart="14dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/autorMensaje"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textFontWeight="600"
+        android:textSize="12sp"
+        tools:text="Marc (técnico)" />
+
+    <TextView
+        android:id="@+id/textoMensaje"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:lineSpacingMultiplier="1.15"
+        android:textIsSelectable="true"
+        android:textSize="14sp"
+        tools:text="Prueba a cargarlo durante 30 minutos." />
+
+    <TextView
+        android:id="@+id/fechaMensaje"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:alpha="0.75"
+        android:textSize="11sp"
+        tools:text="19 nov 2026 · 11:00" />
+</LinearLayout>

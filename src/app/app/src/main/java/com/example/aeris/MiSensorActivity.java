@@ -86,6 +86,11 @@ public class MiSensorActivity extends AppCompatActivity {
 
         ((ImageView) findViewById(R.id.botonVolver)).setOnClickListener(v -> finish());
         botonDesvincular.setOnClickListener(v -> confirmarDesvinculacion());
+        // Ayuda (T043): el formulario de incidencias se abre con «Sensor» elegido y este sensor a la vista
+        findViewById(R.id.enlaceAyudaSensor).setOnClickListener(v -> startActivity(AyudaActivity.intentPara(this,
+                Incidencia.TIPO_SENSOR,
+                sensorActual == null ? null : sensorActual.nombre,
+                sensorActual == null ? null : sensorActual.numeroSerie)));
         findViewById(R.id.botonVincularDesdeMiSensor).setOnClickListener(v ->
                 startActivity(new Intent(this, VincularSensorActivity.class)
                         .putExtra(VincularSensorActivity.EXTRA_DESDE_PERFIL, true)));

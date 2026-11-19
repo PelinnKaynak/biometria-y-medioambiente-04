@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Línea «Sensor: nombre · número de serie» del formulario de Ayuda: lila suave. T043 -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/info_lila_suave" />
+    <corners android:radius="10dp" />
+</shape>

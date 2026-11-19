@@ -117,6 +117,19 @@
             android:name=".MiSensorActivity"
             android:exported="false" />
 
+        <!-- Ayuda (T043): preguntas frecuentes, enviar una incidencia y Mis incidencias.
+             Se abre desde Perfil, Mi sensor y Vincular sensor -->
+        <activity
+            android:name=".AyudaActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- Conversación de una incidencia (T043): se abre desde Mis incidencias -->
+        <activity
+            android:name=".IncidenciaActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- Perfil (T010): se abre desde la barra de navegación inferior -->
         <activity
             android:name=".PerfilActivity"

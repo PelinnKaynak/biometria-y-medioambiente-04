@@ -123,6 +123,8 @@ public class PerfilActivity extends AppCompatActivity {
         findViewById(R.id.opcionMiSensor).setOnClickListener(vista -> pulsarMiSensor());
         findViewById(R.id.opcionEditarDatos).setOnClickListener(vista ->
                 startActivity(new Intent(this, EditarDatosActivity.class)));
+        findViewById(R.id.opcionAyuda).setOnClickListener(vista ->
+                startActivity(AyudaActivity.intentPara(this, null, null, null)));       // Ayuda (T043)
         findViewById(R.id.botonEditarFoto).setOnClickListener(vista -> pulsarFoto());
         imagenAvatar.setOnClickListener(vista -> pulsarFoto());
         findViewById(R.id.botonCerrarSesion).setOnClickListener(vista -> cerrarSesion());
