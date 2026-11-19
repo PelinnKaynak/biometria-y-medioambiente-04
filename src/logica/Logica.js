@@ -355,6 +355,24 @@ class Logica {
             [alertas, idUsuario]);
     }
 
+    async listarAvisos(idUsuario, desdeId = 0) {
+        if (!Number.isSafeInteger(desdeId) || desdeId < 0) {
+            throw new ErrorLogica('DATOS_NO_VALIDOS', 'desdeId no es válido', ['desdeId']);
+        }
+
+        const [avisos] = await this.conexion.execute(
+            `SELECT idAviso, tipo, contaminante, valor, unidad, zona,
+                latitud, longitud, fechaCreacion
+           FROM Avisos
+          WHERE idUsuario = ? AND idAviso > ?
+          ORDER BY idAviso
+          LIMIT 100`,
+            [idUsuario, desdeId]
+        );
+
+        return avisos;
+    }
+
     // -----------------------------------------------------------------------
     // correo: Texto --> solicitarRecuperacion() -->
     // What it does: if the email has an account, makes a signed recovery token

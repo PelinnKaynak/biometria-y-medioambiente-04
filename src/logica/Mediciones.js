@@ -158,27 +158,34 @@ class Mediciones {
         const medicion = aMedicion(filas[0]);
         const nueva = resultado.affectedRows === 1;
 
-        if (nueva && medicion.contaminante === 'O3' &&
-            typeof this.logica.notificarAlerta === 'function') {
-            try {
-                const reservada = await reservarAlertaPersonal(this.conexion, idUsuario, medicion);
+        if (nueva && medicion.contaminante === 'O3') {
+            const ahora = new Date();
 
-                if (reservada) {
-                    await this.logica.notificarAlerta({
-                        tipo: 'personal',
-                        idUsuario,
-                        contaminante: medicion.contaminante,
-                        valor: medicion.valor,
-                        unidad: medicion.unidad,
-                        zona: { latitud: medicion.latitud, longitud: medicion.longitud }
-                    });
-                }
+            try {
+                const { latitud, longitud } = medicion;
+                const aviso = {
+                    tipo: 'personal',
+                    idUsuario,
+                    contaminante: medicion.contaminante,
+                    valor: medicion.valor,
+                    unidad: medicion.unidad,
+                    zona: { latitud, longitud }
+                };
+
+                const reservado = await reservarAlertaPersonal(this.conexion, idUsuario, medicion, ahora, {
+                    ...aviso,
+                    zona: `${latitud.toFixed(5)}, ${longitud.toFixed(5)}`,
+                    latitud,
+                    longitud
+                });
+
+                if (reservado) await this.logica.notificarAlerta?.(aviso);
             } catch (error) {
                 console.error(`Error al procesar la alerta personal del usuario ${idUsuario}:`, error.message);
             }
 
             try {
-                await procesarAlertasDeLugares(this.logica);
+                await procesarAlertasDeLugares(this.logica, ahora);
             } catch (error) {
                 console.error('Error al evaluar las alertas de lugares:', error.message);
             }
@@ -216,7 +223,7 @@ class Mediciones {
         const inicioMs = desde instanceof Date ? desde.getTime() : NaN;
         const finMs = hasta instanceof Date ? hasta.getTime() : NaN;
         if (!Number.isFinite(inicioMs) || !Number.isFinite(finMs)
-                || inicioMs >= finMs || finMs - inicioMs > DURACION_MAXIMA_CONSULTA_MS) {
+            || inicioMs >= finMs || finMs - inicioMs > DURACION_MAXIMA_CONSULTA_MS) {
             throw this.error('DATOS_NO_VALIDOS', 'desde y hasta deben formar un periodo de hasta 26 horas',
                 ['desde', 'hasta']);
         }

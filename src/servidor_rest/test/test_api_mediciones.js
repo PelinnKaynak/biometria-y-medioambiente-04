@@ -123,6 +123,26 @@ describe('API REST de mediciones', function () {
             medicion({ valor: 210, fecha: haceMinutos(1) }));
         assert.strictEqual(otraLectura.codigo, 201);
         assert.strictEqual(alertasEnviadas.length, 1);
+        const lista = await peticion('GET', '/avisos', pelin);
+        assert.strictEqual(lista.codigo, 200);
+        assert.strictEqual(lista.cuerpo.length, 1);
+        const [guardado] = lista.cuerpo;
+        assert.strictEqual(guardado.contaminante, 'O3');
+        assert.strictEqual(guardado.valor, 200);
+        assert.strictEqual(guardado.unidad, 'µg/m³');
+        assert.strictEqual(guardado.latitud, datos.latitud);
+        assert.strictEqual(guardado.longitud, datos.longitud);
+
+        const deAna = await peticion('GET', '/avisos', ana);
+        assert.strictEqual(deAna.codigo, 200);
+        assert.deepStrictEqual(deAna.cuerpo, []);
+
+        const posteriores = await peticion('GET', `/avisos?desdeId=${guardado.idAviso}`, pelin);
+        assert.strictEqual(posteriores.codigo, 200);
+        assert.deepStrictEqual(posteriores.cuerpo, []);
+
+        assert.strictEqual((await peticion('GET', '/avisos')).codigo, 401);
+        assert.strictEqual((await peticion('GET', '/avisos?desdeId=-1', pelin)).codigo, 400);
     });
 
     it('guarda la medición sin avisar si el usuario desactivó las alertas', async function () {
@@ -149,7 +169,7 @@ describe('API REST de mediciones', function () {
         assert.strictEqual(preferencias.codigo, 204);
 
         const ubicacion = { direccion: 'Gandía', latitud: 38.9965, longitud: -0.1663 };
-        const casa = await logica.lugares.crear(idUsuario, {
+        await logica.lugares.crear(idUsuario, {
             ...ubicacion, nombre: 'Casa', tipo: 'casa', avisosActivos: true
         });
         await logica.lugares.crear(idUsuario, {
@@ -159,26 +179,32 @@ describe('API REST de mediciones', function () {
         const normal = await peticion('POST', '/guardarMedicion', pelin,
             medicion({ valor: 90, fecha: haceMinutos(3) }));
         assert.strictEqual(normal.codigo, 201);
-        assert.deepStrictEqual(alertasEnviadas, []);
+        const antes = await peticion('GET', '/avisos', ana);
+        assert.strictEqual(antes.codigo, 200);
+        assert.deepStrictEqual(antes.cuerpo, []);
 
         const malo = await peticion('POST', '/guardarMedicion', pelin,
             medicion({ valor: 190, fecha: haceMinutos(2) }));
         assert.strictEqual(malo.codigo, 201);
-        assert.deepStrictEqual(alertasEnviadas, [{
-            tipo: 'lugar',
-            idUsuario,
-            idLugar: casa.idLugar,
-            contaminante: 'O3',
-            valor: 190,
-            unidad: 'µg/m³',
-            nivel: 'malo',
-            zona: 'Casa (Gandía)'
-        }]);
+        const lista = await peticion('GET', '/avisos', ana);
+        assert.strictEqual(lista.codigo, 200);
+        assert.strictEqual(lista.cuerpo.length, 1);
+
+        const [aviso] = lista.cuerpo;
+        assert.strictEqual(aviso.tipo, 'lugar');
+        assert.strictEqual(aviso.contaminante, 'O3');
+        assert.strictEqual(aviso.valor, 190);
+        assert.strictEqual(aviso.unidad, 'µg/m³');
+        assert.strictEqual(aviso.zona, 'Casa (Gandía)');
+        assert.strictEqual(aviso.latitud, ubicacion.latitud);
+        assert.strictEqual(aviso.longitud, ubicacion.longitud);
 
         const muyMalo = await peticion('POST', '/guardarMedicion', pelin,
             medicion({ valor: 250, fecha: haceMinutos(1) }));
         assert.strictEqual(muyMalo.codigo, 201);
-        assert.strictEqual(alertasEnviadas.length, 1);
+        const despues = await peticion('GET', '/avisos', ana);
+        assert.strictEqual(despues.codigo, 200);
+        assert.deepStrictEqual(despues.cuerpo, lista.cuerpo);
     });
 
     it('no avisa al dueño de un lugar si no tiene Premium activo', async function () {

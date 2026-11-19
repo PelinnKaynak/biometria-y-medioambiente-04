@@ -43,7 +43,19 @@ async function consultarAlertaPersonal(conexion, idUsuario, medicion, ahora) {
     });
 }
 
-async function reservarAlertaPersonal(pool, idUsuario, medicion, ahora = new Date()) {
+async function guardarAviso(conexion, idUsuario, aviso, ahora) {
+    await conexion.execute(
+        `INSERT INTO Avisos
+            (idUsuario, tipo, contaminante, valor, unidad, zona, latitud, longitud, fechaCreacion)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+            idUsuario, aviso.tipo, aviso.contaminante, aviso.valor, aviso.unidad,
+            aviso.zona, aviso.latitud, aviso.longitud, ahora
+        ]
+    );
+}
+
+async function reservarAlertaPersonal(pool, idUsuario, medicion, ahora = new Date(), aviso = null) {
     const conexion = await pool.getConnection();
 
     try {
@@ -64,6 +76,8 @@ async function reservarAlertaPersonal(pool, idUsuario, medicion, ahora = new Dat
                  ON DUPLICATE KEY UPDATE ultimoEnvio = VALUES(ultimoEnvio)`,
                 [idUsuario, ahora]
             );
+
+            if (aviso) await guardarAviso(conexion, idUsuario, aviso, ahora);
         }
 
         await conexion.commit();
@@ -99,7 +113,7 @@ function debeAvisarLugar({ alertas, avisosActivos, nivelAnterior, nivelActual, u
         ahora.getTime() - ultimoEnvio.getTime() >= INTERVALO_ALERTA_LUGAR_MS;
 }
 
-async function reservarAlertaLugar(pool, idLugar, nivelActual, ahora = new Date()) {
+async function reservarAlertaLugar(pool, idLugar, nivelActual, ahora = new Date(), aviso = null) {
     if (nivelActual === null) return false;
 
     const conexion = await pool.getConnection();
@@ -108,7 +122,7 @@ async function reservarAlertaLugar(pool, idLugar, nivelActual, ahora = new Date(
         await conexion.beginTransaction();
 
         const [[lugar]] = await conexion.execute(
-            `SELECT l.avisosActivos, u.alertas,
+            `SELECT l.idUsuario, l.avisosActivos, u.alertas,
             (u.premiumHasta > ?) AS premiumActivo
             FROM Lugares l
             JOIN Usuarios u ON u.idUsuario = l.idUsuario
@@ -148,6 +162,10 @@ async function reservarAlertaLugar(pool, idLugar, nivelActual, ahora = new Date(
             [idLugar, nivelActual, corresponde ? ahora : ultimoEnvio]
         );
 
+        if (corresponde && aviso) {
+            await guardarAviso(conexion, lugar.idUsuario, aviso, ahora);
+        }
+
         await conexion.commit();
         return corresponde;
     } catch (error) {
@@ -182,18 +200,24 @@ async function procesarAlertasDeLugares(logica, ahora = new Date()) {
             const valor = interpolarOzono(lugar.latitud, lugar.longitud, mediciones);
             const nivel = nivelOzonoLugar(valor, ozono);
 
-            if (await reservarAlertaLugar(pool, lugar.idLugar, nivel, ahora)) {
-                await logica.notificarAlerta({
-                    tipo: 'lugar',
-                    idUsuario: lugar.idUsuario,
-                    idLugar: lugar.idLugar,
-                    contaminante: ozono.nombre,
-                    valor,
-                    unidad: ozono.unidad,
-                    nivel,
-                    zona: `${lugar.nombre} (${lugar.direccion})`
-                });
-            }
+            const aviso = {
+                tipo: 'lugar',
+                idUsuario: lugar.idUsuario,
+                idLugar: lugar.idLugar,
+                contaminante: ozono.nombre,
+                valor,
+                unidad: ozono.unidad,
+                nivel,
+                zona: `${lugar.nombre} (${lugar.direccion})`
+            };
+
+            const reservado = await reservarAlertaLugar(pool, lugar.idLugar, nivel, ahora, {
+                ...aviso,
+                latitud: lugar.latitud,
+                longitud: lugar.longitud
+            });
+
+            if (reservado) await logica.notificarAlerta?.(aviso);
         } catch (error) {
             console.error(`Error al procesar la alerta del lugar ${lugar.idLugar}:`, error.message);
         }
