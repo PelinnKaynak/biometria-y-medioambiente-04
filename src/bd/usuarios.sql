@@ -17,17 +17,15 @@ USE aeris;
 -- Tabla: Usuarios
 -- Personas registradas en la plataforma (app y web).
 -- La contraseña NUNCA se guarda en claro: solo su hash.
--- Quien se registra desde la app es 'portador'.
+-- Las cuentas nuevas se crean sin permisos asignados.
 -- ---------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS Usuarios (
   
   idUsuario       INT NOT NULL AUTO_INCREMENT,
-  role            VARCHAR(20) NOT NULL DEFAULT 'portador',
-
   -- Roles múltiples (nuevo sistema)
   esAdministrador BOOLEAN NOT NULL DEFAULT FALSE,
   esTecnico       BOOLEAN NOT NULL DEFAULT FALSE,
-  esPortador      BOOLEAN NOT NULL DEFAULT TRUE,
+  esPortador      BOOLEAN NOT NULL DEFAULT FALSE,
 
   nombre          VARCHAR(50) NOT NULL,
   apellidos     VARCHAR(100)  NOT NULL,
@@ -41,9 +39,7 @@ CREATE TABLE IF NOT EXISTS Usuarios (
   foto          MEDIUMTEXT    NULL,   -- foto de perfil: JPEG 256x256 en base64 (T010)
 
   PRIMARY KEY (idUsuario),
-  UNIQUE KEY uk_usuarios_email (email),
-  CONSTRAINT ck_usuarios_role
-    CHECK (role IN ('administrador', 'tecnico', 'portador', 'ciudadano'))
+  UNIQUE KEY uk_usuarios_email (email)
 ) ENGINE = InnoDB;
 
 -- ---------------------------------------------------------------

@@ -70,7 +70,7 @@ describe('API REST de usuarios y autenticación', function () {
     it('POST /registrarUsuario válido: 201, crea el usuario con la contraseña cifrada', async function () {
         const r = await peticion('POST', '/registrarUsuario', PELIN);
         assert.strictEqual(r.codigo, 201);
-        assert.strictEqual(r.cuerpo.rol, 'portador');
+        assert.strictEqual(r.cuerpo.rol, 'ciudadano');
         assert.match(r.cuerpo.token, /^[\w-]+\.[\w-]+$/);
 
         const [filas] = await logica.conexion.query('SELECT email, passwordHash FROM Usuarios');
@@ -116,7 +116,7 @@ describe('API REST de usuarios y autenticación', function () {
         await peticion('POST', '/registrarUsuario', PELIN);
         const r = await peticion('POST', '/iniciarSesion', { correo: 'Pelin@AERIS.es', contrasena: 'aire2026' });
         assert.strictEqual(r.codigo, 200);
-        assert.strictEqual(r.cuerpo.rol, 'portador');
+        assert.strictEqual(r.cuerpo.rol, 'ciudadano');
         assert.strictEqual(r.cuerpo.nombre, 'Pelin');
         assert.match(r.cuerpo.token, /^[\w-]+\.[\w-]+$/);
     });
@@ -137,7 +137,7 @@ describe('API REST de usuarios y autenticación', function () {
         const r = await peticion('GET', '/usuarioActual', undefined, cuerpo.token);
         assert.strictEqual(r.codigo, 200);
         assert.strictEqual(r.cuerpo.correo, 'pelin@aeris.es');
-        assert.strictEqual(r.cuerpo.rol, 'portador');
+        assert.strictEqual(r.cuerpo.rol, 'ciudadano');
         assert.ok(!JSON.stringify(r.cuerpo).includes('scrypt'));
     });
 
@@ -167,7 +167,7 @@ describe('API REST de usuarios y autenticación', function () {
         assert.strictEqual(conPermiso.codigo, 200);
         assert.strictEqual(conPermiso.cuerpo.usuario.esAdministrador, true);
         assert.strictEqual(conPermiso.cuerpo.usuario.esTecnico, true);
-        assert.strictEqual(conPermiso.cuerpo.usuario.esPortador, true);
+        assert.strictEqual(conPermiso.cuerpo.usuario.esPortador, false);
     });
 
     // --- alertas del perfil (T010) -------------------------------------------

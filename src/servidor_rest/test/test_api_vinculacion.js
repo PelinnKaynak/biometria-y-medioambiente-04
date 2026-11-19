@@ -124,9 +124,16 @@ describe('API REST de vinculación del sensor', function () {
     });
 
     it('POST /responderVinculacion con «si» vincula y la app ve confirmada; el enlace usado ya no vale', async function () {
-        await logica.conexion.execute(
-            "UPDATE Usuarios SET role = 'ciudadano', esPortador = FALSE WHERE email = ?", ['pelin@aeris.es']);
-        await peticion('POST', '/solicitarVinculacion', { numeroSerie: SERIE, sensibilidad: 1 });
+        const solicitud = await peticion('POST', '/solicitarVinculacion', {
+            numeroSerie: SERIE,
+            sensibilidad: 1
+        });
+        assert.strictEqual(solicitud.codigo, 201);
+        assert.strictEqual((await peticion('GET', '/estadoVinculacion')).cuerpo.estado, 'pendiente');
+
+        const perfilPendiente = await peticion('GET', '/usuarioActual');
+        assert.strictEqual(perfilPendiente.codigo, 200);
+        assert.strictEqual(perfilPendiente.cuerpo.esPortador, false);
         const r = await enviarFormulario(tokenDelCorreo(), 'si');
         assert.strictEqual(r.codigo, 200);
         assert.match(r.html, /Sensor vinculado/);
@@ -135,10 +142,11 @@ describe('API REST de vinculación del sensor', function () {
         assert.match(r.html, /@media \(max-width: 480px\)/);
         assert.strictEqual((await peticion('GET', '/estadoVinculacion')).cuerpo.estado, 'confirmada');
         const [[usuario]] = await logica.conexion.execute(
-            'SELECT role, esPortador FROM Usuarios WHERE email = ?', ['pelin@aeris.es']);
-        assert.strictEqual(usuario.role, 'portador');
+            'SELECT esPortador FROM Usuarios WHERE email = ?',
+            ['pelin@aeris.es']
+        );
         assert.strictEqual(Boolean(usuario.esPortador), true);
-
+        
         const otraVez = await enviarFormulario(tokenDelCorreo(), 'si');
         assert.strictEqual(otraVez.codigo, 400);
         assert.match(otraVez.html, /Enlace no válido/);

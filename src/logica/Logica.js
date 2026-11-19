@@ -29,14 +29,19 @@ const { Mediciones } = require('./Mediciones');
 const { Nodos } = require('./Nodos');
 const MiCuenta = require('./MiCuenta');
 
-const ROL_PORTADOR = 'portador';
-
 function obtenerRoles(usuario) {
     return {
         esAdministrador: Boolean(usuario.esAdministrador),
         esTecnico: Boolean(usuario.esTecnico),
         esPortador: Boolean(usuario.esPortador)
     };
+}
+
+function obtenerRolCompatible(roles) {
+    if (roles.esAdministrador) return 'administrador';
+    if (roles.esTecnico) return 'tecnico';
+    if (roles.esPortador) return 'portador';
+    return 'ciudadano';
 }
 // rol de quien se registra desde la app
 const DURACION_SESION_SEGUNDOS = 30 * 24 * 60 * 60;      // 30 días
@@ -162,8 +167,8 @@ class Logica {
         let idUsuario;
         try {
             const [resultado] = await this.conexion.execute(
-                'INSERT INTO Usuarios (role, nombre, apellidos, email, passwordHash) VALUES (?, ?, ?, ?, ?)',
-                [ROL_PORTADOR, nombre.trim(), apellidos.trim(), Validador.normalizarCorreo(correo), hash]);
+                'INSERT INTO Usuarios (nombre, apellidos, email, passwordHash, esAdministrador, esTecnico, esPortador) VALUES (?, ?, ?, ?, FALSE, FALSE, FALSE)',
+                [nombre.trim(), apellidos.trim(), Validador.normalizarCorreo(correo), hash]);
             idUsuario = resultado.insertId;
         } catch (error) {
             if (error.code === 'ER_DUP_ENTRY') {
@@ -225,7 +230,7 @@ class Logica {
 
         return usuario ? {
             idUsuario: usuario.idUsuario,
-            rol: usuario.role,
+            rol: obtenerRolCompatible(obtenerRoles(usuario)),
             ...obtenerRoles(usuario)
         } : null;
 
@@ -240,7 +245,7 @@ class Logica {
     // -----------------------------------------------------------------------
     async obtenerUsuario(idUsuario) {
         const [filas] = await this.conexion.execute(
-            `SELECT idUsuario, nombre, apellidos, email, role, esAdministrador, esTecnico, esPortador, fechaAlta, alertas, premiumHasta, foto
+            `SELECT idUsuario, nombre, apellidos, email, esAdministrador, esTecnico, esPortador, fechaAlta, alertas, premiumHasta, foto
             FROM Usuarios WHERE idUsuario = ?`,
             [idUsuario]);
         if (filas.length !== 1) {
@@ -253,7 +258,7 @@ class Logica {
         return {
             idUsuario: f.idUsuario, nombre: f.nombre, apellidos: f.apellidos,
 
-            correo: f.email, rol: f.role, ...obtenerRoles(f), fechaAlta: f.fechaAlta,
+            correo: f.email, rol: obtenerRolCompatible(obtenerRoles(f)), ...obtenerRoles(f), fechaAlta: f.fechaAlta,
 
             alertas: Boolean(f.alertas), premiumHasta: f.premiumHasta, foto: f.foto,
             sensor: sensor ? sensor.nombre : null, numeroSerie: sensor ? sensor.numeroSerie : null
@@ -522,10 +527,9 @@ class Logica {
                     'UPDATE Sensores SET idUsuario = ?, estadoSolicitud = ? WHERE idSensor = ?',
                     [datos.u, ESTADO_CONFIRMADA, sensor.idSensor]);
                 await conexion.execute(
-                    `UPDATE Usuarios
-                        SET esPortador = TRUE,
-                            role = CASE WHEN role = 'ciudadano' THEN 'portador' ELSE role END
-                      WHERE idUsuario = ?`, [datos.u]);
+                    'UPDATE Usuarios SET esPortador = TRUE WHERE idUsuario = ?',
+                    [datos.u]
+                );
             } else {
                 await conexion.execute('UPDATE Sensores SET estadoSolicitud = ? WHERE idSensor = ?',
                     [ESTADO_RECHAZADA, sensor.idSensor]);
@@ -736,12 +740,12 @@ class Logica {
     async crearSesion(idUsuario) {
         const [filas] = await this.conexion.execute(
 
-            `SELECT idUsuario, nombre, role, esAdministrador, esTecnico, esPortador, passwordHash
+            `SELECT idUsuario, nombre, esAdministrador, esTecnico, esPortador, passwordHash
             FROM Usuarios WHERE idUsuario = ?`, [idUsuario]);
         const usuario = filas[0];
         const token = this.crearToken(usuario, TIPO_SESION, DURACION_SESION_SEGUNDOS);
 
-        return { idUsuario, token, rol: usuario.role, ...obtenerRoles(usuario), nombre: usuario.nombre };
+        return { idUsuario, token, rol: obtenerRolCompatible(obtenerRoles(usuario)), ...obtenerRoles(usuario), nombre: usuario.nombre };
 
     }
 
@@ -771,7 +775,7 @@ class Logica {
             return null;
         }
         const [filas] = await this.conexion.execute(
-            `SELECT idUsuario, role, esAdministrador, esTecnico, esPortador, passwordHash
+            `SELECT idUsuario, esAdministrador, esTecnico, esPortador, passwordHash
             FROM Usuarios WHERE idUsuario = ?`, [datos.u]);
         if (filas.length !== 1 || Seguridad.huellaContrasenya(filas[0].passwordHash) !== datos.h) {
             return null;

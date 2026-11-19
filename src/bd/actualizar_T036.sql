@@ -1,0 +1,6 @@
+USE aeris;
+
+ALTER TABLE Usuarios
+    ALTER COLUMN esPortador SET DEFAULT FALSE,
+    DROP CONSTRAINT IF EXISTS ck_usuarios_role,
+    DROP COLUMN IF EXISTS role;
