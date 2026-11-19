@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Tarjeta resumen de la previsión de ozono en Inicio (T032). Va aparte para que la tarea T006
+     (inicio real) la pueda colocar donde quiera con un <include>. La rellena InicioActivity. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tarjetaPrevision"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="24dp"
+    android:background="@drawable/fondo_tarjeta"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:orientation="vertical"
+    android:padding="18dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            style="@style/AERIS.InfoSeccion"
+            android:layout_width="0dp"
+            android:layout_marginTop="0dp"
+            android:layout_weight="1"
+            android:text="@string/prevision_inicio_etiqueta" />
+
+        <TextView
+            android:id="@+id/chipSimulado"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/fondo_aviso_simulado"
+            android:paddingStart="10dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="3dp"
+            android:text="@string/prevision_inicio_chip"
+            android:textColor="@color/aviso_simulado"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/puntoPrevisionInicio"
+            android:layout_width="9dp"
+            android:layout_height="9dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/fondo_punto_nivel"
+            android:backgroundTint="@color/borde_campo" />
+
+        <TextView
+            android:id="@+id/textoPrevisionInicio"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:accessibilityLiveRegion="polite"
+            android:lineSpacingMultiplier="1.15"
+            android:text="@string/prevision_inicio_cargando"
+            android:textColor="@color/texto_principal"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            tools:text="Pico de 87 µg/m³ mañana a las 15:00" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/prevision_inicio_ver"
+        android:textColor="@color/violeta"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+</LinearLayout>

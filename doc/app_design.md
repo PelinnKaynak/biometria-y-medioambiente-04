@@ -510,6 +510,117 @@ InformacionActivity (NUEVA): onCreate(), onResume(), onPause(), prepararConsejo(
 
 ---
 
+## 3c. Previsión de ozono de 48 horas (T032)
+
+Pantalla nueva que se abre desde una tarjeta resumen de Inicio. Usa el estilo de «Editar mis datos» (`ScrollView`, botón volver, título 28 sp, tarjetas blancas `fondo_tarjeta`) y no lleva barra de navegación porque no es una pestaña. La tarjeta va en su propio `tarjeta_prevision_inicio.xml` (`<include>`), para que la pantalla de inicio real (T006) la coloque donde quiera.
+
+```text
+InicioActivity --(onResume)--> LogicaFakePrevision.vigente()   (la última previsión recibida hace menos de 30 minutos)
+InicioActivity --(onResume, si no hay vigente)--> LogicaFakePrevision.obtenerPrevision() --> PeticionarioREST --> GET /api/prevision/ozono?zona=Gandia   (servidor principal, puerto 8080)
+InicioActivity --(tarjeta «Previsión de ozono»)--> PrevisionActivity
+PrevisionActivity --(onCreate / onResume)--> LogicaFakePrevision.vigente(), y si no hay --> obtenerPrevision()   («Reintentar» también)
+PrevisionActivity --> PrevisionOzono.mejorMomento() / Hora.nivel() --> NivelOzono.desdeValor()
+PrevisionActivity --> GraficaPrevision.poner()
+```
+
+### Tipos
+
+```text
+Hora          = ( fecha: LocalDateTime, ozono: R )                    // µg/m³; la fecha es la hora local del servidor
+Franja        = ( inicio: LocalDateTime, fin: LocalDateTime, media: R, indice: N, horas: N )
+PrevisionOzono = ( zona: Text, simulados: B, advertencia: Text, modelo: Text, ultimaObservacion: Text,
+                   horas: Lista<Hora>, pico: Hora, json: Text, recibidaMs: Z )      // recibidaMs: cuándo la recibió el teléfono
+```
+
+### Clase PrevisionOzono (NUEVA)
+
+```text
+                                    --------- PrevisionOzono ---------------------------
+                                    |
+  cuerpo: Text, recibidaMs: Z   --> desdeJSON() --x         (sin recibidaMs: la hora actual)
+  PrevisionOzono | null         <-- |     null si no es JSON o no hay ninguna hora válida; salta las horas con
+                                    |     fecha o valor incorrectos o null; ignora «nivel», «nivel_pico» y «criterios_nivel».
+                                    |     Un campo de texto null (o «null») es "": nunca se muestra el texto «null»
+                                    |
+  ahoraMs: Z                    --> estaCaducada() --x
+  B                             <-- |     V si se recibió hace más de 30 minutos (o «en el futuro»: se cambió el reloj)
+                                    |
+                                --> mejorMomento() --x
+  Franja                        <-- |     2 horas seguidas con la media más baja entre las 07:00 y las 22:00;
+                                    |     si no hay, la hora del día más baja; si tampoco, la más baja de todas
+                                    |
+  fecha: LocalDateTime          --> diasDesdeHoy() --x
+  N                             <-- |     0 hoy, 1 mañana, 2 pasado mañana (hoy = día de la última observación)
+                                    |
+                                    -------------------------------------------------
+  Hora:  --> nivel() --x  NivelOzono <--     NivelOzono.desdeValor(ozono)
+```
+
+### Clase LogicaFakePrevision (NUEVA)
+
+```text
+                                    --------- LogicaFakePrevision --------------------
+                                    |
+                                    | ZONA: Text = "Gandia"            (la única con modelo)
+                                    |
+  zona: Text                    --> obtenerPrevision() -->
+                                    |     callback: previsionObtenida(PrevisionOzono), zonaSinModelo(Text),
+                                    |     sinDatos(), error(Text), servicioOcupado(), servicioNoDisponible()
+                                    |     (los dos últimos, por defecto, llaman a error() con su mensaje)
+                                    |     UNA sola petición en vuelo por zona: las llamadas que lleguen mientras
+                                    |     tanto se unen a ella y todas reciben la misma respuesta
+                                    |
+  ahoraMs: Z                    --> vigente() --x
+  PrevisionOzono | null         <-- |     la última recibida si tiene menos de 30 minutos; si no, null
+                                    |
+                                    |    zona: Text --> crearURL() --x                         Text <--
+                                    |    codigo: Z, cuerpo: Text --> notificarPrevision() --x
+                                    |         200 --> la recuerda para vigente(); 503 --> servicioOcupado() si el
+                                    |         servidor dice «ocupado», error() «desactivada», o servicioNoDisponible()
+                                    |
+                                    -------------------------------------------------
+```
+
+### Clase GraficaPrevision (NUEVA, vista propia con Canvas)
+
+```text
+  prevision: PrevisionOzono,
+  franja: Franja | null         --> poner() -->
+  AlElegirHora                  --> setAlElegirHora() -->     callback: horaElegida(indice: N)
+  valorMaximo: R                --> escalaMaxima() --x        R <--     al menos 100; si no, el siguiente múltiplo de 50 con un 10 % de margen
+```
+
+### Pantallas
+
+```text
+PrevisionActivity (NUEVA): onCreate(), onResume(), mostrarVigenteOCargar(), adaptarAncho(), cargar(), mostrarCargando(),
+                           mostrarMensaje(), mostrar(), mostrarAviso(), mostrarPico(), mostrarMejorMomento(),
+                           textoFranja(), mostrarHora(), rellenarLeyenda(), nombreDia(), hora()
+InicioActivity (MODIFICADA): onResume(), cargarPrevision(), mostrarPrevision(), noDisponible(), abrirPrevision()
+```
+
+### Qué se ve
+
+- **Aviso «Datos simulados»** (tarjeta ámbar con `ic_info`), siempre arriba mientras el servidor diga `simulados: true` o envíe una `advertencia`: el texto del servidor tal cual y «No es una previsión real.». La tarjeta de Inicio lleva la etiqueta «Datos simulados».
+- **Pico máximo** (valor, día y hora, nivel con su color) y **Mejor momento para salir** (franja y media, «Orientativo»), lado a lado; apiladas si la pantalla mide menos de 360 dp. En pantallas de más de 600 dp el contenido se centra a 600 dp.
+- **Gráfica «Hora a hora»:** una barra por hora del color de su `NivelOzono`; punto y valor sobre el pico; franja recomendada sombreada en verde; líneas discontinuas en los límites de nivel que caben (100, 180, 240); horas cada 6 h (cada 12 h si no caben); «Hoy / Mañana / Pasado» separados por una línea. Al tocar o arrastrar se elige una hora y se escribe encima su día, hora, valor y nivel. Lleva `contentDescription` con el resumen.
+- **Leyenda de niveles:** las mismas cuatro filas de «Los niveles de AERIS» de Información (`item_nivel_ozono.xml`, `InformacionActivity.NIVELES_OZONO`).
+- **Pie:** modelo y última observación utilizada.
+
+### Aclaraciones
+
+- **Niveles:** la app no usa el campo `nivel` del servidor: cada hora se clasifica con `NivelOzono.desdeValor(ozono_predicho)` (Bueno ≤ 100, Moderado ≤ 180, Malo ≤ 240, Muy malo), la misma escala que Información y el mapa de la web. El servidor (`clasificar_nivel()`) usa ya los mismos límites. Con los datos de demostración casi todo sale «Bueno».
+- **Errores (en la propia pantalla, sin Toast) con «Reintentar»:** sin conexión → «No hay conexión con el servidor. Inténtalo de nuevo.»; `400` → «Solo hay previsión para Gandia.»; `503` → depende del `motivo` que manda el servidor: caído → «El servicio de previsión no está disponible ahora mismo.», ocupado (servidores anteriores a T032) → «El servicio de previsión está ocupado. Inténtalo en unos segundos.», desactivado → «La previsión no está activada en el servidor.»; `504` → «La previsión ha tardado demasiado. Inténtalo de nuevo.»; `200` sin horas válidas → «No hay predicciones disponibles en este momento.». En Inicio la tarjeta dice «Previsión no disponible por ahora. Toca para reintentar.» (o «El servicio está ocupado…») y se vuelve a intentar al volver a la pantalla.
+- **Una sola petición:** `LogicaFakePrevision` mantiene **una única petición en vuelo por zona**; Inicio y `PrevisionActivity` (y la actividad recreada al girar el móvil) se unen a ella en vez de lanzar otra. La última previsión recibida se recuerda en `LogicaFakePrevision` y las pantallas la usan mientras tenga **menos de 30 minutos** (`vigente()`): girar el móvil, volver a Inicio o abrir la pantalla no repite la petición. Ya no se pasa la respuesta por un extra del `Intent` ni por `onSaveInstanceState()`.
+- **Caducidad (30 minutos):** cuenta desde que el teléfono recibe la respuesta (`recibidaMs`, reloj del teléfono). Una previsión más antigua no se reutiliza: Inicio y la pantalla la piden de nuevo al volver (`onResume()`); si el reloj se retrasa por debajo de la hora de recepción, también se considera caducada.
+- **Campos `null`:** un campo de texto `null` o con el texto «null» se lee como vacío (el `optString()` de Android devolvería el texto «null»): zona vacía → «Gandia», modelo vacío → «-», advertencia vacía → texto por defecto, observación no válida → no se muestra. El aviso de datos simulados se mantiene mientras `simulados` sea `true`.
+- **Mejor momento:** es orientativo y se calcula con los valores de la propia previsión; no es una recomendación médica.
+- **Zona:** solo hay modelo para Gandia, así que la zona va fija en `LogicaFakePrevision.ZONA`.
+- **Servidor:** `URL_SERVIDOR` + `/api/prevision/ozono` (puerto 8080). No necesita sesión ni token.
+- **Tests (`PrevisionTest`):** lectura del JSON (datos, inválido, horas incorrectas), niveles con `NivelOzono` frente al de la API, mejor momento (de día, horas no consecutivas, sin franja diurna, una sola hora), `diasDesdeHoy()`, y las respuestas 200, 400, 503, 504 y sin conexión. **`PrevisionRobustezTest`:** caducidad a los 30 minutos (límite exacto y reloj atrasado), `vigente()`, campos `null` y «null», una sola petición compartida entre varias pantallas (también si falla el transporte o un callback), y la diferencia entre servicio ocupado, caído y desactivado.
+
+---
+
 ## 4. Aclaraciones del diseño
 
 - **Petición REST:** `POST /registrarUsuario` con el cuerpo `{"nombre": ..., "apellidos": ..., "correo": ..., "contrasena": ...}`. Respuestas: `201` cuenta creada, `409` el correo ya tiene cuenta, `400` datos incorrectos, `500` error del servidor. Si no hay conexión el código es `0`.

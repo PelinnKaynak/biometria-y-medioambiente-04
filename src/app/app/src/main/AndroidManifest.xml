@@ -63,6 +63,11 @@
             android:name=".VincularSensorActivity"
             android:exported="false" />
 
+        <!-- Previsión de ozono de 48 horas (T032): se abre desde la tarjeta de Inicio -->
+        <activity
+            android:name=".PrevisionActivity"
+            android:exported="false" />
+
         <!-- Perfil (T010): se abre desde la barra de navegación inferior -->
         <activity
             android:name=".PerfilActivity"

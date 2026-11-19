@@ -32,6 +32,9 @@
             android:text="@string/inicio_texto"
             android:textColor="@color/texto_secundario"
             android:textSize="14sp" />
+
+        <!-- Previsión de ozono de 48 horas (T032) -->
+        <include layout="@layout/tarjeta_prevision_inicio" />
     </LinearLayout>
 
     <include layout="@layout/barra_navegacion" />

@@ -30,6 +30,11 @@
     <color name="linea_llamada">#B9A5D6</color>
     <color name="linea_suave">#F0ECF6</color>
 
+    <!-- Aviso de datos simulados (previsión, T032) -->
+    <color name="aviso_simulado">#8A5A00</color>
+    <color name="aviso_simulado_fondo">#FFF6E0</color>
+    <color name="aviso_simulado_borde">#F1DCA6</color>
+
     <!-- Niveles de ozono (los mismos que el mapa de la web) -->
     <color name="nivel_bueno">#4E9C83</color>
     <color name="nivel_moderado">#E2B33F</color>
