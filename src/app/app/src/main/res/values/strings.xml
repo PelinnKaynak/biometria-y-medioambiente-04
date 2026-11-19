@@ -315,4 +315,15 @@
     <string name="mis_lugares_eliminar_cancelar">Cancelar</string>
     <string name="mis_lugares_icono_eliminar_desc">Eliminar lugar</string>
     <string name="mis_lugares_nivel_formato">%1$.0f µg/m³ · %2$s</string>
+
+    <!-- Recepción de las mediciones del sensor por Bluetooth (T023) -->
+    <string name="medicion_canal">Medición con tu sensor</string>
+    <string name="medicion_canal_descripcion">Avisa de que AERIS está recibiendo las medidas de tu sensor.</string>
+    <string name="medicion_titulo">AERIS está midiendo</string>
+    <string name="medicion_buscando">Buscando tu sensor…</string>
+    <string name="medicion_ultima">Última medida: %1$d µg/m³ · %2$s</string>
+    <string name="medicion_sin_ubicacion">Medida %1$d µg/m³, pero aún no sabemos dónde estás. Activa la ubicación.</string>
+    <string name="medicion_bluetooth_apagado">Activa el Bluetooth para recibir las medidas de tu sensor.</string>
+    <string name="medicion_sin_bluetooth">Este teléfono no tiene Bluetooth.</string>
+    <string name="inicio_sin_permisos_medicion">Sin permiso de ubicación y Bluetooth no podemos recibir las medidas de tu sensor.</string>
 </resources>

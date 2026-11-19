@@ -638,7 +638,7 @@ ProximamenteActivity (NUEVA, provisional): onCreate(), intentPara(), seccionDe()
 - **Notificaciones:** la campana abre el panel de Figma: velo oscuro, el panel crece desde la campana y los avisos entran uno detrás de otro (título, texto y hora o «Ayer»). Los no leídos llevan un punto violeta a la izquierda y la insignia de la campana cuenta solo esos. Tocar un aviso lo marca como leído (el punto se encoge y se va); al cerrar el panel (tocar fuera o «atrás») se marcan todos. Lo leído se guarda en el teléfono por la clave de cada aviso (`AvisosLeidos`, SharedPreferences); los 3 avisos de ejemplo no se guardan, así que al volver a abrir la app salen otra vez sin leer. Con los datos de ejemplo son los 3 avisos del Figma; con datos reales, `Aviso.calcular()`.
 - **Pulsar:** las filas, las cajas y los botones se hunden un poco al pulsarlos (`EfectoPulsar`).
 - **Textos de tiempo:** «hace X min» se actualiza cada minuto mientras la pantalla se ve (`onResume()` / `onPause()`).
-- **Datos de ejemplo (hasta T017):** el servidor aún no tiene `GET /ultimasMediciones`, así que `LogicaFakeInicio.USAR_DATOS_DE_EJEMPLO = true` devuelve los datos del Figma: 5 mediciones (84 ahora y 90, 102, 96 y 88 µg/m³, una cada 20 min), la batería, la mejor hora, Mis lugares y los 3 avisos. Como el servidor aún no envía el sensor del usuario, `SENSOR_DE_EJEMPLO = true` da por vinculado un sensor de ejemplo para ver «Mi sensor» (también sin conexión); para ver la tarjeta «Vincular», ponerlo a `false`. Con T017 se ponen los dos a `false`. Respuesta esperada: `200` con `[{"valor": 84, "fecha": "2026-11-12T17:42:00Z"}, ...]`; `401` sesión caducada.
+- **Datos reales (T017 + T023):** `LogicaFakeInicio.USAR_DATOS_DE_EJEMPLO = false` y `SENSOR_DE_EJEMPLO = false`: las mediciones salen de `GET /ultimasMediciones?cantidad=5` y la tarjeta del sensor de `GET /usuarioActual` (`sensor`, `numeroSerie`). Respuesta esperada: `200` con `[{"valor": 84, "fecha": "2026-11-12T17:42:00Z"}, ...]`; `401` sesión caducada. Para ver la pantalla sin servidor, poner los dos a `true`: datos del Figma (5 mediciones 84, 90, 102, 96 y 88 µg/m³, una cada 20 min, la batería, la mejor hora, Mis lugares y los 3 avisos). Si el usuario tiene sensor, Inicio guarda su número de serie (`Sesion.guardarNumeroSerie`), pide los permisos que falten (una vez cada vez que se abre la app) y arranca `ServicioMediciones` (sección 3e); al recibir `ACCION_MEDICION_GUARDADA` vuelve a pedir las mediciones.
 - **Entrada:** las tarjetas aparecen una detrás de otra (fundido y desplazamiento, 70 ms entre cada una); la de Mi sensor / Vincular entra a la vez que las demás con lo que se sabía (lo que respondió el servidor la última vez, guardado en el teléfono; hasta T017, el sensor de ejemplo) y luego el servidor la confirma o la cambia.
 - **ProximamenteActivity:** título, icono, etiqueta «Próximamente» y un texto de la sección, con la barra de navegación (la pestaña marcada si se abrió desde la barra; desde un acceso de Inicio no se marca ninguna y tiene flecha de volver).
 
@@ -735,6 +735,42 @@ MisLugaresActivity (NUEVA): onCreate(), onResume(), cargarLugares(), mostrarLuga
 - **Ozono del mapa interpolado:** Cada lugar muestra la concentración actual en µg/m³ y el nivel de ozono correspondiente (`NivelOzono`: Bueno, Moderado, Malo o Muy Malo) con su indicador visual de color.
 - **Interruptor de avisos:** Cada tarjeta de lugar incluye un `MaterialSwitch` que activa o desactiva las alertas de esa ubicación específica.
 - **Eliminación:** Cada tarjeta dispone de un botón de papelera que solicita confirmación antes de borrar el lugar.
+
+## 3e. Recepción de las mediciones por Bluetooth (T023)
+
+El nodo (T004, `doc/arduino_design.md`) emite tramas iBeacon: UUID = `"AERI"` + número de serie (12 cifras), major = tipo × 256 + contador, minor = valor con signo. Ozono (tipo 11, µg/m³) durante 6 s y temperatura (tipo 12, décimas de °C) durante 3 s; una ronda cada ~9 s. La app las recibe y las envía al servidor:
+
+```
+sensor --BLE--> ServicioMediciones --TramaAERIS--> ReceptorMediciones --> ColaMediciones --POST /guardarMedicion--> servidor
+                     (+ ubicación y hora)                                                   └─ ACCION_MEDICION_GUARDADA --> Inicio
+```
+
+### Clase TramaAERIS (NUEVA)
+- `leer(datos: [N] | null) → TramaAERIS | null`: datos del fabricante `0x004C` del anuncio: `0x02 0x15`, UUID, major, minor, txPower (23 bytes). `null` si no empieza por `PREFIJO` (`0x02 0x15 "AERI"`) o el número de serie no son 12 cifras.
+- Campos: `numeroSerie`, `tipo` (`OZONO` = 11, `TEMPERATURA` = 12), `contador` (0..255), `valor` (con signo). `esOzono()`. Basada en `TramaIBeacon` del Sprint 0.
+
+### Clase ReceptorMediciones (NUEVA)
+- `esNueva(trama, ahora) → B`: solo ozono, contador distinto del último guardado y al menos `INTERVALO_MINIMO` (60 s) después: el sensor repite la misma medición durante 6 s y hace una nueva cada ~9 s, así que se guarda una por minuto. La temperatura no se envía (el servidor solo guarda contaminantes).
+- `cuerpo(numeroSerie, valor, latitud, longitud, momento) → Text`: `{"numeroSerie", "contaminante": "O3", "valor", "latitud", "longitud", "fecha"}` (ISO sin milisegundos). El valor se deja entre 0 y 2000 (`valorParaServidor`): con muy poco ozono el sensor puede dar un poco menos de 0.
+- `queHacer(codigo) → Resultado`: `200`/`201` ENVIADA; `401` SIN_SESION; `0`, `408`, `429`, `5xx` REINTENTAR; el resto (400, 403, 404) DESCARTAR (el servidor nunca la aceptará).
+
+### Clase ColaMediciones (NUEVA)
+- Mediciones aún no enviadas, la más antigua primero: `anadir()`, `primero()`, `quitarPrimero()`, `tamano()`, `vacia()`. Como mucho `MAXIMO` (2000, ~33 h a una por minuto); si se llena se pierden las más antiguas.
+- `aTexto()` / `desdeTexto()`: una por línea, para guardarla en el teléfono (`SharedPreferences` «mediciones_pendientes») y no perderla al cerrar la app.
+
+### Clase PermisosMedicion (NUEVA)
+- `obligatorios(sdk)`: ubicación precisa y aproximada (cada medición va con dónde se tomó; en Android 10 y 11 también hacen falta para buscar por Bluetooth) y, desde Android 12, `BLUETOOTH_SCAN`. `aPedir(sdk)`: además `POST_NOTIFICATIONS` desde Android 13 (si se niega, se mide igual, sin ver la notificación). `concedidos(contexto)`.
+
+### Clase ServicioMediciones (NUEVA, servicio en primer plano de tipo `location`)
+- `iniciar(contexto)` (solo con los permisos) / `parar(contexto)`. Lo arranca Inicio si el usuario tiene sensor; `Sesion.cerrar()` lo para.
+- Busca por Bluetooth con un filtro en los datos del fabricante (`PREFIJO`), así también funciona con la pantalla apagada, y se queda con las tramas del número de serie de `Sesion.numeroSerie()`. Ubicación: la última conocida y una nueva cada 30 s (GPS y red, `LocationManager`). Sin ubicación todavía, la medición no se guarda (el servidor la exige) y la notificación lo dice.
+- Envía las pendientes de una en una a `POST /guardarMedicion` con el token; sin conexión lo reintenta cada minuto; `401` para el servicio. Al guardar una envía `ACCION_MEDICION_GUARDADA` (solo a la propia app).
+- Notificación fija (canal «Medición con tu sensor», importancia baja): «Buscando tu sensor…», «Última medida: 84 µg/m³ · 13:42», Bluetooth apagado o sin ubicación. Al tocarla abre Inicio.
+- Logcat, etiqueta `ServicioMediciones`: cada medición nueva, los envíos que fallan y las que el servidor no acepta.
+
+### Clase Sesion y DatosUsuario (MODIFICADAS en T023)
+- `DatosUsuario.numeroSerie` (de `GET /usuarioActual`; `""` si no tiene sensor). `Sesion.guardarNumeroSerie()` / `numeroSerie()`; `Sesion.cerrar()` también para `ServicioMediciones`.
+
 
 ## 4. Aclaraciones del diseño
 
