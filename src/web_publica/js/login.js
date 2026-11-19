@@ -38,16 +38,17 @@ function validarFormulario(correo, contrasena) {
 }
 
 // --------------------------------------------------------
-// rol: Text --> paginaInicioSegunRol() --> url: Text
+// usuario: Usuario | Text --> paginaInicioSegunRol() --> url: Text
 //
-// ¿Es administrador o técnico? Va al panel de administración.
-// Si no, es un usuario (portador o ciudadano) y va a Mi cuenta.
-// Las consultas del rol están en roles.js.
+// Si tiene acceso al panel (administrador o técnico, aunque
+// además sea portador), va al panel de administración. Si no,
+// es un usuario (portador o ciudadano) y va a Mi cuenta.
+// Acepta también solo el texto del rol, como antes.
+// Las consultas de los roles están en roles.js.
 // --------------------------------------------------------
-function paginaInicioSegunRol(rol) {
-  const usuario = { rol };
-  if (rolesLogin.esAdministrador(usuario) || rolesLogin.esTecnico(usuario)) return PAGINA_PANEL;
-  return PAGINA_USUARIO;
+function paginaInicioSegunRol(usuario) {
+  const datos = typeof usuario === "string" ? { rol: usuario } : usuario;
+  return rolesLogin.tieneAccesoPanel(datos) ? PAGINA_PANEL : PAGINA_USUARIO;
 }
 
 // --------------------------------------------------------
@@ -124,7 +125,7 @@ async function enviarFormulario(evento, logica, irA) {
     mostrarError(resultado.error || MENSAJE_CREDENCIALES, ["correo", "contrasena"]);
     return;
   }
-  irA(paginaInicioSegunRol(resultado.usuario.rol));
+  irA(paginaInicioSegunRol(resultado.usuario));
 }
 
 // --------------------------------------------------------

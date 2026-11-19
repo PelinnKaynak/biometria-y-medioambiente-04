@@ -94,7 +94,7 @@ La lógica fake y la real tienen la misma interfaz, así que la pantalla funcion
 ```
 correo: Text, contrasena: Text --> validarFormulario() --> errores: [ ErrorCampo ]
 
-rol: Rol --> paginaInicioSegunRol() --> url: Text
+rol: Text --> paginaInicioSegunRol() --> url: Text
 
 mensaje: Text, campos: [ Text ] --> mostrarError()
 
@@ -108,7 +108,7 @@ iniciarPantalla()
 ```
 
 - `validarFormulario()` comprueba el correo y la contraseña con las reglas de `validacion.js` (apartado 2). Devuelve un error por cada campo que falla, con el id del campo y el mensaje. Si la lista está vacía, el formulario es correcto.
-- `paginaInicioSegunRol()` devuelve `../web_admin/panel_nodos.html` para TECNICO y ADMINISTRADOR, y `mi_cuenta.html` para PORTADOR y PREMIUM.
+- `paginaInicioSegunRol()` pregunta con `roles.js` (apartado 11) si es administrador o técnico. Si lo es, devuelve `../web_admin/panel_nodos.html`. Si no, es un usuario (portador o ciudadano) y devuelve `mi_cuenta.html`.
 - `mostrarError()` enseña el aviso debajo de los campos con el mensaje y marca con el borde de error los campos indicados por su id.
 - `ocultarError()` esconde el aviso y quita el borde de error de todos los campos.
 - `alternarVisibilidadContrasena()` cambia el campo de contraseña entre texto oculto y visible y cambia el icono del ojo.
@@ -209,7 +209,7 @@ La lógica real usa las rutas de `doc/servidor_rest_design.md`:
 | `solicitarRecuperacion()` | `POST /solicitarRecuperacion { correo }` | 200 · 400 · 404 (correo sin cuenta) |
 | `restablecerContrasena()` | `POST /restablecerContrasenya { token, contrasena }` | 204 · 400 |
 
-- El servidor manda el rol en minúsculas (`administrador`, `tecnico`, `portador`, `ciudadano`), y `paginaInicioSegunRol()` lo compara sin tener en cuenta mayúsculas. Ser premium no es un rol: lo indica `premiumHasta`.
+- El servidor manda el rol en minúsculas (`administrador`, `tecnico`, `portador`, `ciudadano`), y `roles.js` lo compara sin tener en cuenta mayúsculas. Ser premium no es un rol: lo indica `premiumHasta`.
 - Tras iniciar sesión se guarda en `sessionStorage` el usuario con su token, que se enviará en la cabecera `Authorization: Bearer` en las peticiones que lo pidan.
 - La web la sirve el mismo servidor REST (`ServidorREST.js`): `web_publica` en `/` y también en `/web_publica`, y `web_admin` en `/web_admin`. Por eso `URL_SERVIDOR` está vacío y las peticiones van a la misma dirección que la página.
 - Para usar la base de datos real: `USAR_LOGICA_FAKE = false` en `src/web_publica/js/configuracion.js`, `npm start` en `src/servidor_rest` con MySQL de XAMPP en marcha, y abrir `http://localhost:8080/login.html`. Abrir la página desde PhpStorm (puerto 63342) no sirve con la lógica real, porque las peticiones irían a PhpStorm y no al servidor.
@@ -295,7 +295,7 @@ Página `mi_cuenta.html`. Es donde llega el portador después de iniciar sesión
 - Saludo con el nombre y el estado del nodo: identificador y hace cuánto se sincronizó.
 - Cuatro indicadores: mediciones del mes comparadas con el mes anterior, puntos y nivel, exposición media al ozono con su nivel, y horas por encima del umbral de aviso esta semana.
 - Gráfica de la exposición al ozono (media diaria) por semana, mes o 3 meses, con las líneas de 100 µg/m³ (valor guía de la OMS) y 180 µg/m³ (umbral de aviso) y el máximo del periodo marcado.
-- Mis lugares guardados en el servidor, con nombre, zona y ozono interpolado. Cuando no hay mediciones O3 recientes, se indica «Sin datos recientes». Se gestionan desde la app (T046).
+- Mis lugares con la calidad del aire actual de cada uno. Se añaden y se editan desde la app.
 - Recompensas: puntos que faltan para el siguiente nivel y barra de progreso.
 - Últimas mediciones (solo en escritorio).
 - Tu perfil: nombre, correo, aviso de ozono y plan. El botón «Editar perfil» abre un diálogo para cambiar nombre, apellidos y correo. La contraseña, la foto y los avisos se cambian desde la app.
@@ -318,15 +318,12 @@ Página `mi_cuenta.html`. Es donde llega el portador después de iniciar sesión
 |---|---|---|
 | `obtenerPerfil()` | `GET /usuarioActual` | Ya está en el servidor (T016, T010) |
 | `actualizarDatos(datos)` | `POST /actualizarDatos { nombre, apellidos, correo }` · 200 · 400 · 409 | Ya está en el servidor (T010) |
-| `obtenerVinculacion()` | `GET /estadoVinculacion` | Ya está en el servidor (T005) |
-| `solicitarVinculacion(codigo)` | `POST /solicitarVinculacion { numeroSerie, sensibilidad? }` · 200 · 201 · 400 · 404 · 409 | Ya está en el servidor (T005, T045) |
-| `reenviarCorreo()` | `POST /reenviarCorreoVinculacion` | Ya está en el servidor (T005) |
-| `obtenerResumen()` | `GET /miCuenta` | Servidor implementado (T024); incluye lugares del usuario (T046) |
-| `obtenerExposicion(periodo)` | `GET /miExposicion?periodo=semana, mes o 3meses` | Servidor implementado (T024) |
+| `obtenerResumen()` | `GET /miCuenta` | Propuesta para T024 |
+| `obtenerExposicion(periodo)` | `GET /miExposicion?periodo=semana, mes o 3meses` | Propuesta para T024 |
 
-Todas las peticiones llevan la cabecera `Authorization: Bearer <token>`. Si no hay mediciones del sensor, el servidor responde 404 y la página muestra el aviso de que todavía no hay mediciones. Los lugares se exponen en el resumen incluso si su ozono es `null`.
+Todas las peticiones llevan la cabecera `Authorization: Bearer <token>`. Mientras T024 no esté hecha, el servidor responde 404 a las dos rutas nuevas y la página muestra el aviso de que todavía no hay mediciones. Con la lógica fake se ve la página completa con datos de ejemplo.
 
-Ejemplo de respuesta de `GET /miCuenta`:
+Respuesta propuesta de `GET /miCuenta`:
 
 ```
 { nodo, ultimaSincronizacion, medicionesMes, medicionesMesAnterior,
@@ -336,15 +333,9 @@ Ejemplo de respuesta de `GET /miCuenta`:
   ultimasMediciones: [ { fecha, lugar, ozono } ] }
 ```
 
-Respuesta de `GET /miExposicion`: `[ { fecha, ozono } ]`, una media por día.
+Respuesta propuesta de `GET /miExposicion`: `[ { fecha, ozono } ]`, una media por día.
 
 Funciones principales de `js/mi_cuenta.js`: `nivelOzono()`, `formatearNumero()`, `formatearFecha()`, `textoHace()`, `textoVariacion()`, `calcularGrafica()`, `cargarCuenta()`, `cambiarPeriodo()`, `validarPerfil()` y `guardarPerfil()`.
-
-#### Vincular sensor (T045 · H019, H037)
-
-La página `vincular.html` se abre desde «Vincular mi sensor» en Mi cuenta. Tanto en escritorio como en móvil, el código de la etiqueta se escribe manualmente; la lectura con cámara corresponde a la app (T005), no a la web.
-
-El flujo es `Mi cuenta · sin sensor` → `Vincular sensor` → `Mi cuenta · esperando confirmación`. Los enlaces «Vincular mi sensor» y «Vincular de nuevo» abren la misma página. `js/vincular.js` valida y muestra el número de serie y la fecha de fabricación antes de solicitar el vínculo. «Vincular» usa `LogicaCuentaReal.solicitarVinculacion()` para llamar a `POST /solicitarVinculacion`; el servidor valida que el sensor exista y no pertenezca a otra cuenta, y envía el correo de confirmación. Si se acepta, la página vuelve a Mi cuenta, que muestra el estado pendiente. Los errores 404 (sensor no registrado) y 409 (vinculado a otra cuenta) se muestran en la página. La lógica fake permite probar los estados de éxito y error sin el servidor.
 
 ### 8. Página de inicio y mapa (T012)
 
@@ -419,51 +410,33 @@ Páginas públicas `contaminantes.html`, `normativa.html` y `consejos.html`, seg
 
 ### 10. Pie común y contraste del texto
 
-- Todas las páginas públicas con cabecera (portada, mapa, Contaminantes, Normativa, Consejos, Mi cuenta y Vincular sensor) tienen el mismo pie oscuro: logo, frase, tres columnas de enlaces y «© 2026 SenseTech · AERIS». Sus estilos están en `css/pie.css` y cada página lo carga después de su hoja propia.
+- Todas las páginas públicas con cabecera (portada, mapa, Contaminantes, Normativa, Consejos y Mi cuenta) tienen el mismo pie oscuro: logo, frase, tres columnas de enlaces y «© 2026 SenseTech · AERIS». Sus estilos están en `css/pie.css` y cada página lo carga después de su hoja propia.
 - En la portada los enlaces del pie a sus secciones son anclas (`#planes`). En el resto de páginas llevan delante `index.html` (`index.html#planes`).
 - En Mi cuenta la columna «Tu cuenta» solo enlaza a Mi cuenta, porque ya hay sesión.
 - Las páginas de acceso (login, registro, recuperar y restablecer) no llevan pie, porque son una tarjeta centrada sin menú.
 - Los textos secundarios usan colores con un contraste de al menos 4,5:1 sobre blanco y sobre el fondo `#F5F6FA` (nivel AA de la WCAG 2.1). En `css/estilos.css` hay cuatro variables para texto: `--texto-gris` (#6A6585, sustituye al antiguo #8992B8), `--bueno-texto` (#2B735B), `--moderado-texto` (#85600F) y `--malo-texto` (#B5414A). Los colores de nivel de siempre (`--bueno`, `--moderado`, `--malo`) se siguen usando para puntos, barras y manchas del mapa, pero no para texto.
 
-### 11. Página Ayuda (T042 · H038)
+### 11. Consultas del rol (`roles.js`)
 
-Pantalla `ayuda.html`. Diseños «Ayuda» y «Ayuda · móvil» de Figma. Ofrece soporte integral al usuario con tres secciones principales:
+Las dos webs deciden qué puede hacer cada usuario con las mismas consultas. El rol de la BD es uno de estos: `administrador`, `tecnico`, `portador` o `ciudadano`.
 
-1. **Preguntas frecuentes (FAQ):** Acordeones interactivos (`<details class="faq-item">`) con dudas habituales (vinculación del sensor, calibración, niveles de ozono, resolución de problemas Bluetooth y cuenta).
-2. **Formulario para enviar una incidencia:** Permite elegir el tipo de incidencia (`sensor`, `datos`, `cuenta` u `otra`), redactar un asunto y describir el problema detalladamente. **Regla de validación:** Con el mensaje vacío no se envía (se resalta el campo y se avisa con mensaje de error accesible).
-3. **Mis incidencias:** Lista las incidencias enviadas por el usuario actual (obtenidas mediante `GET /misIncidencias`), mostrando para cada una su asunto, tipo, fecha, su **estado** (`abierta`, `en curso`, `resuelta`) y la **respuesta** del técnico/administrador cuando esté disponible (indicando quién respondió y cuándo). Si no hay sesión iniciada, muestra el aviso para iniciar sesión.
+```
+usuario: Usuario | null --> rolDe() --> Text
 
-#### Lógica del navegador (`logica_ayuda_fake.js` y `logica_ayuda_real.js`)
+usuario: Usuario | null --> esAdministrador() --> B
 
-```text
- --------- LogicaAyudaFake / LogicaAyudaReal -----------------------
- |
- |                                 obtenerMisIncidencias() -->
- |  { correcto: B, incidencias: [ Incidencia ], error: Text, sinSesion: B } <--
- |
- |  datos: { tipo, asunto, descripcion } --> crearIncidencia() -->
- |  { correcto: B, incidencia: Incidencia | null, error: Text, campos: [ Text ] } <--
- |
- -------------------------------------------------------------------
+usuario: Usuario | null --> esTecnico() --> B
+
+usuario: Usuario | null --> tipoDeUsuario() --> TipoUsuario
+
+TipoUsuario = { ADMINISTRADOR, TECNICO, USUARIO, SIN_SESION }
 ```
 
-#### Controlador de la pantalla (`ayuda.js`)
-
-```text
-isoString: Text, conHora: B --> formatearFecha() --> Text
-
-estado: Text --> textoEstado() --> { texto: Text, clase: Text }
-
-tipo: Text --> textoTipo() --> Text
-
-datos: { asunto, descripcion } --> validarIncidencia() --> { valido: B, error: Text, campo: Text }
-
-contenedor: HTMLElement, lista: [ Incidencia ] --> pintarIncidencias()
-
-logica: LogicaAyuda --> cargarMisIncidencias()
-
-evento: Event, logica: LogicaAyuda --> enviarIncidenciaFormulario()
-```
+- `rolDe()` devuelve el rol en mayúsculas, o una cadena vacía si no hay sesión, porque el servidor lo manda en minúsculas.
+- `tipoDeUsuario()` pregunta primero si es administrador y después si es técnico. Si no es ninguno de los dos, es un usuario (portador o ciudadano).
+- Las usan `login.js` (a dónde ir al iniciar sesión), `inicio.js` (el botón de la cabecera: «Panel» o «Mi cuenta»), `mi_cuenta.js` y `admin_comun.js` del panel. Por eso `roles.js` se carga antes que esos scripts en cada página.
+- Un administrador también tiene su página Mi cuenta. Llega desde «Ver como usuario» del panel, y en Mi cuenta la cabecera le enseña el enlace «Panel de administración» para volver. A los demás roles ese enlace no se les muestra.
+- El servidor comprueba el rol por su cuenta (`requiereSesion()`). Las consultas de la web solo deciden qué se enseña.
 
 ## Reglas generales
 
@@ -478,7 +451,9 @@ evento: Event, logica: LogicaAyuda --> enviarIncidenciaFormulario()
 ### Pruebas mínimas
 
 - `validarFormulario()` con un correo sin @, con la contraseña vacía y con datos correctos.
-- `paginaInicioSegunRol()` con cada uno de los cuatro roles.
+- `paginaInicioSegunRol()` con cada uno de los cuatro roles y con un rol que no es administrador ni técnico, que va a Mi cuenta.
+- Consultas del rol (`roles.test.js`): `esAdministrador()`, `esTecnico()` y `tipoDeUsuario()` con los cuatro roles, en mayúsculas y minúsculas, y sin sesión.
+- Mi cuenta: el enlace al panel solo se ve con rol administrador.
 - `iniciarSesion()` de la lógica fake con un usuario correcto, con una contraseña incorrecta y con un correo que no existe.
 - `enviarFormulario()` muestra el aviso de error cuando la lógica devuelve `correcto: false`, y marca solo el campo que falla cuando el formato no es correcto.
 - `esCorreoValido()` y `esContrasenaValida()` con ejemplos válidos y con cada caso que incumple una regla.

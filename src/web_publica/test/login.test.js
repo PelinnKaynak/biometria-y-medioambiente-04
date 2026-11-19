@@ -124,6 +124,15 @@ describe("enviarFormulario()", () => {
     expect(irA).toHaveBeenCalledWith("mi_cuenta.html");
   });
 
+  test("lleva al técnico que también es portador al panel y guarda sus dos roles (T048)", async () => {
+    const irA = jest.fn();
+    rellenar("marc@aeris.es", "marc1234");
+    await login.enviarFormulario(eventoFalso(), logica, irA);
+    expect(irA).toHaveBeenCalledWith("../web_admin/panel_nodos.html");
+    const sesion = JSON.parse(sessionStorage.getItem("aeris_usuario"));
+    expect(sesion).toMatchObject({ esTecnico: true, esPortador: true, esAdministrador: false });
+  });
+
   test("muestra el aviso y marca los campos si los datos son incorrectos", async () => {
     const irA = jest.fn();
     rellenar("laura@correo.es", "otraClave99");

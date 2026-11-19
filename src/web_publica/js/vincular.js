@@ -47,7 +47,7 @@ function conectarCabeceraVincular(logica, irA) {
     const nombre = String(usuario.nombre || "").trim();
     document.getElementById("nombre-cabecera").textContent = nombre;
     document.getElementById("avatar").textContent = nombre.charAt(0).toUpperCase();
-    document.getElementById("enlace-panel").hidden = !rolesVincular.esAdministrador(usuario);
+    document.getElementById("enlace-panel").hidden = !rolesVincular.tieneAccesoPanel(usuario);
 
     const botonMenu = document.getElementById("boton-menu");
     botonMenu.addEventListener("click", () => {
