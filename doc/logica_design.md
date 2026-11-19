@@ -184,6 +184,7 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
   - `test_mi_cuenta.js`: datos de la página Mi cuenta (T024).
   - `test_incidencias.js`: incidencias (T041).
   - `test_mediciones.js`: mediciones (T017).
+  - `test_nodos.js`: nodos del panel de administración (T021).
 - **Foto de perfil (T010):** se guarda en la columna `foto` de `Usuarios` como texto base64 (la app la reduce antes a un JPEG de 256×256, unos 30 KB), para que se vea en cualquier teléfono. No hace falta otra tabla.
 - **Cambiar la contraseña (T010):** pide la contraseña actual. Como el token lleva una huella del hash, al cambiarla se cierran todas las sesiones; por eso se devuelve un token nuevo para el teléfono que la ha cambiado.
 - **Correo de bienvenida (T002/T016):** al registrarse, `registrarUsuario()` llama a `enviarBienvenida()` sin esperarla: el registro responde enseguida y, si el correo falla (por ejemplo, Gmail no responde), la cuenta se crea igual y el error solo se escribe en la consola del servidor. El correo lo monta `CorreoBienvenida.crearCorreoBienvenida(nombre)` en español: texto plano y HTML con los colores de la app, el logo de AERIS arriba, una presentación general de la app y algunas de sus funciones (mapa, alertas, historial, previsión de ozono, rutas limpias, lugares, puntos…) y el logo de SenseTech al pie. Los logos (`src/logica/img/`) van incrustados en el correo (`cid:`), así se ven aunque el servidor no esté en internet. El nombre se escapa (`escaparHTML()`) para que no pueda meter HTML.
@@ -256,4 +257,17 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
                          --> mediciones.ultima() --> Medicion                 | SIN_MEDICIONES
   fecha: Texto | N       --> leerFecha() --> Date | null                       (sin milisegundos)
   Medicion = ( idMedicion, contaminante, valor, unidad, fecha, latitud, longitud )
+```
+- **Nodos del panel (T021 · H011):** están en `Nodos.js` (clase `Nodos`) y se usan como `logica.nodos.buscar(…)`. Un nodo es un sensor vinculado a un usuario (`Sensores.idUsuario` no nulo); los que nadie ha vinculado todavía no salen. De cada uno se da el número de serie, el portador (nombre y apellidos), la fecha y el sitio de su última medición, la batería, si necesita calibración y el estado, con las mismas claves que los nodos de `LogicaAdminFake` de la web. Si un sensor no ha medido nunca, la fecha es `ultimaConexion` (o `null`) y la ubicación `null`.
+  - Estado: `INACTIVO` si lleva más de 24 horas sin datos o no ha medido nunca (el mismo umbral que `nodos.js` de la web); si no, `CALIBRAR` si `necesitaCalibracion` y `ACTIVO` en el resto.
+  - `buscar()`: busca en el número de serie y en el portador sin mirar mayúsculas ni acentos, filtra por `estado` (`todos`, `activos` = no inactivos, `inactivos`, `calibrar`) y ordena del que lleva más tiempo sin datos al más reciente. Devuelve la página pedida (`pagina` desde 1, `porPagina` 20 por defecto y 100 como mucho) y `total`, el número de nodos que cumplen el filtro sin paginar. `porPagina` 0 los devuelve todos (el mapa). Un filtro que no vale da `DATOS_NO_VALIDOS` con los campos.
+  - `resumen()`: total, activos, inactivos de más de 24 horas, inactivos de más de 7 días y por calibrar.
+
+```text
+  filtro: ( busqueda, estado, pagina, porPagina ), ahora: Fecha
+                         --> nodos.buscar() --> ( nodos: Lista<Nodo>, total: N )   | DATOS_NO_VALIDOS
+  ahora: Fecha           --> nodos.resumen() --> ( total, activos, inactivos24h, inactivos7d, porCalibrar )
+  Nodo = ( id, portador, ultimaMedicion: Fecha | null, bateria: N | null,
+           latitud: R | null, longitud: R | null, necesitaCalibrar: V/F,
+           estado: ACTIVO | INACTIVO | CALIBRAR )
 ```

@@ -6,8 +6,8 @@
 //              perfil, la edición de los datos y la foto (T010), y la
 //              vinculación de sensores confirmada por correo (T005), y los
 //              datos de la página Mi cuenta (T024). Las incidencias (T041)
-//              están en Incidencias.js y las mediciones (T017) en
-//              Mediciones.js. Es la única parte que habla con la base de
+//              están en Incidencias.js, las mediciones (T017) en
+//              Mediciones.js y los nodos del panel (T021) en Nodos.js. Es la única parte que habla con la base de
 //              datos (MySQL, tablas Usuarios, Sensores, Contaminantes y
 //              Mediciones). Las sesiones y los enlaces de
 //              recuperación y de vinculación son tokens firmados: no usan tablas.
@@ -26,6 +26,7 @@ const { crearCorreoRecuperacion } = require('./CorreoRecuperacion');
 const { crearCorreoVinculacion } = require('./CorreoVinculacion');
 const { Incidencias } = require('./Incidencias');
 const { Mediciones } = require('./Mediciones');
+const { Nodos } = require('./Nodos');
 const MiCuenta = require('./MiCuenta');
 
 const ROL_PORTADOR = 'portador';
@@ -114,6 +115,7 @@ class Logica {
         this.urlVinculacion = urlVinculacion || `${new URL(urlRestablecer).origin}/responderVinculacion`;
         this.incidencias = new Incidencias(this);     // T041: logica.incidencias.crear(…), …
         this.mediciones = new Mediciones(this);       // T017: logica.mediciones.guardar(…), …
+        this.nodos = new Nodos(this);                 // T021: logica.nodos.buscar(…), …
     }
 
     // -----------------------------------------------------------------------

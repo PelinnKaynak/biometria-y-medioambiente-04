@@ -4,8 +4,8 @@
 //              petición, llama a la lógica y traduce el resultado a HTTP.
 //              Contrato completo en doc/servidor_rest_design.md. Tareas T016,
 //              T010, T005 (vinculación del sensor confirmada por correo),
-//              T041 (incidencias), T017 (mediciones) y T024 (datos de la
-//              página Mi cuenta).
+//              T041 (incidencias), T017 (mediciones), T024 (datos de la
+//              página Mi cuenta) y T021 (nodos del panel).
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -18,6 +18,9 @@ const { paginaConfirmar, paginaResultado, paginaEnlaceNoValido } = require('./Pa
 
 // Roles que reciben y responden las incidencias (T041)
 const ROLES_GESTION_INCIDENCIAS = ['administrador', 'tecnico'];
+
+// Roles que entran al panel de administración y ven los nodos (T021)
+const ROLES_PANEL = ['administrador', 'tecnico'];
 
 // Código de ErrorLogica --> código HTTP
 const CODIGOS_HTTP = {
@@ -133,6 +136,28 @@ function cargarReglasREST(servidor, logica) {
     servidor.post('/reenviarCorreoVinculacion', requiereSesion(logica), envolver(async (peticion, respuesta) => {
         await logica.reenviarCorreoVinculacion(peticion.usuario.idUsuario);
         respuesta.status(200).json({ mensaje: 'Correo reenviado' });
+    }));
+
+    // ---- Nodos del panel de administración (T021) ----
+
+    // GET /nodos/resumen  🔒 administrador o técnico
+    //   200 { total, activos, inactivos24h, inactivos7d, porCalibrar } · 401 · 403
+    servidor.get('/nodos/resumen', requiereSesion(logica, ROLES_PANEL), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.nodos.resumen());
+    }));
+
+    // GET /nodos?busqueda=&estado=todos|activos|inactivos|calibrar&pagina=1&porPagina=20  🔒 administrador o técnico
+    //   200 { nodos: [ Nodo ], total } (total sin paginar; porPagina máx. 100) · 400 filtro no válido · 401 · 403
+    servidor.get('/nodos', requiereSesion(logica, ROLES_PANEL), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.nodos.buscar(peticion.query));
+    }));
+
+    // GET /nodos/mapa?busqueda=&estado=  🔒 administrador o técnico
+    //   200 { nodos: [ Nodo ], total }: todos los que cumplen el filtro y tienen ubicación, sin paginar · 400 · 401 · 403
+    servidor.get('/nodos/mapa', requiereSesion(logica, ROLES_PANEL), envolver(async (peticion, respuesta) => {
+        const { nodos } = await logica.nodos.buscar({ ...peticion.query, pagina: 1, porPagina: 0 });
+        const conSitio = nodos.filter((n) => n.latitud !== null && n.longitud !== null);
+        respuesta.status(200).json({ nodos: conSitio, total: conSitio.length });
     }));
 
     // GET /miCuenta  🔒                                                   (T024)
