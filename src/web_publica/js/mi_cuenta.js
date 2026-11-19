@@ -381,9 +381,16 @@ function pintarLugares(lugares) {
         nombre.className = "nombre-lugar";
         nombre.innerHTML = "<strong></strong><span class='zona'></span>";
         nombre.querySelector("strong").textContent = lugar.nombre;
-        nombre.querySelector(".zona").textContent = " · " + lugar.zona;
-        const nivel = nivelOzono(lugar.ozono);
-        li.append(nombre, crearNivel(nivel, nivel.texto + " · " + Math.round(lugar.ozono) + " µg/m³"));
+        nombre.querySelector(".zona").textContent = lugar.zona ? " · " + lugar.zona : "";
+        if (typeof lugar.ozono !== "number" || !Number.isFinite(lugar.ozono)) {
+            const sinDatos = document.createElement("span");
+            sinDatos.className = "sin-nivel";
+            sinDatos.textContent = "Sin datos recientes";
+            li.append(nombre, sinDatos);
+        } else {
+            const nivel = nivelOzono(Number(lugar.ozono));
+            li.append(nombre, crearNivel(nivel, nivel.texto + " · " + Math.round(lugar.ozono) + " µg/m³"));
+        }
         lista.appendChild(li);
     }
 }

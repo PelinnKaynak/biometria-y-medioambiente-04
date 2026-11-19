@@ -22,10 +22,11 @@ public class Lugar {
     public final int id;
     public final int idUsuario;
     public final String nombre;
+    public final String tipo;
     public final String direccion;
     public final double latitud;
     public final double longitud;
-    public final double ozonoActual;
+    public final Double ozonoActual;
     public boolean avisosActivos;
 
     // -----------------------------------------------------------------------
@@ -35,9 +36,15 @@ public class Lugar {
     // -----------------------------------------------------------------------
     public Lugar(int id, int idUsuario, String nombre, String direccion,
                  double latitud, double longitud, double ozonoActual, boolean avisosActivos) {
+        this(id, idUsuario, nombre, "otro", direccion, latitud, longitud, ozonoActual, avisosActivos);
+    }
+
+    public Lugar(int id, int idUsuario, String nombre, String tipo, String direccion,
+                 double latitud, double longitud, Double ozonoActual, boolean avisosActivos) {
         this.id = id;
         this.idUsuario = idUsuario;
         this.nombre = nombre != null ? nombre.trim() : "";
+        this.tipo = tipo != null ? tipo.trim() : "otro";
         this.direccion = direccion != null ? direccion.trim() : "";
         this.latitud = latitud;
         this.longitud = longitud;
@@ -60,7 +67,7 @@ public class Lugar {
     //               for the current ozone value.
     // -----------------------------------------------------------------------
     public NivelOzono nivelOzono() {
-        return NivelOzono.desdeValor(ozonoActual);
+        return ozonoActual == null ? null : NivelOzono.desdeValor(ozonoActual);
     }
 
     // -----------------------------------------------------------------------
@@ -69,7 +76,9 @@ public class Lugar {
     // What it does: returns the ozone value formatted with µg/m³.
     // -----------------------------------------------------------------------
     public String textoOzono() {
-        return String.format(Locale.getDefault(), "%.0f µg/m³", ozonoActual);
+        return ozonoActual == null
+                ? "Sin datos recientes"
+                : String.format(Locale.getDefault(), "%.0f µg/m³", ozonoActual);
     }
 
     // -----------------------------------------------------------------------
@@ -85,13 +94,21 @@ public class Lugar {
             int id = json.optInt("id", json.optInt("idLugar", 0));
             int idUsuario = json.optInt("idUsuario", 0);
             String nombre = json.optString("nombre", "");
-            String direccion = json.optString("direccion", "");
+            String tipo = json.optString("tipo", "otro");
+            String direccion = json.optString("direccion", json.optString("zona", ""));
             double latitud = json.optDouble("latitud", 0.0);
             double longitud = json.optDouble("longitud", 0.0);
-            double ozonoActual = json.optDouble("ozonoActual", json.optDouble("valor", 0.0));
+            Double ozonoActual = null;
+            if (json.has("ozonoActual") && !json.isNull("ozonoActual")) {
+                ozonoActual = json.optDouble("ozonoActual");
+            } else if (json.has("ozono") && !json.isNull("ozono")) {
+                ozonoActual = json.optDouble("ozono");
+            } else if (json.has("valor") && !json.isNull("valor")) {
+                ozonoActual = json.optDouble("valor");
+            }
             boolean avisos = json.optBoolean("avisosActivos", json.optBoolean("alertas", true));
 
-            return new Lugar(id, idUsuario, nombre, direccion, latitud, longitud, ozonoActual, avisos);
+            return new Lugar(id, idUsuario, nombre, tipo, direccion, latitud, longitud, ozonoActual, avisos);
         } catch (Exception e) {
             return null;
         }
@@ -111,7 +128,8 @@ public class Lugar {
             json.put("direccion", direccion);
             json.put("latitud", latitud);
             json.put("longitud", longitud);
-            json.put("ozonoActual", ozonoActual);
+            json.put("tipo", tipo);
+            json.put("ozonoActual", ozonoActual == null ? JSONObject.NULL : ozonoActual);
             json.put("avisosActivos", avisosActivos);
         } catch (JSONException ignored) {
         }

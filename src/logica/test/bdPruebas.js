@@ -50,6 +50,7 @@ async function crearBDPruebas() {
 //               with them).
 // ---------------------------------------------------------------------------
 async function vaciarTablas(conexion) {
+    await conexion.query('DELETE FROM Lugares');
     await conexion.query('DELETE FROM Incidencias');
     await conexion.query('DELETE FROM Mediciones');
     await conexion.query('DELETE FROM Sensores');

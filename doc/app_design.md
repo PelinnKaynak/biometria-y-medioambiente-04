@@ -642,9 +642,9 @@ ProximamenteActivity (NUEVA, provisional): onCreate(), intentPara(), seccionDe()
 - **Entrada:** las tarjetas aparecen una detrás de otra (fundido y desplazamiento, 70 ms entre cada una); la de Mi sensor / Vincular entra a la vez que las demás con el último estado conocido (guardado en el teléfono) y luego el servidor lo confirma o lo cambia.
 - **ProximamenteActivity:** título, icono, etiqueta «Próximamente» y un texto de la sección, con la barra de navegación (la pestaña marcada si se abrió desde la barra; desde un acceso de Inicio no se marca ninguna y tiene flecha de volver).
 
-## 3d. Pantalla Mis lugares (T019 · H034)
+## 3d. Pantalla Mis lugares (T019/T046 · H034)
 
-Pantalla completa de «Mis lugares» (Figma: «mis lugares»). Permite al usuario guardar y gestionar hasta 5 ubicaciones habituales (casa, trabajo, colegio...), consultar en cada una el nivel de ozono actual (obtenido del modelo de mapa interpolado) y activar o desactivar los avisos de calidad del aire asociados a cada ubicación. Se abre desde el acceso «Mis lugares» de `InicioActivity` o desde la opción «Mis lugares» de `PerfilActivity`.
+Pantalla completa de «Mis lugares» (Figma: «mis lugares»). Permite guardar hasta 5 ubicaciones en el servidor, especificando nombre, tipo, dirección y coordenadas; muestra el ozono interpolado de las mediciones recientes y permite activar o desactivar los avisos asociados a cada ubicación. Se abre desde el acceso «Mis lugares» de `InicioActivity` o desde la opción «Mis lugares» de `PerfilActivity`.
 
 ```text
 InicioActivity («filaLugares»)   --> MisLugaresActivity
@@ -663,10 +663,11 @@ Lugar: (
     id: Z,
     idUsuario: Z,
     nombre: Texto,
+    tipo: casa | trabajo | colegio | otro,
     direccion: Texto,
     latitud: R,
     longitud: R,
-    ozonoActual: R,
+    ozonoActual: R | null,
     avisosActivos: B
 )
 ```
@@ -696,6 +697,8 @@ Lugar: (
 
 ### Clase LogicaFakeMisLugares (NUEVA)
 
+La implementación predeterminada usa la API REST; el almacenamiento en memoria solo se activa en el modo de ejemplo de las pruebas.
+
 ```text
                                     --------- LogicaFakeMisLugares -----------------
                                     |
@@ -704,16 +707,16 @@ Lugar: (
                                         |     401 -> sesionCaducada()
                                     |
   token: Texto, nombre: Texto,      --> anadirLugar() -->
-  direccion: Texto,                     |     nombre/dirección vacíos -> error()
-  callback: CallbackOperacionLugar      |     tamaño >= 5 -> limiteAlcanzado()
-                                        |     ok -> calcula ozono interpolado y guarda
+  tipo: Texto, dirección: Texto,        |     POST /lugares con tipo y coordenadas
+  latitud: R, longitud: R,              |     400 -> error(campos), 409 -> limiteAlcanzado()
+  callback: CallbackOperacionLugar      |     201 -> lugar guardado
                                     |
   token: Texto, idLugar: Z,         --> cambiarAvisos() -->
-  avisosActivos: B,                     |     actualiza estado del interruptor
+  avisosActivos: B,                     |     PATCH /lugares/:idLugar
   callback: CallbackOperacionLugar      |
                                     |
   token: Texto, idLugar: Z,         --> eliminarLugar() -->
-  callback: CallbackEliminarLugar       |     elimina de la cuenta del usuario
+  callback: CallbackEliminarLugar       |     DELETE /lugares/:idLugar
                                     |
   token: Texto                      --> esTokenValido() --x
   B                                 <-- |     comprueba sesión
@@ -730,11 +733,12 @@ MisLugaresActivity (NUEVA): onCreate(), onResume(), cargarLugares(), mostrarLuga
                             guardarNuevoLugar(), confirmarEliminarLugar(), colorDe(), nombreDe()
 ```
 
-- **Aislamiento por usuario:** Los lugares guardados solo los ve el usuario con sesión activa (`token`). `LogicaFakeMisLugares` indexa los almacenes por usuario.
+- **Aislamiento por usuario:** La app usa la API con la sesión activa (`token`); el servidor filtra por propietario. El almacén en memoria se conserva solo para pruebas del modo de ejemplo.
 - **Límite de 5 lugares:** La tarjeta de contador muestra `X de 5 lugares guardados`. Si se alcanza el límite (5 lugares), se muestra el aviso de límite y se bloquea la adición hasta que se elimine algún lugar.
-- **Ozono del mapa interpolado:** Cada lugar muestra la concentración actual en µg/m³ y el nivel de ozono correspondiente (`NivelOzono`: Bueno, Moderado, Malo o Muy Malo) con su indicador visual de color.
+- **Ozono interpolado:** Cada lugar muestra la concentración y nivel cuando hay lecturas O3 de las últimas 24 horas; si no las hay, muestra «Sin datos recientes».
 - **Interruptor de avisos:** Cada tarjeta de lugar incluye un `MaterialSwitch` que activa o desactiva las alertas de esa ubicación específica.
 - **Eliminación:** Cada tarjeta dispone de un botón de papelera que solicita confirmación antes de borrar el lugar.
+- **Tipo y coordenadas:** El formulario permite elegir Casa/Trabajo/Colegio/Otro e introducir latitud y longitud manualmente; no se usa un geocodificador.
 
 ## 3e. Recepción de las mediciones por Bluetooth (T023)
 
@@ -803,7 +807,7 @@ sensor --BLE--> ServicioMediciones --TramaAERIS--> ReceptorMediciones --> ColaMe
 - **Mensajes en la pantalla, sin avisos emergentes (Toast):** los errores y las confirmaciones se escriben en la propia pantalla: en el perfil, en rojo debajo del correo; en «Editar mis datos», los errores debajo de cada botón y, al cambiar la contraseña, una etiqueta verde «✓ Cambiada» al lado del título «Contraseña»; en «Revisa tu correo», debajo de «Reenviar». Al guardar los datos no sale ningún mensaje: se vuelve al perfil, que ya enseña los datos nuevos.
 - **Cambiar contraseña:** pide la actual, la nueva (segura y distinta de la actual) y repetirla; `POST /cambiarContrasenya`. `200` → el servidor devuelve una sesión nueva, que se guarda con `Sesion.iniciar()` (la sesión de los otros teléfonos se cierra); `403` → «La contraseña actual no es correcta.» y se borra ese campo.
 - **Mi sensor (T011):** el perfil obtiene el sensor con `GET /usuarioActual`; si existe, la fila abre `MiSensorActivity`, y si no, abre `VincularSensorActivity`. Mi sensor carga los datos de `GET /miSensor`, ofrece desvincular mediante `DELETE /miSensor` y conserva localmente el interruptor de luz simulado. Si el servidor responde `401`, se cierra la sesión; si no hay sensor (`404`), muestra la opción de volver a vincular.
-- **Opciones de otras tareas:** «Umbral de alerta», «Puntos y recompensas», «Mis lugares» (T019) y «AERIS Premium» aún no hacen nada al pulsarlas. «Umbral de alerta» enseña «Normal», el valor por defecto (`umbralAlerta` NULL).
+- **Opciones de otras tareas:** «Umbral de alerta», «Puntos y recompensas» y «AERIS Premium» aún no hacen nada al pulsarlas. «Umbral de alerta» enseña «Normal», el valor por defecto (`umbralAlerta` NULL).
 - **Barra de navegación:** `barra_navegacion.xml` se añade con `<include>` y `BarraNavegacion.conectar()` la pinta y conecta. Inicio siempre queda debajo: desde cualquier pestaña se cierra la pantalla actual al cambiar (`cierraLaActual()`), así «atrás» vuelve a Inicio y «atrás» en Inicio sale de la app. Al volver a Inicio se reutiliza (`FLAG_ACTIVITY_CLEAR_TOP`). Las pestañas cambian sin animación.
 - **PeticionarioREST:** es el código proporcionado por el profesor, con la misma interfaz, pero sin `AsyncTask` (obsoleta desde Android 11): la petición se hace en un hilo de fondo (`Executor`) y el callback se llama en el hilo principal.
 - **Visibilidad:** los métodos auxiliares de `ValidadorRegistro` y `LogicaFakeRegistro` son de paquete (sin `public`) para poder probarlos con JUnit; ninguna otra clase los usa.

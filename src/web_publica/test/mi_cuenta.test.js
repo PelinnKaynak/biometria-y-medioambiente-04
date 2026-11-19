@@ -114,6 +114,19 @@ describe("cargarCuenta()", () => {
         expect(visible("cargando")).toBe(false);
     });
 
+    test("muestra sin datos recientes cuando un lugar no tiene mediciones cercanas", async () => {
+        sessionStorage.setItem("aeris_usuario", JSON.stringify(SESION));
+        const logica = new LogicaCuentaFake(0, AHORA);
+        const resultado = await logica.obtenerResumen();
+        resultado.resumen.lugares = [{ nombre: "Casa", zona: "Gandia", ozono: null }];
+        logica.obtenerResumen = async () => resultado;
+
+        await cuenta.cargarCuenta(logica, jest.fn());
+
+        expect(document.querySelector("#lista-lugares .sin-nivel").textContent).toBe("Sin datos recientes");
+        expect(document.querySelector("#lista-lugares .nivel-bueno")).toBeNull();
+    });
+
     test("sin datos del sensor muestra el aviso y oculta los indicadores", async () => {
         sessionStorage.setItem("aeris_usuario", JSON.stringify(SESION));
         const logica = new LogicaCuentaFake(0, AHORA);

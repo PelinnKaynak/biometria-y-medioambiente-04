@@ -4,7 +4,7 @@ Motor: **MySQL / MariaDB** (XAMPP en local).
 Base de datos: `aeris` (codificación `utf8mb4`).
 Script: [`src/bd/usuarios.sql`](../src/bd/usuarios.sql)
 
-Sigue el diagrama de la BD en Figma (enlace en el README). Ahora están las tablas `Usuarios`, `Contaminantes`, `Sensores`, `Mediciones` (T015) e `Incidencias` (T041), más las columnas de la solicitud de vinculación en `Sensores` (T005). Las sesiones y los enlaces de recuperación de contraseña de T016 son tokens firmados por el servidor, así que no necesitan tablas (ver `logica_design.md`). El resto (Lugares, MovimientosPuntos, Insignias, UsuarioInsignia, Recompensas, Canjes, Campañas, ZonasSensibles) se añadirá en las tareas correspondientes.
+Sigue el diagrama de la BD en Figma (enlace en el README). Ahora están las tablas `Usuarios`, `Contaminantes`, `Sensores`, `Mediciones` (T015), `Incidencias` (T041) y `Lugares` (T046), más las columnas de la solicitud de vinculación en `Sensores` (T005). Las sesiones y los enlaces de recuperación de contraseña de T016 son tokens firmados por el servidor, así que no necesitan tablas (ver `logica_design.md`). El resto (MovimientosPuntos, Insignias, UsuarioInsignia, Recompensas, Canjes, Campañas, ZonasSensibles) se añadirá en las tareas correspondientes.
 
 ## Tabla `Usuarios`
 
@@ -94,6 +94,20 @@ Las que el usuario envía desde Ayuda (app y web). Las reciben y las responden l
 | `fechaCreacion` | DATETIME | NOT NULL, DEFAULT UTC_TIMESTAMP | Cuándo se envió (UTC) |
 | `fechaRespuesta` | DATETIME | NULL | Cuándo se respondió (UTC) |
 
+## Tabla `Lugares` (T046 · H034, H035)
+
+Lugares habituales, privados por usuario. La app envía la dirección y sus coordenadas; el servidor guarda `POINT(longitud, latitud)` y la preferencia de avisos.
+
+| Columna | Tipo | Restricciones | Descripción |
+|---|---|---|---|
+| `idLugar` | INT | PK, AUTO_INCREMENT | Identificador del lugar |
+| `idUsuario` | INT | FK → Usuarios, NOT NULL, ON DELETE CASCADE | Propietario |
+| `nombre` | VARCHAR(80) | NOT NULL | Nombre elegido por el usuario |
+| `tipo` | VARCHAR(20) | NOT NULL, CHECK | `casa`, `trabajo`, `colegio` u `otro` |
+| `direccion` | VARCHAR(255) | NOT NULL | Dirección o municipio para mostrar |
+| `ubicacion` | POINT | NOT NULL | Coordenadas validadas; se usa para interpolar el ozono |
+| `avisosActivos` | BOOLEAN | NOT NULL, DEFAULT TRUE | Preferencia de avisos del lugar |
+
 ## Aclaraciones
 
 - `email` es UNIQUE: si se intenta registrar un correo que ya existe, la BD lo rechaza y el servidor responde **409** a la app.
@@ -106,7 +120,7 @@ Las que el usuario envía desde Ayuda (app y web). Las reciben y las responden l
 1. Abrir XAMPP Control Panel y pulsar **Start** en Apache y MySQL.
 2. Abrir `http://localhost/phpmyadmin`.
 3. Pestaña **Importar** → seleccionar `src/bd/usuarios.sql` → **Importar**.
-4. Debe aparecer la base de datos `aeris` con las tablas `Usuarios`, `Contaminantes`, `Sensores` y `Mediciones`.
+4. Debe aparecer la base de datos `aeris` con las tablas `Usuarios`, `Contaminantes`, `Sensores`, `Mediciones`, `Incidencias` y `Lugares`.
 
 **Si la BD ya estaba creada antes de T010:** importar también `src/bd/actualizar_T010.sql`, que añade la columna `foto` sin borrar los usuarios.
 
@@ -115,6 +129,8 @@ Las que el usuario envía desde Ayuda (app y web). Las reciben y las responden l
 **Si la BD ya estaba creada antes de T017:** importar `src/bd/actualizar_T017.sql`, que añade el ozono a `Contaminantes` y la clave única de `Mediciones`. Se puede importar más de una vez.
 
 **Si la BD ya estaba creada antes de T041:** importar `src/bd/actualizar_T041.sql`, que crea la tabla `Incidencias` sin borrar nada. Si ya se había importado una versión anterior (sin `asunto` ni `idResponsable`), borrar antes la tabla con `DROP TABLE Incidencias;`.
+
+**Si la BD ya estaba creada antes de T046:** importar `src/bd/actualizar_T046.sql`, que crea `Lugares` sin borrar nada. Se puede importar más de una vez.
 
 ## Prueba del script
 
