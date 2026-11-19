@@ -10,7 +10,7 @@
 // usuario más (su página Mi cuenta).
 // ------------------------------------------------------------
 
-// Las consultas del rol (esAdministrador, esTecnico) están en
+// Las consultas de los roles (esAdministrador, esTecnico, esPortador) están en
 // web_publica/js/roles.js. En el navegador son globales; en las
 // pruebas (Node) se cargan con require.
 const rolesAdmin = typeof module !== "undefined" ? require("../../web_publica/js/roles") : window;
@@ -24,7 +24,7 @@ const PAGINA_INICIO_PANEL = "panel_nodos.html";
 // Al panel entran los administradores y los técnicos.
 // --------------------------------------------------------
 function tieneAccesoAdmin(usuario) {
-    return rolesAdmin.esAdministrador(usuario) || rolesAdmin.esTecnico(usuario);
+    return rolesAdmin.tieneAccesoPanel(usuario);
 }
 
 // --------------------------------------------------------
@@ -54,11 +54,17 @@ function comprobarAcceso(logica, irA, solo_administrador = false) {
 //
 // Las opciones marcadas con data-solo-admin (Usuarios y
 // «Ver como usuario») solo se muestran al administrador.
+// «Ver como usuario» lleva a Mi cuenta, así que también la ve
+// un técnico que además es portador (T048).
 // --------------------------------------------------------
 function ajustarMenuSegunRol(usuario) {
     const admin = rolesAdmin.esAdministrador(usuario);
     for (const opcion of document.querySelectorAll("[data-solo-admin]")) {
         opcion.hidden = !admin;
+    }
+    const verComoUsuario = admin || rolesAdmin.esPortador(usuario);
+    for (const opcion of document.querySelectorAll(".opcion-vista-usuario")) {
+        opcion.hidden = !verComoUsuario;
     }
 }
 

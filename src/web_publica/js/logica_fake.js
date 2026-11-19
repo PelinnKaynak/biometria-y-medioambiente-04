@@ -13,7 +13,9 @@ class LogicaFake {
   // --------------------------------------------------------
   // retardo_ms: N --> LogicaFake() -->
   //
-  // Crea la lógica fake con dos usuarios de prueba.
+  // Crea la lógica fake con tres usuarios de prueba: un
+  // administrador, una portadora y un técnico que también es
+  // portador.
   // retardo_ms simula lo que tarda el servidor en responder
   // (en las pruebas se pasa 0).
   // --------------------------------------------------------
@@ -24,11 +26,19 @@ class LogicaFake {
     this.usuarios = [
       {
         credenciales: { correo: "admin@aeris.es", contrasena: "admin1234" },
-        usuario: { id: 1, nombre: "Administración AERIS", correo: "admin@aeris.es", rol: "ADMINISTRADOR" }
+        usuario: { id: 1, nombre: "Administración AERIS", correo: "admin@aeris.es", rol: "ADMINISTRADOR",
+          esAdministrador: true, esTecnico: false, esPortador: false }
       },
       {
         credenciales: { correo: "laura@correo.es", contrasena: "laura1234" },
-        usuario: { id: 2, nombre: "Laura Martínez", correo: "laura@correo.es", rol: "PORTADOR" }
+        usuario: { id: 2, nombre: "Laura Martínez", correo: "laura@correo.es", rol: "PORTADOR",
+          esAdministrador: false, esTecnico: false, esPortador: true }
+      },
+      {
+        // Técnico que además lleva un sensor (dos roles a la vez, T048)
+        credenciales: { correo: "marc@aeris.es", contrasena: "marc1234" },
+        usuario: { id: 3, nombre: "Marc Ribes", correo: "marc@aeris.es", rol: "TECNICO",
+          esAdministrador: false, esTecnico: true, esPortador: true }
       }
     ];
   }
@@ -82,7 +92,8 @@ class LogicaFake {
       id: this.usuarios.length + 1,
       nombre: datos.nombre.trim(),
       correo,
-      rol: "PORTADOR"
+      rol: "PORTADOR",
+      esAdministrador: false, esTecnico: false, esPortador: true
     };
     this.usuarios.push({ credenciales: { correo, contrasena: datos.contrasena }, usuario });
     sessionStorage.setItem(CLAVE_SESION, JSON.stringify(usuario));

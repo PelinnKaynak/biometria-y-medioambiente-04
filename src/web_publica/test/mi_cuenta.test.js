@@ -259,12 +259,19 @@ describe("cabecera", () => {
         expect(irA).toHaveBeenCalledWith("login.html");
     });
 
-    test.each([["administrador", false], ["portador", true], ["tecnico", true]])(
+    test.each([["administrador", false], ["portador", true], ["tecnico", false]])(
         "con rol %s, el enlace al panel de administración oculto = %p", (rol, oculto) => {
             sessionStorage.setItem("aeris_usuario", JSON.stringify({ ...SESION, rol }));
             cuenta.conectarCabecera(new LogicaCuentaFake(0, AHORA), jest.fn());
             expect(document.getElementById("enlace-panel").hidden).toBe(oculto);
         });
+
+    test("un técnico que también es portador ve el enlace al panel (T048)", () => {
+        sessionStorage.setItem("aeris_usuario", JSON.stringify({
+            ...SESION, rol: "tecnico", esAdministrador: false, esTecnico: true, esPortador: true }));
+        cuenta.conectarCabecera(new LogicaCuentaFake(0, AHORA), jest.fn());
+        expect(document.getElementById("enlace-panel").hidden).toBe(false);
+    });
 });
 
 test("sin datos el perfil ocupa la rejilla él solo", async () => {

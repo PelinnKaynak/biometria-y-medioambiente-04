@@ -34,6 +34,17 @@ test("iniciarSesion() llama a POST /iniciarSesion y guarda la sesión", async ()
     expect(logica.usuarioActual().token).toBe("abc");
 });
 
+test("iniciarSesion() guarda también los roles múltiples que manda el servidor (T048)", async () => {
+    fetch.mockReturnValue(respuestaFalsa(200, { idUsuario: 9, token: "t9", rol: "tecnico", nombre: "Marc",
+        esAdministrador: false, esTecnico: true, esPortador: true }));
+    const logica = new LogicaReal("");
+    const r = await logica.iniciarSesion({ correo: "marc@aeris.es", contrasena: "marc1234" });
+
+    expect(r.usuario).toEqual({ id: 9, nombre: "Marc", correo: "marc@aeris.es", rol: "tecnico",
+        esAdministrador: false, esTecnico: true, esPortador: true, token: "t9" });
+    expect(logica.usuarioActual().esPortador).toBe(true);
+});
+
 test("iniciarSesion() con 401 devuelve el error de credenciales", async () => {
     fetch.mockReturnValue(respuestaFalsa(401, { error: "Correo o contraseña incorrectos" }));
     const r = await new LogicaReal("").iniciarSesion({ correo: "a@b.es", contrasena: "mala1234" });

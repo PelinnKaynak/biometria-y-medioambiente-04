@@ -8,6 +8,22 @@
 
 const CLAVE_SESION_REAL = "aeris_usuario";
 
+// --------------------------------------------------------
+// sesion: Objeto --> rolesDeSesion() --> Objeto
+//
+// Los campos de roles múltiples (T048) que mande el servidor
+// en el login o en el registro: esAdministrador, esTecnico y
+// esPortador. Los que no vengan no se guardan, y entonces
+// roles.js sigue mirando «rol».
+// --------------------------------------------------------
+function rolesDeSesion(sesion) {
+  const roles = {};
+  for (const campo of ["esAdministrador", "esTecnico", "esPortador"]) {
+    if (typeof sesion[campo] === "boolean") roles[campo] = sesion[campo];
+  }
+  return roles;
+}
+
 class LogicaReal {
 
   // --------------------------------------------------------
@@ -44,7 +60,8 @@ class LogicaReal {
   //                r: ResultadoSesion <--
   //
   // POST /iniciarSesion { correo, contrasena }
-  //   200 { idUsuario, token, rol, nombre } · 401 { error }
+  //   200 { idUsuario, token, rol, esAdministrador, esTecnico, esPortador, nombre }
+  //   401 { error }
   // --------------------------------------------------------
   async iniciarSesion(credenciales) {
     const respuesta = await this.enviarPost("/iniciarSesion", credenciales);
@@ -65,6 +82,7 @@ class LogicaReal {
       nombre: sesion.nombre,
       correo: credenciales.correo.trim().toLowerCase(),
       rol: sesion.rol,
+      ...rolesDeSesion(sesion),
       token: sesion.token
     };
     sessionStorage.setItem(CLAVE_SESION_REAL, JSON.stringify(usuario));
@@ -76,7 +94,7 @@ class LogicaReal {
   //       r: ResultadoRegistro <--
   //
   // POST /registrarUsuario { nombre, apellidos, correo, contrasena }
-  //   201 { idUsuario, token, rol, nombre }
+  //   201 { idUsuario, token, rol, esAdministrador, esTecnico, esPortador, nombre }
   //   400 { error, campos } · 409 { error } (correo ya registrado)
   // --------------------------------------------------------
   async registrarUsuario(datos) {
@@ -98,6 +116,7 @@ class LogicaReal {
       nombre: sesion.nombre,
       correo: datos.correo.trim().toLowerCase(),
       rol: sesion.rol,
+      ...rolesDeSesion(sesion),
       token: sesion.token
     };
     sessionStorage.setItem(CLAVE_SESION_REAL, JSON.stringify(usuario));

@@ -619,13 +619,13 @@ async function cargarCuenta(logica, irA) {
 // --------------------------------------------------------
 // logica: LogicaCuenta, irA: (url: Text) --> conectarCabecera()
 //
-// Un administrador también tiene su página Mi cuenta, como
-// cualquier usuario. A él se le enseña además el enlace para
-// volver al panel de administración.
+// Un administrador o un técnico también puede tener su página
+// Mi cuenta (por ejemplo, si además es portador). A ellos se
+// les enseña además el enlace al panel de administración.
 // --------------------------------------------------------
 function conectarCabecera(logica, irA) {
     const enlacePanel = $("enlace-panel");
-    if (enlacePanel) enlacePanel.hidden = !rolesCuenta.esAdministrador(logica.usuarioActual());
+    if (enlacePanel) enlacePanel.hidden = !rolesCuenta.tieneAccesoPanel(logica.usuarioActual());
     const botonMenu = $("boton-menu");
     botonMenu.addEventListener("click", () => {
         const abierto = $("menu-cuenta").classList.toggle("abierto");

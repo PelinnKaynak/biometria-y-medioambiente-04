@@ -28,6 +28,11 @@ describe("acceso al panel", () => {
         expect(comun.tieneAccesoAdmin({ rol: "ciudadano" })).toBe(false);
     });
 
+    test("con roles múltiples, entra quien es técnico aunque «rol» diga otra cosa (T048)", () => {
+        expect(comun.tieneAccesoAdmin({ rol: "portador", esAdministrador: false, esTecnico: true, esPortador: true })).toBe(true);
+        expect(comun.tieneAccesoAdmin({ rol: "portador", esAdministrador: false, esTecnico: false, esPortador: true })).toBe(false);
+    });
+
     test("un técnico que abre Usuarios vuelve a Nodos", () => {
         entrarComo("tecnico");
         const irA = jest.fn();
@@ -61,6 +66,15 @@ describe.each(["panel_nodos.html", "usuarios.html", "incidencias.html"])("menú 
         expect(opcion("Ver como usuario").hidden).toBe(false);
         expect(opcion("Ver como usuario").getAttribute("href")).toBe("../web_publica/mi_cuenta.html");
         expect(document.querySelector('a[href="incidencias.html"]')).not.toBeNull();
+    });
+
+    test("un técnico que también es portador ve «Ver como usuario», pero no Usuarios (T048)", () => {
+        cargar(pagina);
+        sessionStorage.setItem("aeris_usuario", JSON.stringify({
+            id: 999, rol: "tecnico", esAdministrador: false, esTecnico: true, esPortador: true }));
+        comun.conectarMenu(new LogicaAdminFake(5, AHORA, 0), jest.fn());
+        expect(opcion("Usuarios").hidden).toBe(true);
+        expect(opcion("Ver como usuario").hidden).toBe(false);
     });
 });
 

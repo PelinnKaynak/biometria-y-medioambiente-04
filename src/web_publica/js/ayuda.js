@@ -5,6 +5,9 @@
 // y la lista de Mis incidencias con su estado y respuesta.
 // ------------------------------------------------------------
 
+// Consultas de los roles (roles.js): globales en el navegador, require en Node
+const rolesAyuda = typeof module !== "undefined" ? require("./roles") : window;
+
 const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
 // --------------------------------------------------------
@@ -270,7 +273,7 @@ function iniciarPantallaAyuda() {
     const botonAcceder = document.getElementById("boton-acceder");
     if (botonAcceder) {
         if (usuario) {
-            const esAdmin = usuario.rol && (usuario.rol.toLowerCase() === "administrador" || usuario.rol.toLowerCase() === "tecnico");
+            const esAdmin = rolesAyuda.tieneAccesoPanel(usuario);
             botonAcceder.textContent = esAdmin ? "Panel" : "Mi cuenta";
             botonAcceder.href = esAdmin ? "../web_admin/panel_nodos.html" : "mi_cuenta.html";
         } else {
