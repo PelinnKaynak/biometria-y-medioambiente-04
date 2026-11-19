@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Marco del escáner (EscanerActivity, T039): donde hay que poner el código -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@android:color/transparent" />
+    <stroke
+        android:width="3dp"
+        android:color="@color/blanco" />
+    <corners android:radius="16dp" />
+</shape>

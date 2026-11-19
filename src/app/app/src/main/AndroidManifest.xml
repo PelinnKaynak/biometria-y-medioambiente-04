@@ -3,6 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Escáner propio del código de la etiqueta del sensor (T039) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false" />
     <!-- Android 17: permiso para conectar con el servidor en la red local -->
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
 
@@ -31,6 +36,12 @@
         <activity
             android:name=".InformacionActivity"
             android:exported="false" />
+
+        <!-- Escáner del código de la etiqueta del sensor (T039) -->
+        <activity
+            android:name=".EscanerActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" />
 
         <activity
             android:name=".LoginActivity"

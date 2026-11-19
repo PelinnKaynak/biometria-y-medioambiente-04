@@ -37,6 +37,12 @@
     <string name="vincular_continuar">Continuar</string>
     <string name="vincular_volver_escanear">Volver a escanear</string>
     <string name="vincular_error_codigo">Este código no es el de un sensor AERIS. Escanea el código de la etiqueta del sensor.</string>
+    <string name="vincular_error_codigo_leido">Se ha leído «%1$s», pero no es el código de un sensor AERIS.</string>
+    <string name="escaner_pista">Pon el código de la etiqueta dentro del marco. Toca la pantalla para enfocar y usa dos dedos para acercar.</string>
+    <string name="escaner_linterna">Encender linterna</string>
+    <string name="escaner_linterna_apagar">Apagar linterna</string>
+    <string name="escaner_cerrar">Cerrar el escáner</string>
+    <string name="escaner_sin_permiso">Sin permiso para usar la cámara. Puedes escribir el número de serie a mano.</string>
     <string name="vincular_error_camara">No se ha podido abrir la cámara. Inténtalo de nuevo.</string>
     <string name="vincular_boton">Vincular</string>
     <string name="vincular_mas_tarde">Ahora no, lo vincularé más tarde</string>

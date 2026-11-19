@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Escáner propio del código de la etiqueta del sensor (EscanerActivity, T039) -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/vistaCamara"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Marco donde hay que poner el código -->
+    <View
+        android:id="@+id/marcoEscaner"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_gravity="center"
+        android:background="@drawable/marco_escaner" />
+
+    <TextView
+        android:id="@+id/textoEscaner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="160dp"
+        android:gravity="center"
+        android:paddingStart="32dp"
+        android:paddingEnd="32dp"
+        android:shadowColor="#CC000000"
+        android:shadowRadius="4"
+        android:text="@string/escaner_pista"
+        android:textColor="@color/blanco"
+        android:textSize="15sp" />
+
+    <ImageView
+        android:id="@+id/botonCerrarEscaner"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|start"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="48dp"
+        android:background="@drawable/fondo_boton_volver"
+        android:clickable="true"
+        android:contentDescription="@string/escaner_cerrar"
+        android:focusable="true"
+        android:padding="10dp"
+        android:src="@drawable/ic_volver" />
+
+    <TextView
+        android:id="@+id/botonLinterna"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="64dp"
+        android:background="@drawable/fondo_boton_escaner"
+        android:clickable="true"
+        android:focusable="true"
+        android:paddingStart="24dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="12dp"
+        android:text="@string/escaner_linterna"
+        android:textColor="@color/blanco"
+        android:textSize="15sp"
+        android:visibility="gone" />
+</FrameLayout>
