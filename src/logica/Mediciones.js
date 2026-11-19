@@ -17,6 +17,8 @@
 // ---------------------------------------------------------------------------
 'use strict';
 
+const { reservarAlertaPersonal, procesarAlertasDeLugares } = require('./Alertas');
+
 const CONTAMINANTE_POR_DEFECTO = 'O3';     // el que miden los nodos AERIS
 const VALOR_MAXIMO = 2000;                 // µg/m³: por encima es un error del sensor
 const MARGEN_FUTURO_MS = 5 * 60 * 1000;    // relojes un poco adelantados
@@ -153,7 +155,36 @@ class Mediciones {
         const [filas] = await this.conexion.execute(
             `${SELECT_MEDICION} WHERE m.idSensor = ? AND m.idContaminante = ? AND m.fechaHora = ?`,
             [sensor.idSensor, idContaminante, fecha]);
-        return { medicion: aMedicion(filas[0]), nueva: resultado.affectedRows === 1 };
+        const medicion = aMedicion(filas[0]);
+        const nueva = resultado.affectedRows === 1;
+
+        if (nueva && medicion.contaminante === 'O3' &&
+            typeof this.logica.notificarAlerta === 'function') {
+            try {
+                const reservada = await reservarAlertaPersonal(this.conexion, idUsuario, medicion);
+
+                if (reservada) {
+                    await this.logica.notificarAlerta({
+                        tipo: 'personal',
+                        idUsuario,
+                        contaminante: medicion.contaminante,
+                        valor: medicion.valor,
+                        unidad: medicion.unidad,
+                        zona: { latitud: medicion.latitud, longitud: medicion.longitud }
+                    });
+                }
+            } catch (error) {
+                console.error(`Error al procesar la alerta personal del usuario ${idUsuario}:`, error.message);
+            }
+
+            try {
+                await procesarAlertasDeLugares(this.logica);
+            } catch (error) {
+                console.error('Error al evaluar las alertas de lugares:', error.message);
+            }
+        }
+
+        return { medicion, nueva };
     }
 
     // -----------------------------------------------------------------------

@@ -196,6 +196,27 @@ CREATE TABLE IF NOT EXISTS Lugares (
         CHECK (tipo IN ('casa', 'trabajo', 'colegio', 'otro'))
 ) ENGINE = InnoDB;
 
+-- T020: estado de los avisos personales por ozono.
+CREATE TABLE IF NOT EXISTS EstadoAlertaPersonal (
+    idUsuario INT NOT NULL,
+    ultimoEnvio DATETIME(3) NULL,
+    PRIMARY KEY (idUsuario),
+    CONSTRAINT fk_estado_alerta_personal_usuario
+        FOREIGN KEY (idUsuario) REFERENCES Usuarios(idUsuario)
+        ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- T020: último nivel evaluado y último aviso de cada lugar.
+CREATE TABLE IF NOT EXISTS EstadoAlertaLugar (
+    idLugar INT NOT NULL,
+    ultimoNivel VARCHAR(20) NULL,
+    ultimoEnvio DATETIME(3) NULL,
+    PRIMARY KEY (idLugar),
+    CONSTRAINT fk_estado_alerta_lugar
+        FOREIGN KEY (idLugar) REFERENCES Lugares(idLugar)
+        ON DELETE CASCADE
+) ENGINE = InnoDB;
+
 -- ---------------------------------------------------------------
 -- Contaminantes (T017). Los nodos AERIS miden ozono. Umbrales en
 -- µg/m³: valor guía de la OMS (100), umbral de información (180) y

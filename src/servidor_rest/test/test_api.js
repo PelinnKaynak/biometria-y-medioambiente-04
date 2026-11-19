@@ -169,7 +169,6 @@ describe('API REST de usuarios y autenticación', function () {
         assert.strictEqual(conPermiso.cuerpo.usuario.esTecnico, true);
         assert.strictEqual(conPermiso.cuerpo.usuario.esPortador, false);
     });
-
     // --- alertas del perfil (T010) -------------------------------------------
 
     it('POST /cambiarAlertas con sesión: 204 y GET /usuarioActual devuelve el valor nuevo', async function () {

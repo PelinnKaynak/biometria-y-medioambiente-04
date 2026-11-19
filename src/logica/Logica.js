@@ -734,11 +734,9 @@ class Logica {
 
             if (Number(cuenta.restantes) === 0) {
                 await conexion.execute(
-                    `UPDATE Usuarios
-                        SET esPortador = FALSE,
-                            role = CASE WHEN role = ? THEN 'ciudadano' ELSE role END
-                      WHERE idUsuario = ?`,
-                    [ROL_PORTADOR, idUsuario]);
+                    'UPDATE Usuarios SET esPortador = FALSE WHERE idUsuario = ?',
+                    [idUsuario]
+                );
             }
 
             await conexion.commit();

@@ -16,6 +16,7 @@ describe('API REST de mediciones', function () {
 
     let logica, conexion, url, avisoOriginal;
     let pelin, ana, idAna;     // tokens y usuario
+    let alertasEnviadas;
 
     async function peticion(metodo, ruta, token, cuerpo) {
         const cabeceras = { 'Content-Type': 'application/json' };
@@ -35,8 +36,10 @@ describe('API REST de mediciones', function () {
     }
 
     function medicion(cambios = {}) {
-        return { numeroSerie: '092021011003', valor: 84, latitud: 38.9965, longitud: -0.1663,
-            fecha: haceMinutos(1), ...cambios };
+        return {
+            numeroSerie: '092021011003', valor: 84, latitud: 38.9965, longitud: -0.1663,
+            fecha: haceMinutos(1), ...cambios
+        };
     }
 
     before(async function () {
@@ -49,6 +52,10 @@ describe('API REST de mediciones', function () {
 
     beforeEach(async function () {
         await vaciarTablas(logica.conexion);
+        alertasEnviadas = [];
+        logica.notificarAlerta = async (alerta) => {
+            alertasEnviadas.push(alerta);
+        };
         await logica.conexion.execute(
             "INSERT INTO Contaminantes (nombre, unidad, umbralModerado, umbralMalo, umbralMuyMalo) VALUES ('O3', 'µg/m³', 100, 180, 240)");
         const sesionPelin = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
@@ -91,6 +98,116 @@ describe('API REST de mediciones', function () {
         assert.strictEqual(otraVez.codigo, 200);
         assert.strictEqual(otraVez.cuerpo.nueva, false);
         assert.strictEqual(otraVez.cuerpo.medicion.idMedicion, r.cuerpo.medicion.idMedicion);
+    });
+
+    it('avisa por ozono alto e ignora el reenvío y otra lectura dentro de la hora', async function () {
+        const datos = medicion({ valor: 200, fecha: haceMinutos(2) });
+        const respuesta = await peticion('POST', '/guardarMedicion', pelin, datos);
+        assert.strictEqual(respuesta.codigo, 201);
+
+        const perfil = await peticion('GET', '/usuarioActual', pelin);
+        assert.strictEqual(perfil.codigo, 200);
+        assert.deepStrictEqual(alertasEnviadas, [{
+            tipo: 'personal',
+            idUsuario: perfil.cuerpo.idUsuario,
+            contaminante: 'O3',
+            valor: 200,
+            unidad: 'µg/m³',
+            zona: { latitud: datos.latitud, longitud: datos.longitud }
+        }]);
+
+        const reenvio = await peticion('POST', '/guardarMedicion', pelin, datos);
+        assert.strictEqual(reenvio.codigo, 200);
+
+        const otraLectura = await peticion('POST', '/guardarMedicion', pelin,
+            medicion({ valor: 210, fecha: haceMinutos(1) }));
+        assert.strictEqual(otraLectura.codigo, 201);
+        assert.strictEqual(alertasEnviadas.length, 1);
+    });
+
+    it('guarda la medición sin avisar si el usuario desactivó las alertas', async function () {
+        const preferencias = await peticion('POST', '/cambiarAlertas', pelin, { alertas: false });
+        assert.strictEqual(preferencias.codigo, 204);
+
+        const respuesta = await peticion('POST', '/guardarMedicion', pelin, medicion({ valor: 200 }));
+        assert.strictEqual(respuesta.codigo, 201);
+        assert.deepStrictEqual(alertasEnviadas, []);
+    });
+
+    it('avisa al dueño del lugar cuando el ozono empeora y respeta los avisos desactivados', async function () {
+        const perfilAna = await peticion('GET', '/usuarioActual', ana);
+        assert.strictEqual(perfilAna.codigo, 200);
+        const idUsuario = perfilAna.cuerpo.idUsuario;
+
+        await logica.conexion.execute(
+            'UPDATE Usuarios SET premiumHasta = ? WHERE idUsuario = ?',
+            [new Date('2099-01-01T00:00:00Z'), idUsuario]
+        );
+
+        // Aislamos los avisos por lugar desactivando el aviso personal de Pelin.
+        const preferencias = await peticion('POST', '/cambiarAlertas', pelin, { alertas: false });
+        assert.strictEqual(preferencias.codigo, 204);
+
+        const ubicacion = { direccion: 'Gandía', latitud: 38.9965, longitud: -0.1663 };
+        const casa = await logica.lugares.crear(idUsuario, {
+            ...ubicacion, nombre: 'Casa', tipo: 'casa', avisosActivos: true
+        });
+        await logica.lugares.crear(idUsuario, {
+            ...ubicacion, nombre: 'Trabajo', tipo: 'trabajo', avisosActivos: false
+        });
+
+        const normal = await peticion('POST', '/guardarMedicion', pelin,
+            medicion({ valor: 90, fecha: haceMinutos(3) }));
+        assert.strictEqual(normal.codigo, 201);
+        assert.deepStrictEqual(alertasEnviadas, []);
+
+        const malo = await peticion('POST', '/guardarMedicion', pelin,
+            medicion({ valor: 190, fecha: haceMinutos(2) }));
+        assert.strictEqual(malo.codigo, 201);
+        assert.deepStrictEqual(alertasEnviadas, [{
+            tipo: 'lugar',
+            idUsuario,
+            idLugar: casa.idLugar,
+            contaminante: 'O3',
+            valor: 190,
+            unidad: 'µg/m³',
+            nivel: 'malo',
+            zona: 'Casa (Gandía)'
+        }]);
+
+        const muyMalo = await peticion('POST', '/guardarMedicion', pelin,
+            medicion({ valor: 250, fecha: haceMinutos(1) }));
+        assert.strictEqual(muyMalo.codigo, 201);
+        assert.strictEqual(alertasEnviadas.length, 1);
+    });
+
+    it('no avisa al dueño de un lugar si no tiene Premium activo', async function () {
+        const perfilAna = await peticion('GET', '/usuarioActual', ana);
+        assert.strictEqual(perfilAna.codigo, 200);
+        assert.strictEqual(perfilAna.cuerpo.alertas, true);
+        assert.strictEqual(perfilAna.cuerpo.premiumHasta, null);
+
+        // Pelin sube las lecturas, pero desactivamos su aviso personal.
+        const preferencias = await peticion('POST', '/cambiarAlertas', pelin, { alertas: false });
+        assert.strictEqual(preferencias.codigo, 204);
+
+        await logica.lugares.crear(perfilAna.cuerpo.idUsuario, {
+            nombre: 'Casa',
+            tipo: 'casa',
+            direccion: 'Gandía',
+            latitud: 38.9965,
+            longitud: -0.1663,
+            avisosActivos: true
+        });
+
+        const normal = await peticion('POST', '/guardarMedicion', pelin,
+            medicion({ valor: 90, fecha: haceMinutos(2) }));
+        assert.strictEqual(normal.codigo, 201);
+
+        const malo = await peticion('POST', '/guardarMedicion', pelin,
+            medicion({ valor: 190, fecha: haceMinutos(1) }));
+        assert.strictEqual(malo.codigo, 201);
+        assert.deepStrictEqual(alertasEnviadas, []);
     });
 
     it('POST /guardarMedicion: 400 con los campos que fallan, 403 sensor de otro y 404 no registrado', async function () {

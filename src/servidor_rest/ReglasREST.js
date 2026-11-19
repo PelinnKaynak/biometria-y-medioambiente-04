@@ -277,7 +277,8 @@ function cargarReglasREST(servidor, logica) {
         envolver(async (peticion, respuesta) => {
             const { estado, tipo } = peticion.query;
             respuesta.status(200).json(await logica.incidencias.listar({
-                estado: textoDeConsulta(estado), tipo: textoDeConsulta(tipo) }));
+                estado: textoDeConsulta(estado), tipo: textoDeConsulta(tipo)
+            }));
         }));
 
     // GET /numeroIncidenciasAbiertas  🔒 técnico o administrador
