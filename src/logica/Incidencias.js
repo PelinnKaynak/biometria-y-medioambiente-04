@@ -5,8 +5,10 @@
 //              administradores las listan con filtros, las responden y
 //              cambian su estado. Al responder se guarda quién respondió y se
 //              manda un correo al usuario.
-//              Usa la tabla Incidencias de src/bd/usuarios.sql.
-//              Diseño en doc/logica_design.md. Tarea T041 · H038, H039.
+//              Cada incidencia tiene además una conversación (T043): el usuario
+//              y el equipo se escriben mensajes (tabla MensajesIncidencia).
+//              Usa las tablas Incidencias y MensajesIncidencia de src/bd/usuarios.sql.
+//              Diseño en doc/logica_design.md. Tareas T041 · H038, H039 y T043.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       17/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -104,6 +106,37 @@ function aIncidenciaGestion(fila) {
         });
     }
     return incidencia;
+}
+
+// Los mensajes de la conversación (T043), con el nombre y el rol de quien los escribió
+const SELECT_MENSAJE = `
+    SELECT m.idMensaje, m.idIncidencia, m.idAutor, m.texto, m.fecha, i.idUsuario AS idDuenyo,
+           a.nombre AS nombreAutor, CASE
+           WHEN a.idUsuario IS NULL THEN NULL
+           WHEN a.esAdministrador = TRUE THEN 'administrador'
+           WHEN a.esTecnico = TRUE THEN 'tecnico'
+           WHEN a.esPortador = TRUE THEN 'portador' ELSE 'ciudadano' END AS rolAutor
+      FROM MensajesIncidencia m
+      JOIN Incidencias i ON i.idIncidencia = m.idIncidencia
+      LEFT JOIN Usuarios a ON a.idUsuario = m.idAutor`;
+
+// ---------------------------------------------------------------------------
+// fila: FilaBD --> aMensaje() --> Mensaje
+// Mensaje = { idMensaje, idIncidencia, texto, fecha,
+//             autor: { idUsuario, nombre, rol } | null, delUsuario: V/F }
+// autor es null si su cuenta se borró. delUsuario es V si lo escribió quien envió
+// la incidencia (en la app: «Tú»); F si lo escribió el equipo.
+// ---------------------------------------------------------------------------
+function aMensaje(fila) {
+    return {
+        idMensaje: fila.idMensaje,
+        idIncidencia: fila.idIncidencia,
+        texto: fila.texto,
+        fecha: fila.fecha,
+        autor: fila.idAutor === null ? null
+            : { idUsuario: fila.idAutor, nombre: fila.nombreAutor, rol: fila.rolAutor },
+        delUsuario: fila.idAutor !== null && fila.idAutor === fila.idDuenyo
+    };
 }
 
 // ---------------------------------------------------------------------------
@@ -231,11 +264,24 @@ class Incidencias {
     // What it does: saves the answer (with its date and who answered, the
     //               technician or administrator idResponsable) and/or the new estado.
     //               If there is an answer and no estado, it becomes «resuelta».
-    //               When there is an answer, the user gets an e-mail with it
-    //               (a failure is only written in the console). Throws
+    //               The answer is also added to the conversation of the incidence
+    //               (T043). When there is an answer, the user gets ONE e-mail with
+    //               it (a failure is only written in the console). Throws
     //               DATOS_NO_VALIDOS or INCIDENCIA_NO_EXISTE.
     // -----------------------------------------------------------------------
     async responder(idIncidencia, cambios = {}, idResponsable = null) {
+        return (await this.responderConMensaje(idIncidencia, cambios, idResponsable)).incidencia;
+    }
+
+    // -----------------------------------------------------------------------
+    // idIncidencia: N, cambios: { respuesta?, estado? }, idResponsable: N
+    //     --> responderConMensaje() --> { incidencia: IncidenciaGestion, idMensaje: N | null }
+    // What it does: the same as responder(), and also says the id of the message
+    //               that the answer added to the conversation (null if there was
+    //               only a change of estado). It is the ONLY way the answer of
+    //               the team is saved and e-mailed, so it is never e-mailed twice.
+    // -----------------------------------------------------------------------
+    async responderConMensaje(idIncidencia, cambios = {}, idResponsable = null) {
         const { respuesta, estado } = cambios;
         const conRespuesta = respuesta !== undefined && respuesta !== null;
         const erroneos = [];
@@ -247,10 +293,9 @@ class Incidencias {
         }
         const antes = await this.obtener(idIncidencia);
 
+        let idMensaje = null;
         if (conRespuesta) {
-            await this.conexion.execute(
-                'UPDATE Incidencias SET respuesta = ?, idResponsable = ?, fechaRespuesta = ?, estado = ? WHERE idIncidencia = ?',
-                [respuesta.trim(), idResponsable, this.logica.ahoraEnSegundos(), estado || 'resuelta', idIncidencia]);
+            idMensaje = await this.guardarRespuesta(idIncidencia, respuesta.trim(), estado || 'resuelta', idResponsable);
         } else {
             await this.conexion.execute('UPDATE Incidencias SET estado = ? WHERE idIncidencia = ?',
                 [estado, idIncidencia]);
@@ -259,7 +304,143 @@ class Incidencias {
         if (conRespuesta) {
             await this.enviarRespuesta(despues, antes.usuario);
         }
-        return despues;
+        return { incidencia: despues, idMensaje };
+    }
+
+    // -----------------------------------------------------------------------
+    // idIncidencia: N, texto: Texto, estado: Texto, idResponsable: N | null
+    //     --> guardarRespuesta() --> N                                   (privado)
+    // What it does: in ONE transaction, saves the last answer of the team in the
+    //               incidence (respuesta, idResponsable, fechaRespuesta and estado:
+    //               what the web keeps showing) and adds it as a message of the
+    //               conversation. Returns the id of the message.
+    // -----------------------------------------------------------------------
+    async guardarRespuesta(idIncidencia, texto, estado, idResponsable) {
+        const fecha = this.logica.ahoraEnSegundos();
+        const conexion = await this.conexion.getConnection();
+        let transaccionIniciada = false;
+        try {
+            await conexion.beginTransaction();
+            transaccionIniciada = true;
+            await conexion.execute(
+                'UPDATE Incidencias SET respuesta = ?, idResponsable = ?, fechaRespuesta = ?, estado = ? WHERE idIncidencia = ?',
+                [texto, idResponsable, fecha, estado, idIncidencia]);
+            const [resultado] = await conexion.execute(
+                'INSERT INTO MensajesIncidencia (idIncidencia, idAutor, texto, fecha) VALUES (?, ?, ?, ?)',
+                [idIncidencia, idResponsable, texto, fecha]);
+            await conexion.commit();
+            transaccionIniciada = false;
+            return resultado.insertId;
+        } catch (error) {
+            if (transaccionIniciada) await conexion.rollback();
+            throw error;
+        } finally {
+            conexion.release();
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // idIncidencia: N, idUsuario: N --> listarMensajes() --> Lista<Mensaje>
+    // What it does: the conversation of an incidence, oldest first (the
+    //               description of the incidence is the first message and is not
+    //               repeated). Only the user who sent it, technicians and
+    //               administrators can read it: for anybody else (or if it does not
+    //               exist) it throws INCIDENCIA_NO_EXISTE, so nobody can find out
+    //               which incidences exist.
+    // -----------------------------------------------------------------------
+    async listarMensajes(idIncidencia, idUsuario) {
+        await this.comprobarAcceso(idIncidencia, idUsuario);
+        const [filas] = await this.conexion.execute(
+            `${SELECT_MENSAJE} WHERE m.idIncidencia = ? ORDER BY m.fecha, m.idMensaje`, [idIncidencia]);
+        return filas.map(aMensaje);
+    }
+
+    // -----------------------------------------------------------------------
+    // idIncidencia: N, idAutor: N, texto: Texto, estado: Texto (opcional)
+    //     --> enviarMensaje() --> Mensaje
+    // What it does: adds a message to the conversation.
+    //               - The user who sent the incidence: it is saved as his message and,
+    //                 if the incidence was «resuelta», it is reopened as «abierta».
+    //                 «estado» is ignored (only the team changes it).
+    //               - A technician or administrator (who did not send it): it is the
+    //                 answer of the team, exactly as responder() with a respuesta
+    //                 (it also updates the last answer, the estado «resuelta» unless
+    //                 another is given, and e-mails the user once).
+    //               Throws DATOS_NO_VALIDOS (texto, estado) or INCIDENCIA_NO_EXISTE.
+    // -----------------------------------------------------------------------
+    async enviarMensaje(idIncidencia, idAutor, texto, estado) {
+        const nuevoEstado = estado === null ? undefined : estado;
+        const erroneos = [];
+        if (!esTextoValido(texto)) erroneos.push('texto');
+        if (nuevoEstado !== undefined && !ESTADOS.includes(nuevoEstado)) erroneos.push('estado');
+        if (erroneos.length > 0) {
+            throw this.error('DATOS_NO_VALIDOS', 'El mensaje no es válido', erroneos);
+        }
+        const acceso = await this.comprobarAcceso(idIncidencia, idAutor);
+
+        let idMensaje;
+        if (acceso.esDuenyo) {
+            idMensaje = await this.guardarMensajeDelUsuario(idIncidencia, idAutor, texto.trim());
+        } else {
+            idMensaje = (await this.responderConMensaje(idIncidencia, { respuesta: texto, estado: nuevoEstado },
+                idAutor)).idMensaje;
+        }
+        const [filas] = await this.conexion.execute(`${SELECT_MENSAJE} WHERE m.idMensaje = ?`, [idMensaje]);
+        return aMensaje(filas[0]);
+    }
+
+    // -----------------------------------------------------------------------
+    // idIncidencia: N, idAutor: N, texto: Texto --> guardarMensajeDelUsuario() --> N   (privado)
+    // What it does: in ONE transaction, adds the message of the user and reopens
+    //               the incidence if it was «resuelta». Returns the id of the message.
+    // -----------------------------------------------------------------------
+    async guardarMensajeDelUsuario(idIncidencia, idAutor, texto) {
+        const fecha = this.logica.ahoraEnSegundos();
+        const conexion = await this.conexion.getConnection();
+        let transaccionIniciada = false;
+        try {
+            await conexion.beginTransaction();
+            transaccionIniciada = true;
+            const [resultado] = await conexion.execute(
+                'INSERT INTO MensajesIncidencia (idIncidencia, idAutor, texto, fecha) VALUES (?, ?, ?, ?)',
+                [idIncidencia, idAutor, texto, fecha]);
+            await conexion.execute(
+                'UPDATE Incidencias SET estado = ? WHERE idIncidencia = ? AND estado = ?',
+                [ESTADO_INICIAL, idIncidencia, 'resuelta']);
+            await conexion.commit();
+            transaccionIniciada = false;
+            return resultado.insertId;
+        } catch (error) {
+            if (transaccionIniciada) await conexion.rollback();
+            throw error;
+        } finally {
+            conexion.release();
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // idIncidencia: N, idUsuario: N --> comprobarAcceso() --> { esDuenyo: V/F, esGestor: V/F }   (privado)
+    // What it does: says if the user sent the incidence and/or is a technician or an
+    //               administrator (read in the BD, not trusted from the caller). If
+    //               the incidence does not exist, or the user is neither its owner
+    //               nor of the team, it throws INCIDENCIA_NO_EXISTE.
+    // -----------------------------------------------------------------------
+    async comprobarAcceso(idIncidencia, idUsuario) {
+        const [filas] = Number.isInteger(idIncidencia)
+            ? await this.conexion.execute(
+                `SELECT i.idUsuario AS idDuenyo, u.esAdministrador, u.esTecnico
+                   FROM Incidencias i JOIN Usuarios u ON u.idUsuario = ?
+                  WHERE i.idIncidencia = ?`, [idUsuario, idIncidencia])
+            : [[]];
+        if (filas.length !== 1) {
+            throw this.error('INCIDENCIA_NO_EXISTE', 'Esa incidencia no existe');
+        }
+        const esDuenyo = filas[0].idDuenyo === idUsuario;
+        const esGestor = Boolean(filas[0].esAdministrador) || Boolean(filas[0].esTecnico);
+        if (!esDuenyo && !esGestor) {
+            throw this.error('INCIDENCIA_NO_EXISTE', 'Esa incidencia no existe');
+        }
+        return { esDuenyo, esGestor };
     }
 
     // -----------------------------------------------------------------------

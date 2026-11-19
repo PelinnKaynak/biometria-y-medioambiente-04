@@ -246,7 +246,22 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
                          --> incidencias.responder() --> IncidenciaGestion       | DATOS_NO_VALIDOS, INCIDENCIA_NO_EXISTE
   Incidencia = ( idIncidencia, tipo, asunto, descripcion, estado, respuesta, responsable ( nombre, rol ) | null, fechaCreacion, fechaRespuesta, sensor | null )
   IncidenciaGestion = Incidencia + usuario ( idUsuario, nombre, apellidos, correo ) + datos del sensor
+
+  Conversación (T043):
+  idIncidencia: N, idUsuario: N
+                         --> incidencias.listarMensajes() --> Lista<Mensaje>     | INCIDENCIA_NO_EXISTE
+  idIncidencia: N, idAutor: N, texto: Texto, estado: Texto (opcional)
+                         --> incidencias.enviarMensaje() --> Mensaje             | DATOS_NO_VALIDOS, INCIDENCIA_NO_EXISTE
+  idIncidencia: N, { respuesta?, estado? }, idResponsable: N
+                         --> incidencias.responderConMensaje() --> ( incidencia: IncidenciaGestion, idMensaje: N | null )
+  Mensaje = ( idMensaje, idIncidencia, texto, fecha, autor ( idUsuario, nombre, rol ) | null, delUsuario: V/F )
 ```
+
+- **Conversación de cada incidencia (T043):** tabla `MensajesIncidencia` (ver `bd_design.md`). La descripción de la incidencia es el primer mensaje del usuario y no se repite en la tabla; el resto va por orden de `fecha` y `idMensaje`. `delUsuario` es V si lo escribió quien envió la incidencia (en la app, «Tú») y F si lo escribió el equipo. `autor` es `null` si la cuenta del autor se borró.
+  - **Quién puede leer y escribir:** quien envió la incidencia y los técnicos y administradores (los roles se leen de la BD, no se fía de quien llama). Para cualquier otro, o si no existe, `INCIDENCIA_NO_EXISTE` (404): nadie puede averiguar qué incidencias existen.
+  - **Mensaje del usuario:** se guarda como suyo y, si la incidencia estaba «resuelta», vuelve a «abierta» (si estaba «en curso» o «abierta» no cambia). No manda correo y el `estado` que se envíe se ignora: solo el equipo lo cambia. Una persona del equipo que escribe en una incidencia suya cuenta como usuario.
+  - **Mensaje del equipo:** es la respuesta de siempre. `enviarMensaje()` de un técnico o administrador y `responder()` con `respuesta` usan **la misma vía**, `responderConMensaje()`: en una sola transacción actualizan `respuesta`, `idResponsable`, `fechaRespuesta` y `estado` de la incidencia (lo que siguen usando la web y el panel) y añaden el mensaje a la conversación; después se manda **un solo correo** al usuario. Así una respuesta nunca se avisa dos veces. Un cambio de estado sin respuesta no añade mensaje ni manda correo.
+  - `texto` entre 1 y 2000 caracteres (sin contar los espacios de los extremos); si no, `DATOS_NO_VALIDOS` con `campos`.
 
 - **Mediciones (T017):** están en `Mediciones.js` (clase `Mediciones`), como las incidencias. Se usan como `logica.mediciones.guardar(…)`. Tablas `Mediciones`, `Sensores` y `Contaminantes`. Solo se guarda la medición del sensor vinculado al usuario (el `numeroSerie` de la trama iBeacon). `contaminante` es `O3` si no se indica y tiene que existir en `Contaminantes`. Se comprueba que no falte nada y que esté en rango: valor de 0 a 2000 µg/m³, latitud −90..90, longitud −180..180 y fecha (ISO o milisegundos) de los últimos 7 días, con 5 minutos de margen hacia el futuro; si no, `DATOS_NO_VALIDOS` con los campos y un aviso en la consola. La clave única `(idSensor, idContaminante, fechaHora)` hace que una medición reenviada por la app no se guarde dos veces: `nueva` = false. Al guardar, el sensor pasa a `activo` y `ultimaConexion` es la fecha más reciente recibida. `obtenerUsuario()` devuelve también `sensor` (nombre) y `numeroSerie` del sensor vinculado, o `null`.
 
