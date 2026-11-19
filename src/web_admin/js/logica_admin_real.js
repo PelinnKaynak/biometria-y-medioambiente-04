@@ -198,6 +198,24 @@ class LogicaAdminReal {
     }
 
     // --------------------------------------------------------
+    // id_incidencia: N --> obtenerMensajesIncidencia() -->
+    //       r: ResultadoMensajes <--                          (T043)
+    //
+    // GET /mensajesIncidencia?id=
+    //   200 [ Mensaje ]  la conversación, el más antiguo primero;
+    //   la descripción de la incidencia es el primer mensaje y no
+    //   va en la lista.
+    //   Mensaje = { idMensaje, texto, fecha, delUsuario,
+    //               autor: { idUsuario, nombre, rol } | null }
+    // --------------------------------------------------------
+    async obtenerMensajesIncidencia(id_incidencia) {
+        const parametros = new URLSearchParams({ id: String(id_incidencia) });
+        const { respuesta, error } = await this.pedir("/mensajesIncidencia?" + parametros);
+        if (!respuesta) return { correcto: false, mensajes: [], error };
+        return { correcto: true, mensajes: await respuesta.json(), error: "" };
+    }
+
+    // --------------------------------------------------------
     // GET /numeroIncidenciasAbiertas --> { abiertas }
     // --------------------------------------------------------
     async obtenerNumeroIncidenciasAbiertas() {
