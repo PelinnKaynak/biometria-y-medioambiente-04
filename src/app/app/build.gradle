@@ -4,9 +4,6 @@ plugins {
 
 android {
     namespace 'com.example.aeris'
-    buildFeatures {
-        buildConfig = true
-    }
     compileSdk {
         version = release(37)
     }
