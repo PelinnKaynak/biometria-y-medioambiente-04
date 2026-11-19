@@ -39,7 +39,9 @@ public class SeleccionarUbicacionActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Configuration.getInstance().setUserAgentValue(getPackageName());
+        Configuration.getInstance().setUserAgentValue(
+                getString(R.string.app_name) + "/" + BuildConfig.VERSION_NAME
+                        + " (" + getPackageName() + ")");
         setContentView(R.layout.activity_seleccionar_ubicacion);
 
         ImageView botonVolver = findViewById(R.id.botonVolverMapaLugar);
