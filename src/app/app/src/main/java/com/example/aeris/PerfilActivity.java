@@ -318,14 +318,14 @@ public class PerfilActivity extends AppCompatActivity {
     // -----------------------------------------------------------------------
     // pulsarMiSensor() -->
     // What it does: without sensor, opens «Vincular sensor» (when it ends, it
-    //               comes back here). With sensor, the «Mi sensor» screen is
-    //               task T011 and does not exist yet: nothing happens. Until
-    //               the server answers it is not known, so nothing happens either.
+    // comes back here). With sensor, opens «Mi sensor».
     // -----------------------------------------------------------------------
     private void pulsarMiSensor() {
         if (Boolean.FALSE.equals(tieneSensor)) {
             startActivity(new Intent(this, VincularSensorActivity.class)
                     .putExtra(VincularSensorActivity.EXTRA_DESDE_PERFIL, true));
+        } else if (Boolean.TRUE.equals(tieneSensor)) {
+            startActivity(new Intent(this, MiSensorActivity.class));
         }
     }
 

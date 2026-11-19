@@ -102,6 +102,10 @@
             android:name=".VincularSensorActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".MiSensorActivity"
+            android:exported="false" />
+
         <!-- Perfil (T010): se abre desde la barra de navegación inferior -->
         <activity
             android:name=".PerfilActivity"
