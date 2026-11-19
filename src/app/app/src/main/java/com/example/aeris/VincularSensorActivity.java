@@ -2,9 +2,9 @@
 // Fichero:     VincularSensorActivity.java
 // Descripción: Pantalla «Vincular sensor» (Figma: «vincular sensor»). Se abre
 //              tras el registro y desde «Mi sensor» del perfil (si el usuario
-//              no tiene sensor). «Escanear código» abre la cámara (escáner de
-//              Google, sin pedir el permiso de cámara) y lee el código de la
-//              etiqueta del sensor (CodigoSensor). Si la cámara no funciona,
+//              no tiene sensor). «Escanear código» abre nuestro escáner
+//              (EscanerActivity) y lee el código de la etiqueta del sensor
+//              (CodigoSensor). Si la cámara no funciona,
 //              «¿No funciona la cámara? Escribe el código» deja escribir el
 //              número de serie y la sensibilidad. Después se enseña el sensor
 //              con el botón «Vincular». Al pulsarlo se pide la vinculación
@@ -26,12 +26,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.mlkit.vision.barcode.common.Barcode;
-import com.google.mlkit.vision.codescanner.GmsBarcodeScanner;
-import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions;
-import com.google.mlkit.vision.codescanner.GmsBarcodeScanning;
 
 import java.time.ZoneId;
 
@@ -64,6 +61,18 @@ public class VincularSensorActivity extends AppCompatActivity {
     private boolean desdePerfil;
     // De dónde salió el código (escáner o escrito a mano): adónde vuelve la flecha
     private View tarjetaEntrada;
+
+    // Escáner propio (EscanerActivity): devuelve el texto del código leído
+    private final ActivityResultLauncher<Intent> abrirEscaner =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), resultado -> {
+                if (resultado.getResultCode() == RESULT_OK && resultado.getData() != null) {
+                    codigoLeido(resultado.getData().getStringExtra(EscanerActivity.EXTRA_CODIGO));
+                } else if (resultado.getResultCode() == EscanerActivity.RESULTADO_SIN_PERMISO) {
+                    mostrarErrorEscaneo(getString(R.string.escaner_sin_permiso));
+                } else if (resultado.getResultCode() == EscanerActivity.RESULTADO_ERROR) {
+                    mostrarErrorEscaneo(getString(R.string.vincular_error_camara));
+                }
+            });
     private CodigoSensor sensorLeido;   // null hasta que se escanea un código válido
 
     // -----------------------------------------------------------------------
@@ -149,20 +158,16 @@ public class VincularSensorActivity extends AppCompatActivity {
 
     // -----------------------------------------------------------------------
     // escanear() -->
-    // What it does: opens Google's code scanner (DataMatrix, the code of the
-    //               sensor label, or QR). If the user closes it, nothing
-    //               happens; if it cannot open, the error is shown below the
-    //               button.
+    // What it does: opens our own scanner (EscanerActivity: high
+    //               resolution, zoom, tap to focus and torch; Google's
+    //               scanner could not read the small DataMatrix of the
+    //               label). The text comes back in abrirEscaner. If the user
+    //               closes it, nothing happens; without camera permission or
+    //               if the camera fails, the error is shown below the button.
     // -----------------------------------------------------------------------
     private void escanear() {
         errorEscaneo.setVisibility(View.GONE);
-        GmsBarcodeScannerOptions opciones = new GmsBarcodeScannerOptions.Builder()
-                .setBarcodeFormats(Barcode.FORMAT_DATA_MATRIX, Barcode.FORMAT_QR_CODE)
-                .build();
-        GmsBarcodeScanner escaner = GmsBarcodeScanning.getClient(this, opciones);
-        escaner.startScan()
-                .addOnSuccessListener(codigo -> codigoLeido(codigo.getRawValue()))
-                .addOnFailureListener(error -> mostrarErrorEscaneo(getString(R.string.vincular_error_camara)));
+        abrirEscaner.launch(new Intent(this, EscanerActivity.class));
     }
 
     // -----------------------------------------------------------------------
@@ -173,7 +178,10 @@ public class VincularSensorActivity extends AppCompatActivity {
     private void codigoLeido(String texto) {
         CodigoSensor codigo = CodigoSensor.desdeTexto(texto);
         if (codigo == null) {
-            mostrarErrorEscaneo(getString(R.string.vincular_error_codigo));
+            // Se enseña lo que se ha leído, para saber qué trae la etiqueta
+            mostrarErrorEscaneo(texto == null || texto.trim().isEmpty()
+                    ? getString(R.string.vincular_error_codigo)
+                    : getString(R.string.vincular_error_codigo_leido, texto.trim()));
             return;
         }
         tarjetaEntrada = tarjetaEscanear;
