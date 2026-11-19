@@ -153,6 +153,27 @@ describe('Logica (mediciones)', function () {
         await assert.rejects(mediciones.ultimasDeUsuario(pelin.idUsuario, 2.5), (e) => e.codigo === 'DATOS_NO_VALIDOS');
     });
 
+    it('deUsuarioEnPeriodo() filtra por usuario y límites, y ordena cronológicamente', async function () {
+        const desde = new Date(Date.now() - 60 * 60000);
+        const hasta = new Date(Date.now() + 10 * 60000);
+        await mediciones.guardar(pelin.idUsuario, medicion({ valor: 90, fecha: haceMinutos(1) }));
+        await mediciones.guardar(pelin.idUsuario, medicion({ valor: 80, fecha: haceMinutos(2) }));
+        await mediciones.guardar(pelin.idUsuario, medicion({ valor: 70, fecha: haceMinutos(61) }));
+        await mediciones.guardar(ana.idUsuario, medicion({
+            numeroSerie: SERIE_ANA, valor: 150, fecha: haceMinutos(1)
+        }));
+
+        const propias = await mediciones.deUsuarioEnPeriodo(pelin.idUsuario, desde, hasta);
+        assert.deepStrictEqual(propias.map((m) => m.valor), [80, 90]);
+        assert.ok(Math.abs(propias[0].latitud - 38.9965) < 1e-9);
+        const ajenas = await mediciones.deUsuarioEnPeriodo(ana.idUsuario, desde, hasta);
+        assert.deepStrictEqual(ajenas.map((m) => m.valor), [150]);
+        await assert.rejects(mediciones.deUsuarioEnPeriodo(pelin.idUsuario, desde, new Date(NaN)),
+            (e) => e.codigo === 'DATOS_NO_VALIDOS' && e.campos.includes('hasta'));
+        await assert.rejects(mediciones.deUsuarioEnPeriodo(pelin.idUsuario, desde,
+            new Date(desde.getTime() + 27 * 60 * 60000)), (e) => e.codigo === 'DATOS_NO_VALIDOS');
+    });
+
     it('ultima() da la más nueva de todos los sensores; sin mediciones, SIN_MEDICIONES', async function () {
         await assert.rejects(mediciones.ultima(), (e) => e.codigo === 'SIN_MEDICIONES');
         await mediciones.guardar(pelin.idUsuario, medicion({ valor: 90, fecha: haceMinutos(10) }));

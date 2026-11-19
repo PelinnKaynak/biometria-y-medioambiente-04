@@ -249,11 +249,11 @@ public class InicioTest {
         }
         assertEquals(InicioActivity.class, BarraNavegacion.pantallaDe(BarraNavegacion.Pestanya.INICIO));
         assertEquals(ProximamenteActivity.class, BarraNavegacion.pantallaDe(BarraNavegacion.Pestanya.MAPA));
+        assertEquals(MisDatosActivity.class, BarraNavegacion.pantallaDe(BarraNavegacion.Pestanya.MIS_DATOS));
         assertEquals(ProximamenteActivity.Seccion.MAPA,
                 ProximamenteActivity.seccionDe(BarraNavegacion.Pestanya.MAPA));
         assertEquals(ProximamenteActivity.Seccion.MI_SENSOR, ProximamenteActivity.Seccion.valueOf("MI_SENSOR"));
-        assertEquals(ProximamenteActivity.Seccion.MIS_DATOS,
-                ProximamenteActivity.seccionDe(BarraNavegacion.Pestanya.MIS_DATOS));
+        assertNull(ProximamenteActivity.seccionDe(BarraNavegacion.Pestanya.MIS_DATOS));
         assertNull(ProximamenteActivity.seccionDe(BarraNavegacion.Pestanya.PERFIL));
     }
 

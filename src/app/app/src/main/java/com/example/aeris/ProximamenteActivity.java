@@ -1,9 +1,10 @@
 // ---------------------------------------------------------------------------
 // Fichero:     ProximamenteActivity.java
 // Descripción: Pantalla PROVISIONAL para las secciones que aún no están hechas
-//              (Mapa, Mis datos, Previsión, Mis lugares y Mi sensor), para que la barra de
-//              navegación y los accesos de Inicio abran algo. Cada sección se
-//              hace en su propia tarea; entonces BarraNavegacion.pantallaDe()
+//              (Mapa y Previsión), para que la barra de navegación y los
+//              accesos de Inicio abran una pantalla mientras se implementan.
+//              Cada sección se hace en su propia tarea; entonces
+//              BarraNavegacion.pantallaDe()
 //              o InicioActivity abrirán su pantalla real. Tarea T006.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       12/11/2026
@@ -31,7 +32,6 @@ public class ProximamenteActivity extends AppCompatActivity {
     // Secciones aún no hechas: título, texto e icono
     public enum Seccion {
         MAPA(R.string.proximamente_mapa, R.string.proximamente_mapa_texto, R.drawable.ic_mapa),
-        MIS_DATOS(R.string.proximamente_mis_datos, R.string.proximamente_mis_datos_texto, R.drawable.ic_mis_datos),
         PREVISION(R.string.proximamente_prevision, R.string.proximamente_prevision_texto, R.drawable.ic_reloj),
         MIS_LUGARES(R.string.proximamente_lugares, R.string.proximamente_lugares_texto, R.drawable.ic_lugar),
         MI_SENSOR(R.string.proximamente_mi_sensor, R.string.proximamente_mi_sensor_texto, R.drawable.ic_sensor),
@@ -69,8 +69,6 @@ public class ProximamenteActivity extends AppCompatActivity {
         switch (pestanya) {
             case MAPA:
                 return Seccion.MAPA;
-            case MIS_DATOS:
-                return Seccion.MIS_DATOS;
             default:
                 return null;
         }

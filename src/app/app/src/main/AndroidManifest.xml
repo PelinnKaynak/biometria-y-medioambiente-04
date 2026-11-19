@@ -87,7 +87,12 @@
             android:name=".InicioActivity"
             android:exported="false" />
 
-        <!-- Secciones aún no hechas: Mapa, Mis datos, Previsión (T006) -->
+        <!-- Mis datos (T007) se implementa en su pantalla propia. -->
+        <activity
+            android:name=".MisDatosActivity"
+            android:exported="false" />
+
+        <!-- Secciones aún no hechas: Mapa y Previsión (T006) -->
         <activity
             android:name=".ProximamenteActivity"
             android:exported="false" />

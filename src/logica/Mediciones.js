@@ -23,6 +23,7 @@ const MARGEN_FUTURO_MS = 5 * 60 * 1000;    // relojes un poco adelantados
 const ANTIGUEDAD_MAXIMA_MS = 7 * 24 * 60 * 60 * 1000;   // lo que la app guarda sin conexión
 const CANTIDAD_POR_DEFECTO = 5;
 const CANTIDAD_MAXIMA = 100;
+const DURACION_MAXIMA_CONSULTA_MS = 26 * 60 * 60 * 1000;
 const ESTADO_ACTIVO = 'activo';
 
 // ---------------------------------------------------------------------------
@@ -171,6 +172,30 @@ class Mediciones {
             `${SELECT_MEDICION} WHERE m.idUsuario = ? AND c.nombre = ?
               ORDER BY m.fechaHora DESC, m.idMedicion DESC LIMIT ${limite}`,
             [idUsuario, contaminante]);
+        return filas.map(aMedicion);
+    }
+
+    // -----------------------------------------------------------------------
+    // idUsuario: N, desde: Fecha, hasta: Fecha --> deUsuarioEnPeriodo() --> Lista<Medicion>
+    // What it does: returns all ozone readings of this user in the half-open
+    //               time range [desde, hasta). The bounded interval is used
+    //               by the daily app summary and allows 23/25-hour local days.
+    // -----------------------------------------------------------------------
+    async deUsuarioEnPeriodo(idUsuario, desde, hasta) {
+        const inicioMs = desde instanceof Date ? desde.getTime() : NaN;
+        const finMs = hasta instanceof Date ? hasta.getTime() : NaN;
+        if (!Number.isFinite(inicioMs) || !Number.isFinite(finMs)
+                || inicioMs >= finMs || finMs - inicioMs > DURACION_MAXIMA_CONSULTA_MS) {
+            throw this.error('DATOS_NO_VALIDOS', 'desde y hasta deben formar un periodo de hasta 26 horas',
+                ['desde', 'hasta']);
+        }
+
+        const nombresOzono = this.logica.condicionOzono().valores;
+        const [filas] = await this.conexion.execute(
+            `${SELECT_MEDICION} WHERE m.idUsuario = ? AND c.nombre IN (?, ?)
+              AND m.fechaHora >= ? AND m.fechaHora < ?
+              ORDER BY m.fechaHora ASC, m.idMedicion ASC`,
+            [idUsuario, ...nombresOzono, desde, hasta]);
         return filas.map(aMedicion);
     }
 

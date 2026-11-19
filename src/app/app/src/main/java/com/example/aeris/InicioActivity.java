@@ -169,10 +169,11 @@ public class InicioActivity extends AppCompatActivity {
         findViewById(R.id.botonVincular).setOnClickListener(vista ->
                 startActivity(new Intent(this, VincularSensorActivity.class)
                         .putExtra(VincularSensorActivity.EXTRA_DESDE_PERFIL, true)));
-        // «Mi sensor» abre su pantalla; «Mis datos» y la previsión siguen pendientes.
+        // «Mi sensor» y «Mis datos» abren sus pantallas; la previsión sigue pendiente.
         findViewById(R.id.botonVerSensor).setOnClickListener(vista ->
                 startActivity(new Intent(this, MiSensorActivity.class)));
-        findViewById(R.id.botonVerMas).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.MIS_DATOS));
+        findViewById(R.id.botonVerMas).setOnClickListener(vista ->
+                startActivity(new Intent(this, MisDatosActivity.class)));
         findViewById(R.id.filaPrevision).setOnClickListener(vista -> abrir(ProximamenteActivity.Seccion.PREVISION));
         findViewById(R.id.filaLugares).setOnClickListener(vista ->
                 startActivity(new Intent(this, MisLugaresActivity.class)));

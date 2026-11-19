@@ -256,11 +256,14 @@ ErrorLogica    = ( codigo: Texto, mensaje: Texto, campos: Lista<Texto> )
                                                    | DATOS_NO_VALIDOS, SENSOR_NO_REGISTRADO, SENSOR_NO_ES_TUYO
   idUsuario: N, cantidad: N (5, máx. 100), contaminante: Texto ("O3")
                          --> mediciones.ultimasDeUsuario() --> Lista<Medicion> | DATOS_NO_VALIDOS
+  idUsuario: N, desde: Date, hasta: Date
+                         --> mediciones.deUsuarioEnPeriodo() --> Lista<Medicion> | DATOS_NO_VALIDOS
   contaminante: Texto ("O3")
                          --> mediciones.ultima() --> Medicion                 | SIN_MEDICIONES
   fecha: Texto | N       --> leerFecha() --> Date | null                       (sin milisegundos)
   Medicion = ( idMedicion, contaminante, valor, unidad, fecha, latitud, longitud )
 ```
+- `deUsuarioEnPeriodo()` admite rangos de hasta 26 horas para cubrir días locales de 23 o 25 horas; filtra por `idUsuario`, limita el resultado a ozono y ordena del más antiguo al más reciente (T007).
 - **Nodos del panel (T021 · H011):** están en `Nodos.js` (clase `Nodos`) y se usan como `logica.nodos.buscar(…)`. Un nodo es un sensor vinculado a un usuario (`Sensores.idUsuario` no nulo); los que nadie ha vinculado todavía no salen. De cada uno se da el número de serie, el portador (nombre y apellidos), la fecha y el sitio de su última medición, la batería, si necesita calibración y el estado, con las mismas claves que los nodos de `LogicaAdminFake` de la web. Si un sensor no ha medido nunca, la fecha es `ultimaConexion` (o `null`) y la ubicación `null`.
   - Estado: `INACTIVO` si lleva más de 24 horas sin datos o no ha medido nunca (el mismo umbral que `nodos.js` de la web); si no, `CALIBRAR` si `necesitaCalibracion` y `ACTIVO` en el resto.
   - `buscar()`: busca en el número de serie y en el portador sin mirar mayúsculas ni acentos, filtra por `estado` (`todos`, `activos` = no inactivos, `inactivos`, `calibrar`) y ordena del que lleva más tiempo sin datos al más reciente. Devuelve la página pedida (`pagina` desde 1, `porPagina` 20 por defecto y 100 como mucho) y `total`, el número de nodos que cumplen el filtro sin paginar. `porPagina` 0 los devuelve todos (el mapa). Un filtro que no vale da `DATOS_NO_VALIDOS` con los campos.

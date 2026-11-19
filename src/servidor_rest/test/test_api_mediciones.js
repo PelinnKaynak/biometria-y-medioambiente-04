@@ -15,7 +15,7 @@ const { crearServidor } = require('../ServidorREST');
 describe('API REST de mediciones', function () {
 
     let logica, conexion, url, avisoOriginal;
-    let pelin, ana;     // tokens
+    let pelin, ana, idAna;     // tokens y usuario
 
     async function peticion(metodo, ruta, token, cuerpo) {
         const cabeceras = { 'Content-Type': 'application/json' };
@@ -55,6 +55,7 @@ describe('API REST de mediciones', function () {
         const sesionAna = await logica.registrarUsuario('Ana', 'García', 'ana@aeris.es', 'aire2026');
         pelin = sesionPelin.token;
         ana = sesionAna.token;
+        idAna = sesionAna.idUsuario;
         await logica.conexion.execute(
             'INSERT INTO Sensores (numeroSerie, sensibilidad, correoCompra, idUsuario) VALUES (?, ?, ?, ?)',
             ['092021011003', -38.11, 'pkaynak@upv.edu.es', sesionPelin.idUsuario]);
@@ -74,6 +75,7 @@ describe('API REST de mediciones', function () {
     it('sin sesión, guardar y ver las mías dan 401; la última medición es pública', async function () {
         assert.strictEqual((await peticion('POST', '/guardarMedicion', null, medicion())).codigo, 401);
         assert.strictEqual((await peticion('GET', '/ultimasMediciones')).codigo, 401);
+        assert.strictEqual((await peticion('GET', '/misDatos')).codigo, 401);
         assert.strictEqual((await peticion('GET', '/ultimaMedicion')).codigo, 404);     // aún no hay
     });
 
@@ -111,6 +113,36 @@ describe('API REST de mediciones', function () {
         assert.deepStrictEqual((await peticion('GET', '/ultimasMediciones', ana)).cuerpo, []);
         assert.strictEqual((await peticion('GET', '/ultimasMediciones?cantidad=abc', pelin)).codigo, 400);
         assert.strictEqual((await peticion('GET', '/ultimasMediciones?cantidad=0', pelin)).codigo, 400);
+    });
+
+    it('GET /misDatos: devuelve todas las mediciones del periodo solo del usuario autenticado', async function () {
+        await logica.conexion.execute(
+            'INSERT INTO Sensores (numeroSerie, sensibilidad, correoCompra, idUsuario) VALUES (?, ?, ?, ?)',
+            ['092021010920', -44.75, 'ana@aeris.es', idAna]);
+        await peticion('POST', '/guardarMedicion', pelin, medicion({ valor: 90, fecha: haceMinutos(1) }));
+        await peticion('POST', '/guardarMedicion', pelin, medicion({ valor: 80, fecha: haceMinutos(2) }));
+        await peticion('POST', '/guardarMedicion', ana,
+            medicion({ numeroSerie: '092021010920', valor: 150, fecha: haceMinutos(1) }));
+
+        const desde = Date.now() - 60 * 60000;
+        const hasta = Date.now() + 5 * 60000;
+        const ruta = `/misDatos?desde=${desde}&hasta=${hasta}`;
+        const datosPelin = await peticion('GET', ruta, pelin);
+        const datosAna = await peticion('GET', ruta, ana);
+        assert.strictEqual(datosPelin.codigo, 200);
+        assert.deepStrictEqual(datosPelin.cuerpo.map((m) => m.valor), [80, 90]);
+        assert.strictEqual(datosPelin.cuerpo[0].latitud, 38.9965);
+        assert.deepStrictEqual(datosAna.cuerpo.map((m) => m.valor), [150]);
+
+        const invalido = await peticion('GET', '/misDatos?desde=no&hasta=1', pelin);
+        assert.strictEqual(invalido.codigo, 400);
+        assert.deepStrictEqual(invalido.cuerpo.campos, ['desde', 'hasta']);
+    });
+
+    it('GET /misDatos: 404 cuando el usuario no tiene sensor vinculado', async function () {
+        const desde = Date.now() - 60 * 60000;
+        const hasta = Date.now() + 5 * 60000;
+        assert.strictEqual((await peticion('GET', `/misDatos?desde=${desde}&hasta=${hasta}`, ana)).codigo, 404);
     });
 
     it('GET /ultimaMedicion: la más nueva, con valor, unidad, fecha y ubicación', async function () {

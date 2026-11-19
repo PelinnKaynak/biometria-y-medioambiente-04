@@ -275,7 +275,7 @@ InicioActivity: ver la sección 3c (T006)
 
 ## 3. Perfil, editar mis datos y barra de navegación (T010)
 
-Pantalla de Figma «perfil» y componente «barra navegacion». La barra está en las pantallas principales (Inicio, Información y Perfil). Mapa y Mis datos llegan en otras tareas; hasta entonces abren la pantalla provisional `ProximamenteActivity` (T006).
+Pantalla de Figma «perfil» y componente «barra navegacion». La barra está en las pantallas principales (Inicio, Información y Perfil). Mapa sigue abriendo la pantalla provisional `ProximamenteActivity` (T006); «Mis datos» abre `MisDatosActivity` (T007).
 
 ```text
 InicioActivity <--barra--> PerfilActivity
@@ -421,7 +421,7 @@ Pestanya     ∈ { INICIO, MAPA, MIS_DATOS, INFO, PERFIL }
                                     |    B <--
                                     |
                                     |    pestanya: Pestanya --> pantallaDe() --x
-                                    |    Class <--          (Mapa y Mis datos: ProximamenteActivity, T006)
+                                    |    Class <--          (Mapa: ProximamenteActivity, T006; Mis datos: MisDatosActivity, T007)
                                     |
                                     -------------------------------------------------
 ```
@@ -516,17 +516,21 @@ Pantallas de Figma «inicio», «inicio (sin sensor)» e «inicio · notificacio
 InicioActivity.onResume() --> LogicaFakeInicio.obtenerUltimasMediciones()   (GET /ultimasMediciones?cantidad=5, T017)
                           --> LogicaFakePerfil.obtenerUsuario()             (GET /usuarioActual: ¿tiene sensor?)
 InicioActivity --(«Vincular», sin sensor)--> VincularSensorActivity (extra desdePerfil: al terminar vuelve a Inicio)
-InicioActivity --(«Ver» / «Ver más» / «Mejor hora para salir» / «Mis lugares»)--> ProximamenteActivity
+InicioActivity --(«Ver más»)--> MisDatosActivity
+InicioActivity --(«Ver»)--> MiSensorActivity
+InicioActivity --(«Mejor hora para salir»)--> ProximamenteActivity
+InicioActivity --(«Mis lugares»)--> MisLugaresActivity
 InicioActivity --(campana)--> panel de notificaciones (Aviso.calcular() o los de ejemplo)
 InicioActivity --(tocar una de las últimas mediciones)--> elegir() (esa medición pasa al arco)
-barra («Mapa» / «Mis datos») --> ProximamenteActivity
+barra «Mapa» --> ProximamenteActivity
+barra «Mis datos» --> MisDatosActivity
 ```
 
 ### Tipos
 
 ```text
 Medicion: { valor: R (µg/m³), momento: Z (ms desde 1970, UTC) }
-Seccion ∈ { MAPA, MIS_DATOS, PREVISION, MIS_LUGARES, MI_SENSOR }     // secciones aún no hechas
+Seccion ∈ { MAPA, PREVISION, MIS_LUGARES, MI_SENSOR }                // secciones provisionales
 Aviso: { tipo ∈ { CONTAMINACION, BATERIA, DESCONECTADO }, titulo: Text, texto: Text, momento: Z, clave: Text }
 ```
 
@@ -775,6 +779,24 @@ sensor --BLE--> ServicioMediciones --TramaAERIS--> ReceptorMediciones --> ColaMe
 ### Clase Sesion y DatosUsuario (MODIFICADAS en T023)
 - `DatosUsuario.numeroSerie` (de `GET /usuarioActual`; `""` si no tiene sensor). `Sesion.guardarNumeroSerie()` / `numeroSerie()`; `Sesion.cerrar()` también para `ServicioMediciones`.
 
+
+## 3f. Pantalla Mis datos (T007)
+
+`MisDatosActivity` está disponible desde la pestaña inferior «Mis datos» y desde «Ver más» de Inicio. Al abrirse consulta los registros del día local con el token de sesión; el servidor comprueba que el usuario tenga un sensor y filtra por su `idUsuario`.
+
+```text
+MisDatosActivity.onResume()
+  --> LogicaFakeMisDatos.obtenerDatos(token, inicioDiaLocal, inicioDiaSiguiente)
+  --> GET /misDatos?desde=<epoch-ms>&hasta=<epoch-ms>
+  --> MedicionDiaria.listaDesdeJSON()
+  --> ResumenMisDatos.calcular()
+```
+
+- `ResumenMisDatos` ordena las mediciones, suma las distancias entre ubicaciones consecutivas con la fórmula de Haversine y calcula la media aritmética de O3. La media se clasifica con `NivelOzono`.
+- La pantalla muestra la distancia recorrida, la calidad media y una gráfica horaria de concentraciones del día; el umbral de 100 µg/m³ se marca en la gráfica. Si hoy no hay mediciones, los valores quedan como «—» y se indica que no hay datos.
+- Sin sensor vinculado, el servidor responde 404 y la pantalla muestra el aviso y el acceso a «Vincular sensor». Al volver a la pantalla se vuelven a cargar los datos. `401` cierra la sesión; los errores de red ofrecen «Reintentar».
+- El día se calcula en la zona horaria del dispositivo y se envía al servidor como un intervalo semiabierto. El servidor admite hasta 26 horas para cubrir cambios de horario y devuelve todas las mediciones O3 de ese usuario con sus coordenadas.
+- **Tests:** `MisDatosTest` cubre el análisis del JSON, la distancia, la media y el estado vacío; `LogicaFakeMisDatosTest` cubre las respuestas de la API. Las pruebas del servidor verifican el aislamiento de datos, el intervalo y el caso sin sensor.
 
 ## 4. Aclaraciones del diseño
 

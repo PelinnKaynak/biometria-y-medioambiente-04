@@ -4,7 +4,7 @@
 //              (Inicio, Mapa, Mis datos, Info, Perfil), como el componente
 //              «barra navegacion» de Figma. Pinta la pestaña activa en violeta
 //              y abre la pantalla de cada pestaña. Diseño en doc/app_design.md.
-//              Tarea T010 (Info: T009; Mapa y Mis datos provisionales: T006).
+//              Tarea T010 (Info: T009; Mapa provisional: T006; Mis datos: T007).
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       04/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -62,9 +62,8 @@ public class BarraNavegacion {
     // -----------------------------------------------------------------------
     // pestanya: Pestanya --> pantallaDe() --x
     // Class | null <--
-    // What it does: returns the screen of the tab. Mapa and Mis datos are
-    //               done in other tasks: until then they open the temporary
-    //               screen ProximamenteActivity (T006).
+    // What it does: returns the screen of the tab. Mapa is still provisional
+    //               and opens ProximamenteActivity (T006).
     // -----------------------------------------------------------------------
     static Class<? extends Activity> pantallaDe(Pestanya pestanya) {
         switch (pestanya) {
@@ -72,6 +71,8 @@ public class BarraNavegacion {
                 return InicioActivity.class;
             case INFO:
                 return InformacionActivity.class;
+            case MIS_DATOS:
+                return MisDatosActivity.class;
             case PERFIL:
                 return PerfilActivity.class;
             default:
