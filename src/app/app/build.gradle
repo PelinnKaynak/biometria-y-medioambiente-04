@@ -37,6 +37,7 @@ dependencies {
     implementation libs.constraintlayout
     implementation libs.material
     implementation libs.splashscreen
+    implementation libs.osmdroid
 
     // Escáner propio del código de la etiqueta (Vincular sensor, T039): cámara y lector de DataMatrix
     implementation 'androidx.camera:camera-camera2:1.4.2'

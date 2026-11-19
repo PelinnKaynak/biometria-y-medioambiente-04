@@ -657,6 +657,8 @@ MisLugaresActivity --> LogicaFakeMisLugares.obtenerLugares()
 MisLugaresActivity --> LogicaFakeMisLugares.anadirLugar()
 MisLugaresActivity --> LogicaFakeMisLugares.cambiarAvisos()
 MisLugaresActivity --> LogicaFakeMisLugares.eliminarLugar()
+MisLugaresActivity --(«Elegir posición en el mapa»)--> SeleccionarUbicacionActivity
+SeleccionarUbicacionActivity --(latitud, longitud)--> MisLugaresActivity
 MisLugaresActivity --(«atrás»)--> finish()
 ```
 
@@ -742,7 +744,7 @@ MisLugaresActivity (NUEVA): onCreate(), onResume(), cargarLugares(), mostrarLuga
 - **Ozono interpolado:** Cada lugar muestra la concentración y nivel cuando hay lecturas O3 de las últimas 24 horas; si no las hay, muestra «Sin datos recientes».
 - **Interruptor de avisos:** Cada tarjeta de lugar incluye un `MaterialSwitch` que activa o desactiva las alertas de esa ubicación específica.
 - **Eliminación:** Cada tarjeta dispone de un botón de papelera que solicita confirmación antes de borrar el lugar.
-- **Tipo y coordenadas:** El formulario permite elegir Casa/Trabajo/Colegio/Otro e introducir latitud y longitud manualmente; no se usa un geocodificador.
+- **Tipo y posición:** El formulario permite elegir Casa/Trabajo/Colegio/Otro. La posición se elige tocando el mapa de OpenStreetMap; el selector devuelve latitud y longitud a `MisLugaresActivity`, sin pedir al usuario que las escriba. El mapa muestra la atribución de OpenStreetMap.
 
 ## 3e. Recepción de las mediciones por Bluetooth (T023)
 

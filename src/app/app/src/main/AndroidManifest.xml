@@ -106,6 +106,10 @@
             android:windowSoftInputMode="adjustResize" />
 
         <activity
+            android:name=".SeleccionarUbicacionActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".VincularSensorActivity"
             android:exported="false" />
 

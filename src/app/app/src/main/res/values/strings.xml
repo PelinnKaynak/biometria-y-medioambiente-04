@@ -340,9 +340,16 @@
     <string name="mis_lugares_campo_nombre">Nombre (ej. Casa, Trabajo, Colegio)</string>
     <string name="mis_lugares_campo_direccion">Dirección o municipio</string>
     <string name="mis_lugares_campo_tipo">Tipo</string>
-    <string name="mis_lugares_campo_coordenadas">Coordenadas (latitud, longitud)</string>
-    <string name="mis_lugares_campo_latitud">Latitud</string>
-    <string name="mis_lugares_campo_longitud">Longitud</string>
+    <string name="mis_lugares_campo_ubicacion">Posición en el mapa</string>
+    <string name="mis_lugares_boton_seleccionar_mapa">Elegir posición en el mapa</string>
+    <string name="mis_lugares_ubicacion_pendiente">Ninguna posición seleccionada</string>
+    <string name="mis_lugares_ubicacion_formato">%1$.5f, %2$.5f</string>
+    <string name="mis_lugares_error_ubicacion">Selecciona la posición del lugar en el mapa.</string>
+    <string name="mis_lugares_mapa_titulo">Elegir posición</string>
+    <string name="mis_lugares_mapa_instruccion">Toca el mapa para colocar el marcador. Puedes moverlo y acercar el mapa.</string>
+    <string name="mis_lugares_mapa_sin_seleccion">Toca el mapa para marcar la posición del lugar.</string>
+    <string name="mis_lugares_mapa_confirmar">Usar esta posición</string>
+    <string name="mis_lugares_mapa_atribucion">© OpenStreetMap contributors</string>
     <string name="mis_lugares_boton_guardar">Guardar lugar</string>
     <string name="mis_lugares_boton_anadir">Añadir lugar</string>
     <string name="mis_lugares_error_nombre">Escribe un nombre para el lugar</string>
@@ -359,7 +366,6 @@
     <string name="mis_lugares_icono_eliminar_desc">Eliminar lugar</string>
     <string name="mis_lugares_nivel_formato">%1$.0f µg/m³ · %2$s</string>
     <string name="mis_lugares_sin_datos_recientes">Sin datos recientes</string>
-    <string name="mis_lugares_coordenadas_invalidas">Introduce una latitud y longitud válidas.</string>
 
     <string-array name="mis_lugares_tipos_etiquetas">
         <item>Casa</item>
