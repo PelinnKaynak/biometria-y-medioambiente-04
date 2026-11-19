@@ -327,16 +327,14 @@
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
-                    <TextView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:background="@drawable/fondo_circulo_paso"
-                        android:backgroundTint="@color/espera_icono"
-                        android:gravity="center"
-                        android:text="!"
-                        android:textColor="@color/blanco"
-                        android:textSize="13sp"
-                        android:textStyle="bold" />
+                    <!-- Rueda girando: se está comprobando si ya lo han confirmado -->
+                    <ProgressBar
+                        android:id="@+id/ruedaEsperando"
+                        style="?android:attr/progressBarStyleSmall"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:indeterminate="true"
+                        android:indeterminateTint="@color/espera_icono" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -357,6 +355,14 @@
                     android:textColor="@color/texto_cuerpo"
                     android:textSize="14sp"
                     tools:text="Hemos enviado un correo a m•••••@gmail.com, el correo con el que se compró el sensor 092021010920. Cuando lo confirme, tu sensor empezará a funcionar. El enlace caduca en 48 horas." />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/vincular_esperando_comprobando"
+                    android:textColor="@color/espera_texto"
+                    android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/botonReenviar"
@@ -550,6 +556,71 @@
                 android:text="@string/vincular_ayuda"
                 android:textColor="@color/violeta"
                 android:textSize="14sp"
+                android:textFontWeight="600" />
+        </LinearLayout>
+
+        <!-- Quien compró el sensor ha confirmado el correo: ya está vinculado
+             (aparece sola, sin salir de la pantalla) -->
+        <LinearLayout
+            android:id="@+id/tarjetaVinculado"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/fondo_aviso_ok"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/fondo_circulo_paso"
+                    android:backgroundTint="@color/verde_ok"
+                    android:gravity="center"
+                    android:text="✓"
+                    android:textColor="@color/blanco"
+                    android:textSize="28sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/vincular_confirmada"
+                    android:textColor="@color/verde_ok"
+                    android:textSize="20sp"
+                    android:textFontWeight="700" />
+
+                <TextView
+                    android:id="@+id/textoVinculado"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:lineSpacingExtra="3dp"
+                    android:textColor="@color/texto_cuerpo"
+                    android:textSize="14sp"
+                    tools:text="Tu sensor 092021011003 ya está vinculado a tu cuenta. Empezará a medir en cuanto esté cerca del móvil con el Bluetooth activado." />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/botonContinuarVinculado"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/fondo_boton_principal"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/vincular_continuar_vinculado"
+                android:textColor="@color/blanco"
+                android:textSize="16sp"
                 android:textFontWeight="600" />
         </LinearLayout>
 

@@ -10,13 +10,15 @@ Parte del `HolaMundoIBeacon` del Sprint 0 (código de Jordi Bataller i Mascarell
 
 | Pin del ULPSM-O3 | Placa | Uso |
 |---|---|---|
-| 1 · Vgas | 29 (AIN5) | Señal del gas |
-| 2 · Vref | 5 (AIN3) | Referencia (≈ V+/2) |
-| 3 · Vtemp | 2 (AIN0) | Temperatura |
+| 1 · Vgas (gris) | 28 (AIN4) | Señal del gas |
+| 2 · Vref (morado) | 5 (AIN3) | Referencia (≈ V+/2) |
+| 3 · Vtemp | 29 (AIN5) | Temperatura (opcional, ver abajo) |
 | 7, 8 · V+ | 3V3 | Alimentación (2,7–3,3 V; nunca a VBAT ni a 5 V) |
-| 6 · GND | GND | Masa |
+| 6 · GND | 4 | Masa: la placa no tiene pin GND soldado, así que el pin 4 hace de GND (el programa lo pone como salida a 0 V; el sensor gasta unos µA). Solo se activa si al arrancar el pin no tiene más de 2 V (`V_MAXIMA_PIN_GND`); si no, el monitor serie avisa y no se toca |
 
 Solo leen tensiones las entradas analógicas del nRF52840: los pines 2, 3, 4, 5, 28, 29, 30 y 31. Si el montaje usa otros de esa lista, se cambian en `Configuracion.h`.
+
+Vtemp es opcional. Con `HAY_VTEMP = false` (montaje de 4 cables: V+, GND, Vgas, Vref; el que se usa ahora) no se lee y siempre se toma `TEMPERATURA_POR_DEFECTO`. Con `true`, si da una temperatura fuera de −20…55 °C (sin cable, mal conectado o saturado a 3 V, que son 61 °C), `Medidor` usa `TEMPERATURA_POR_DEFECTO` (25 °C) para pasar a µg/m³ y el monitor serie lo indica con «T=25.0 C (fija)». Entre 20 y 30 °C el resultado solo cambia un 3 %, así que basta con conectar V+, GND, Vgas y Vref.
 
 Comprobación con el polímetro (sensor alimentado, aire limpio): Vref ≈ 1,65 V; Vgas muy cerca de Vref (unos pocos mV por debajo); Vtemp ≈ 1,6 V a 25 °C.
 
@@ -56,7 +58,7 @@ ozono  = max(0, µg/m³ × factor)
 ```
 
 - Sensibilidad: la de la etiqueta del sensor (−38,11 nA/ppm en el del nodo de Pelin, etiqueta «092021011003 110406 O3 2109 -38.11»). Ganancia TIA del módulo de ozono: 499 kV/A.
-- **ADC:** 1 ppm mueve Vgas solo unos 22 mV (100 µg/m³ ≈ 1,1 mV), así que se lee a 14 bits con referencia de 3,0 V (un paso ≈ 0,18 mV ≈ 16 µg/m³). Cada lectura es la media de 256 muestras, guardando los decimales.
+- **ADC:** 1 ppm mueve Vgas solo unos 22 mV (100 µg/m³ ≈ 1,1 mV), así que se lee a 14 bits con referencia de 3,0 V (un paso ≈ 0,18 mV ≈ 16 µg/m³). Cada lectura es la media de 64 muestras, guardando los decimales. La salida Vgas del ULPSM no carga el condensador del ADC al instante, así que al cambiar de pin se tira la primera lectura y se esperan 5 ms, y 2 ms entre muestras (sin esto Vgas salía mezclada con el pin leído antes y saltaba cientos de mV). Aun así Vgas − Vref tiene decenas de mV de ruido de una medición a otra: el ozono se calcula con la media de las últimas `MEDICIONES_MEDIA` (10, ~1,5 min) y la orden «cero» guarda la media de `MEDICIONES_CERO` (10) mediciones seguidas. El monitor serie enseña la diferencia de cada medición y su media.
 
 ```text
 lectura: R, bits: N, vReferencia: R   --> voltiosDesdeLectura() --> R
@@ -125,12 +127,34 @@ Lectura = ( vGas: R, vRef: R, vTemp: R, temperatura: R, ozonoSinAjustar: R, ozon
                                        ------------------------------------------
 ```
 
+                                       --------- LuzAviso (H033) ----------------
+                                       | elLED; activa: V/F (en la flash, /luz.dat)
+  ozono: R                         --> ponerOzono() -->
+  activa: V/F                      --> pedir() -->             (desde Bluetooth; se aplica en loop)
+                                       atenderPedido() --> V/F
+  ms: Z                            --> esperar() -->           (si está activa, el LED parpadea
+                                                                 durante la espera)
+                                       ------------------------------------------
+
+                                       --------- ServicioLuz --------------------
+                                       servicio "AERIS-SERVICIO-1"
+                                       característica "AERIS-LUZ-ACTIVA" (1 byte, leer/escribir)
+  alEscribir: F, activa: V/F       --> activar() -->
+  activa: V/F                      --> mostrar() -->
+                                       ------------------------------------------
+
+Luz de aviso: con la luz activada, el LED parpadea más rápido cuanto más ozono hay
+(< 100 µg/m³ cada 2 s, < 180 cada 1 s, < 240 cada 0,5 s y a partir de 240 cada 0,25 s).
+La app escribe 1 (activar) o 0 (desactivar) en la característica; la orden se guarda en la
+flash para que se mantenga tras reiniciar. Con la luz desactivada el LED solo hace el brillo
+corto de cada medición.
+
 Programa principal (`NodoAERIS.ino`):
 
 ```text
 setup()    espera el puerto serie como mucho 3 s (con batería no hay USB), carga la calibración,
            prepara el ADC y enciende Bluetooth
-loop()     cont := cont + 1; órdenes; l := medir(); LED; publicar(OZONO, l.ozono, cont, 6 s);
+loop()     cont := cont + 1; órdenes; l := medir(); luz de aviso; LED; publicar(OZONO, l.ozono, cont, 6 s);
            órdenes; publicar(TEMPERATURA, l.temperatura × 10, cont, 3 s)
 ```
 

@@ -1,12 +1,30 @@
+// ---------------------------------------------------------------------------
+// Fichero:     MiSensorActivity.java
+// Descripción: Pantalla «Mi sensor» (T011): estado, número de serie,
+//              batería y última conexión del sensor vinculado, la luz de
+//              aviso y desvincularlo. La luz de aviso (H033) se cambia de
+//              verdad en el sensor por Bluetooth (LuzSensor); el interruptor
+//              solo se queda en la nueva posición si el sensor lo confirma.
+//              Diseño en doc/app_design.md.
+// Autores:     Equipo 04 – SenseTech
+// Fecha:       19/11/2026
+// Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
+// ---------------------------------------------------------------------------
 package com.example.aeris;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -35,7 +53,19 @@ public class MiSensorActivity extends AppCompatActivity {
     private MaterialSwitch interruptorLuz;
     private View botonDesvincular;
     private SensorUsuario sensorActual;
-    private LuzSensorSimulada luzSimulada;
+    private LuzSensorSimulada luzSimulada;      // estado de la luz que ha confirmado el sensor
+    private boolean luzPedida;                   // lo que se quiere poner mientras se pide el permiso
+
+    // Android 12+: conectar con el sensor necesita el permiso BLUETOOTH_CONNECT
+    private final ActivityResultLauncher<String> pedirPermisoConectar =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), concedido -> {
+                if (concedido) {
+                    enviarLuz(luzPedida);
+                } else {
+                    ponerInterruptor(!luzPedida);
+                    Toast.makeText(this, R.string.mi_sensor_luz_sin_permiso, Toast.LENGTH_LONG).show();
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,17 +166,68 @@ public class MiSensorActivity extends AppCompatActivity {
         actualizarTextoLuz();
     }
 
+    // -----------------------------------------------------------------------
+    // encendida: B --> cambiarLuz() -->
+    // What it does: the user moved the switch: asks for the Bluetooth
+    //               permission if it is missing (Android 12+) and sends it
+    //               to the sensor.
+    // -----------------------------------------------------------------------
     private void cambiarLuz(boolean encendida) {
         if (sensorActual == null) {
             return;
         }
-        if (luzSimulada == null) {
-            luzSimulada = new LuzSensorSimulada(false);
+        if (Build.VERSION.SDK_INT >= 31 && checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT)
+                != PackageManager.PERMISSION_GRANTED) {
+            luzPedida = encendida;
+            pedirPermisoConectar.launch(Manifest.permission.BLUETOOTH_CONNECT);
+            return;
         }
-        luzSimulada.establecer(encendida);
-        getSharedPreferences(PREFERENCIAS, MODE_PRIVATE).edit()
-                .putBoolean(CLAVE_LUZ + sensorActual.numeroSerie, encendida).apply();
-        actualizarTextoLuz();
+        enviarLuz(encendida);
+    }
+
+    // -----------------------------------------------------------------------
+    // encendida: B --> enviarLuz() -->
+    // What it does: «Cambiando…» while LuzSensor connects to the sensor and
+    //               writes it. If it works, it is saved; if not, the switch
+    //               goes back and the reason is shown.
+    // -----------------------------------------------------------------------
+    private void enviarLuz(boolean encendida) {
+        interruptorLuz.setEnabled(false);
+        textoEstadoLuz.setText(R.string.mi_sensor_luz_cambiando);
+        LuzSensor.cambiar(this, encendida, new LuzSensor.Respuesta() {
+            @Override
+            public void cambiada() {
+                if (isFinishing() || sensorActual == null) {
+                    return;
+                }
+                interruptorLuz.setEnabled(true);
+                if (luzSimulada == null) {
+                    luzSimulada = new LuzSensorSimulada(false);
+                }
+                luzSimulada.establecer(encendida);
+                getSharedPreferences(PREFERENCIAS, MODE_PRIVATE).edit()
+                        .putBoolean(CLAVE_LUZ + sensorActual.numeroSerie, encendida).apply();
+                actualizarTextoLuz();
+            }
+
+            @Override
+            public void error(String mensaje) {
+                if (isFinishing()) {
+                    return;
+                }
+                interruptorLuz.setEnabled(true);
+                ponerInterruptor(!encendida);
+                actualizarTextoLuz();
+                Toast.makeText(MiSensorActivity.this, mensaje, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    // encendida: B --> ponerInterruptor() -->   (sin volver a llamar a cambiarLuz)
+    private void ponerInterruptor(boolean encendida) {
+        interruptorLuz.setOnCheckedChangeListener(null);
+        interruptorLuz.setChecked(encendida);
+        interruptorLuz.setOnCheckedChangeListener((boton, e) -> cambiarLuz(e));
     }
 
     private void actualizarTextoLuz() {

@@ -63,6 +63,16 @@ namespace ConversorOzono {
   } // ()
 
   // ------------------------------------------------------------
+  // t: R, minima: R, maxima: R --> temperaturaValida() --> B
+  // What it does: true if t is between minima and maxima (a real air
+  //               temperature). Vtemp without a wire or touching 3V3 gives
+  //               impossible values, such as 61 °C.
+  // ------------------------------------------------------------
+  inline bool temperaturaValida(float t, float minima, float maxima) {
+    return t >= minima && t <= maxima;
+  } // ()
+
+  // ------------------------------------------------------------
   // ppm: R, temperaturaC: R --> microgramosPorM3() --> R
   // What it does: ppm to µg/m³ at that temperature and 1 atm:
   //               ppm × 48 × 1000 / volumen molar (24,45 L/mol at 25 °C,

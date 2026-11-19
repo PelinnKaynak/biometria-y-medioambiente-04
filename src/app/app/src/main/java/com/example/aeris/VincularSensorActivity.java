@@ -10,7 +10,9 @@
 //              con el botón «Vincular». Al pulsarlo se pide la vinculación
 //              (LogicaFakeVincular) y el servidor envía un correo a quien
 //              compró el sensor: la pantalla espera a que lo confirme
-//              («Esperando la confirmación») o enseña si lo ha rechazado.
+//              («Esperando la confirmación», con una rueda girando, y
+//              pregunta el estado cada INTERVALO_CONSULTA) y, en cuanto lo
+//              confirma, enseña «¡Sensor vinculado!»; si lo rechaza, lo dice.
 //              Diseño en doc/app_design.md.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       05/11/2026
@@ -20,10 +22,11 @@ package com.example.aeris;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -39,6 +42,9 @@ public class VincularSensorActivity extends AppCompatActivity {
     // al perfil en vez de abrir el inicio)
     public static final String EXTRA_DESDE_PERFIL = "desdePerfil";
 
+    // Cada cuánto se pregunta si ya han confirmado el correo (ms)
+    static final long INTERVALO_CONSULTA = 5000;
+
     private View botonEscanear;
     private TextView errorEscaneo;
     private View tarjetaEscanear;
@@ -53,6 +59,12 @@ public class VincularSensorActivity extends AppCompatActivity {
     private TextView textoVincular;
     private View tarjetaEsperando;
     private View tarjetaRechazada;
+    private View tarjetaVinculado;
+    private TextView textoVinculado;
+    // Preguntar el estado mientras se espera la confirmación (solo con la pantalla delante)
+    private final Handler consultas = new Handler(Looper.getMainLooper());
+    private final Runnable consultarOtraVez = this::consultarSiEspera;
+    private boolean enPantalla = false;
     private TextView textoEsperando;
     private TextView textoPasoEscaneado;
     private TextView textoPasoCorreo;
@@ -104,6 +116,8 @@ public class VincularSensorActivity extends AppCompatActivity {
         textoVincular = findViewById(R.id.textoVincular);
         tarjetaEsperando = findViewById(R.id.tarjetaEsperando);
         tarjetaRechazada = findViewById(R.id.tarjetaRechazada);
+        tarjetaVinculado = findViewById(R.id.tarjetaVinculado);
+        textoVinculado = findViewById(R.id.textoVinculado);
         textoEsperando = findViewById(R.id.textoEsperando);
         textoPasoEscaneado = findViewById(R.id.textoPasoEscaneado);
         textoPasoCorreo = findViewById(R.id.textoPasoCorreo);
@@ -121,6 +135,7 @@ public class VincularSensorActivity extends AppCompatActivity {
         findViewById(R.id.botonEscanearDeNuevo).setOnClickListener(vista -> escanear());
         findViewById(R.id.enlaceAyudaEsperando).setOnClickListener(vista -> abrirAyuda());
         findViewById(R.id.enlaceAyudaRechazada).setOnClickListener(vista -> abrirAyuda());
+        findViewById(R.id.botonContinuarVinculado).setOnClickListener(vista -> salir());
         tarjetaEntrada = tarjetaEscanear;
         // La flecha y el botón «atrás» del teléfono vuelven al paso anterior
         findViewById(R.id.botonVolver).setOnClickListener(vista -> volver());
@@ -151,8 +166,40 @@ public class VincularSensorActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        enPantalla = true;
+        consultarSiEspera();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        enPantalla = false;
+        consultas.removeCallbacks(consultarOtraVez);
+    }
+
+    // -----------------------------------------------------------------------
+    // consultarSiEspera() -->
+    // What it does: if «Esperando la confirmación» is shown, asks the server
+    //               in which state the request is (the answer goes to
+    //               mostrarSolicitud, which asks again later while it is
+    //               still pending).
+    // -----------------------------------------------------------------------
+    private void consultarSiEspera() {
         if (tarjetaEsperando.getVisibility() == View.VISIBLE) {
             logica.consultarEstado(Sesion.token(this), respuestaSolicitud(false));
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // programarConsulta() -->
+    // What it does: asks again in INTERVALO_CONSULTA, only while waiting
+    //               and with the screen in front (not with the app in the
+    //               background, so it does not spend battery or data).
+    // -----------------------------------------------------------------------
+    private void programarConsulta() {
+        consultas.removeCallbacks(consultarOtraVez);
+        if (enPantalla && tarjetaEsperando.getVisibility() == View.VISIBLE) {
+            consultas.postDelayed(consultarOtraVez, INTERVALO_CONSULTA);
         }
     }
 
@@ -228,7 +275,8 @@ public class VincularSensorActivity extends AppCompatActivity {
         tarjetaSensor.setVisibility(tarjeta == tarjetaSensor ? View.VISIBLE : View.GONE);
         tarjetaEsperando.setVisibility(tarjeta == tarjetaEsperando ? View.VISIBLE : View.GONE);
         tarjetaRechazada.setVisibility(tarjeta == tarjetaRechazada ? View.VISIBLE : View.GONE);
-        if (tarjeta != tarjetaEsperando && tarjeta != tarjetaRechazada) {
+        tarjetaVinculado.setVisibility(tarjeta == tarjetaVinculado ? View.VISIBLE : View.GONE);
+        if (tarjeta != tarjetaEsperando && tarjeta != tarjetaRechazada && tarjeta != tarjetaVinculado) {
             textoVincular.setText(R.string.vincular_texto);
         }
     }
@@ -298,6 +346,7 @@ public class VincularSensorActivity extends AppCompatActivity {
             @Override
             public void sinSolicitud() {
                 botonVincular.setEnabled(true);
+                programarConsulta();
             }
 
             @Override
@@ -312,6 +361,7 @@ public class VincularSensorActivity extends AppCompatActivity {
                     errorVincular.setText(mensaje);
                     errorVincular.setVisibility(View.VISIBLE);
                 }
+                programarConsulta();          // sin conexión: se vuelve a probar
             }
         };
     }
@@ -319,9 +369,10 @@ public class VincularSensorActivity extends AppCompatActivity {
     // -----------------------------------------------------------------------
     // solicitud: SolicitudVinculacion --> mostrarSolicitud() -->
     // What it does: pending -> «Esperando la confirmación» with the hidden
-    //               e-mail, the serial and when it was scanned; confirmed ->
-    //               «¡Sensor vinculado!» and salir(); rejected -> «Vinculación
-    //               rechazada».
+    //               e-mail, the serial and when it was scanned (and it asks
+    //               again in INTERVALO_CONSULTA); confirmed -> the
+    //               «¡Sensor vinculado!» card, whose button calls salir();
+    //               rejected -> «Vinculación rechazada».
     // -----------------------------------------------------------------------
     private void mostrarSolicitud(SolicitudVinculacion solicitud) {
         switch (solicitud.estado) {
@@ -335,10 +386,13 @@ public class VincularSensorActivity extends AppCompatActivity {
                 textoPasoCorreo.setText(getString(R.string.vincular_paso_correo_detalle,
                         solicitud.correoComprador));
                 mostrarSolo(tarjetaEsperando);
+                programarConsulta();
                 break;
             case CONFIRMADA:
-                Toast.makeText(this, R.string.vincular_confirmada, Toast.LENGTH_SHORT).show();
-                salir();
+                consultas.removeCallbacks(consultarOtraVez);
+                textoVincular.setText(R.string.vincular_texto_vinculado);
+                textoVinculado.setText(getString(R.string.vincular_vinculado_texto, solicitud.numeroSerie));
+                mostrarSolo(tarjetaVinculado);
                 break;
             case RECHAZADA:
                 textoVincular.setText(getString(R.string.vincular_texto_rechazada, solicitud.numeroSerie));
@@ -396,7 +450,9 @@ public class VincularSensorActivity extends AppCompatActivity {
     //               writing the code again asks for it again.
     // -----------------------------------------------------------------------
     private void volver() {
-        if (tarjetaAMano.getVisibility() == View.VISIBLE) {
+        if (tarjetaVinculado.getVisibility() == View.VISIBLE) {
+            salir();
+        } else if (tarjetaAMano.getVisibility() == View.VISIBLE) {
             mostrarSolo(tarjetaEscanear);
         } else if (tarjetaSensor.getVisibility() == View.VISIBLE
                 || tarjetaEsperando.getVisibility() == View.VISIBLE
