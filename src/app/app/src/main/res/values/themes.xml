@@ -12,6 +12,12 @@
 
     <style name="Theme.AERIS" parent="Base.Theme.AERIS" />
 
+    <style name="Theme.AERIS.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/fondo</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/logo_aeris</item>
+        <item name="postSplashScreenTheme">@style/Theme.AERIS</item>
+    </style>
+
     <!-- Etiqueta encima de cada campo -->
     <style name="AERIS.Etiqueta" parent="">
         <item name="android:textColor">@color/texto_principal</item>

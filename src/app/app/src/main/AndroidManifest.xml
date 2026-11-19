@@ -25,6 +25,7 @@
         <!-- Primera pantalla: la bienvenida (T001). Si ya hay sesión, abre directamente el inicio -->
         <activity
             android:name=".BienvenidaActivity"
+            android:theme="@style/Theme.AERIS.Starting"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
