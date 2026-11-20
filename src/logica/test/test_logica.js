@@ -235,6 +235,172 @@ describe('Logica (usuarios y autenticación)', function () {
         await assert.rejects(logica.iniciarSesion('', ''), { codigo: 'CREDENCIALES_INCORRECTAS' });
     });
 
+    it('usuarios.crear() crea cuentas solo de técnico o administrador y protege el hash', async function () {
+        const usuario = await logica.usuarios.crear({
+            nombre: 'Aina', apellidos: 'Núñez', correo: 'Aina@aeris.es',
+            contrasena: 'tecnico2026', rol: 'tecnico'
+        });
+        assert.strictEqual(usuario.rol, 'tecnico');
+        assert.strictEqual(usuario.estado, 'activo');
+
+        const [filas] = await logica.conexion.execute(
+            'SELECT email, passwordHash, esAdministrador, esTecnico FROM Usuarios WHERE idUsuario = ?',
+            [usuario.idUsuario]);
+        assert.strictEqual(filas[0].email, 'aina@aeris.es');
+        assert.ok(!filas[0].passwordHash.includes('tecnico2026'));
+        assert.strictEqual(Boolean(filas[0].esAdministrador), false);
+        assert.strictEqual(Boolean(filas[0].esTecnico), true);
+
+        const admin = await logica.usuarios.crear({
+            nombre: 'Alba', apellidos: 'Admin', correo: 'alba@aeris.es',
+            contrasena: 'admin2026', rol: 'administrador'
+        });
+        assert.strictEqual(admin.rol, 'administrador');
+
+        await assert.rejects(logica.usuarios.crear({
+            nombre: 'Aina', apellidos: 'Núñez', correo: 'aina@aeris.es',
+            contrasena: 'tecnico2026', rol: 'ciudadano'
+        }), { codigo: 'DATOS_NO_VALIDOS' });
+        await assert.rejects(logica.usuarios.crear({
+            nombre: 'Otra', apellidos: 'Persona', correo: 'AINA@aeris.es',
+            contrasena: 'tecnico2026', rol: 'administrador'
+        }), { codigo: 'CORREO_YA_REGISTRADO' });
+    });
+
+    it('usuarios.buscar() filtra por nombre, rol y estado y pagina sin exponer credenciales', async function () {
+        const tecnica = await logica.usuarios.crear({
+            nombre: 'Aina', apellidos: 'Núñez', correo: 'aina@aeris.es',
+            contrasena: 'tecnico2026', rol: 'tecnico'
+        });
+        await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        const encontrados = await logica.usuarios.buscar({
+            busqueda: 'Aina Núñez', rol: 'tecnico', estado: 'activo', pagina: 1, porPagina: 1
+        });
+        assert.strictEqual(encontrados.total, 1);
+        assert.strictEqual(encontrados.usuarios[0].idUsuario, tecnica.idUsuario);
+        assert.strictEqual(encontrados.usuarios[0].correo, 'aina@aeris.es');
+        assert.strictEqual(Object.prototype.hasOwnProperty.call(encontrados.usuarios[0], 'passwordHash'), false);
+
+        await logica.usuarios.darDeBaja(tecnica.idUsuario);
+        assert.strictEqual((await logica.usuarios.buscar({ rol: 'tecnico', estado: 'activo' })).total, 0);
+        assert.strictEqual((await logica.usuarios.buscar({ rol: 'tecnico', estado: 'inactivo' })).total, 1);
+        await assert.rejects(logica.usuarios.buscar({ rol: 'invalido' }), { codigo: 'DATOS_NO_VALIDOS' });
+    });
+
+    it('usuarios.cambiarRol() aplica el rol y no permite al administrador quitarse el suyo', async function () {
+        const admin = await logica.registrarUsuario('Ana', 'Admin', 'ana@aeris.es', 'admin2026');
+        const usuario = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.conexion.execute(
+            'UPDATE Usuarios SET esAdministrador = TRUE WHERE idUsuario = ?', [admin.idUsuario]);
+
+        const actualizado = await logica.usuarios.cambiarRol(usuario.idUsuario, 'portador', admin.idUsuario);
+        assert.strictEqual(actualizado.rol, 'portador');
+        await assert.rejects(
+            logica.usuarios.cambiarRol(admin.idUsuario, 'tecnico', admin.idUsuario),
+            { codigo: 'NO_PUEDE_QUITAR_ADMIN_PROPIO' });
+        await assert.rejects(
+            logica.usuarios.cambiarRol(999999, 'tecnico', admin.idUsuario),
+            { codigo: 'USUARIO_NO_EXISTE' });
+    });
+
+    it('usuarios.crear() sin contraseña deja la cuenta pendiente y envía el correo para elegirla', async function () {
+        const tecnico = await logica.usuarios.crear({
+            nombre: 'Teo', apellidos: 'Técnico', correo: 'teo@aeris.es', rol: 'tecnico'
+        });
+        assert.strictEqual(tecnico.estado, 'pendiente');
+        assert.strictEqual(correos.length, 1);
+        assert.strictEqual(correos[0].destinatario, 'teo@aeris.es');
+
+        // Mientras está pendiente no puede entrar con ninguna contraseña
+        await assert.rejects(logica.iniciarSesion('teo@aeris.es', 'tecnico2026'), { codigo: 'CREDENCIALES_INCORRECTAS' });
+
+        // Elige la suya con el enlace del correo y la cuenta queda activa
+        const token = /token=([^\s"&<]+)/.exec(correos[0].texto)[1];
+        await logica.restablecerContrasenya(token, 'tecnico2026');
+        assert.strictEqual((await logica.usuarios.obtener(tecnico.idUsuario)).estado, 'activo');
+        const sesion = await logica.iniciarSesion('teo@aeris.es', 'tecnico2026');
+        assert.strictEqual(sesion.esTecnico, true);
+    });
+
+    it('usuarios.buscar() por grupo usa los tres campos de roles y devuelve el nodo', async function () {
+        const admin = await logica.registrarUsuario('Ana', 'Admin', 'ana@aeris.es', 'admin2026');
+        const marc = await logica.registrarUsuario('Marc', 'Ribes', 'marc@aeris.es', 'marc2026');
+        await logica.conexion.execute('UPDATE Usuarios SET esAdministrador = TRUE WHERE idUsuario = ?', [admin.idUsuario]);
+        await logica.conexion.execute(
+            'UPDATE Usuarios SET esTecnico = TRUE, esPortador = TRUE WHERE idUsuario = ?', [marc.idUsuario]);
+        await logica.conexion.execute(
+            `INSERT INTO Sensores (numeroSerie, sensibilidad, correoCompra, idUsuario)
+             VALUES ('111122223333', -40, 'marc@aeris.es', ?)`, [marc.idUsuario]);
+
+        const tecnicos = await logica.usuarios.buscar({ grupo: 'tecnicos' });
+        const portadores = await logica.usuarios.buscar({ grupo: 'portadores' });
+        assert.deepStrictEqual(tecnicos.usuarios.map((u) => u.correo), ['marc@aeris.es']);
+        assert.deepStrictEqual(portadores.usuarios.map((u) => u.correo), ['marc@aeris.es']);
+        assert.strictEqual(tecnicos.usuarios[0].rol, 'tecnico');
+        assert.strictEqual(tecnicos.usuarios[0].nodo, '111122223333');
+        assert.strictEqual(tecnicos.usuarios[0].esPortador, true);
+        assert.strictEqual((await logica.usuarios.buscar({ grupo: 'premium' })).total, 0);
+        await logica.conexion.execute(
+            'UPDATE Usuarios SET premiumHasta = UTC_TIMESTAMP() + INTERVAL 30 DAY WHERE idUsuario = ?', [marc.idUsuario]);
+        const premium = await logica.usuarios.buscar({ grupo: 'premium' });
+        assert.strictEqual(premium.total, 1);
+        assert.strictEqual(premium.usuarios[0].premium, true);
+        assert.strictEqual((await logica.usuarios.buscar({ grupo: 'administradores' })).usuarios[0].nodo, null);
+        await assert.rejects(logica.usuarios.buscar({ grupo: 'otro' }), { codigo: 'DATOS_NO_VALIDOS' });
+
+        assert.deepStrictEqual(await logica.usuarios.conteo(),
+            { todos: 2, portadores: 1, premium: 1, administradores: 1, tecnicos: 1 });
+    });
+
+    it('usuarios.cambiarRol() no quita el rol de portador a quien tiene un sensor vinculado', async function () {
+        const admin = await logica.registrarUsuario('Ana', 'Admin', 'ana@aeris.es', 'admin2026');
+        const pelin = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.conexion.execute('UPDATE Usuarios SET esAdministrador = TRUE WHERE idUsuario = ?', [admin.idUsuario]);
+        await logica.conexion.execute('UPDATE Usuarios SET esPortador = TRUE WHERE idUsuario = ?', [pelin.idUsuario]);
+        await logica.conexion.execute(
+            `INSERT INTO Sensores (numeroSerie, sensibilidad, correoCompra, idUsuario)
+             VALUES ('111122223333', -40, 'pelin@aeris.es', ?)`, [pelin.idUsuario]);
+
+        const tecnica = await logica.usuarios.cambiarRol(pelin.idUsuario, 'tecnico', admin.idUsuario);
+        assert.strictEqual(tecnica.rol, 'tecnico');
+        assert.strictEqual(tecnica.esTecnico, true);
+        assert.strictEqual(tecnica.esPortador, true);
+        assert.strictEqual(tecnica.nodo, '111122223333');
+
+        // Sin sensor, pasar a técnico sí deja de ser portador
+        const otra = await logica.registrarUsuario('Laura', 'Martínez', 'laura@aeris.es', 'laura2026');
+        await logica.conexion.execute('UPDATE Usuarios SET esPortador = TRUE WHERE idUsuario = ?', [otra.idUsuario]);
+        assert.strictEqual((await logica.usuarios.cambiarRol(otra.idUsuario, 'tecnico', admin.idUsuario)).esPortador, false);
+    });
+
+    it('usuarios.darDeBajaVarios() da de baja a todos o a ninguno', async function () {
+        const admin = await logica.registrarUsuario('Ana', 'Admin', 'ana@aeris.es', 'admin2026');
+        const pelin = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        const laura = await logica.registrarUsuario('Laura', 'Martínez', 'laura@aeris.es', 'laura2026');
+
+        await assert.rejects(logica.usuarios.darDeBajaVarios([pelin.idUsuario, admin.idUsuario], admin.idUsuario),
+            { codigo: 'NO_PUEDE_DARSE_DE_BAJA' });
+        await assert.rejects(logica.usuarios.darDeBajaVarios([pelin.idUsuario, 999999], admin.idUsuario),
+            { codigo: 'USUARIO_NO_EXISTE' });
+        await assert.rejects(logica.usuarios.darDeBajaVarios([], admin.idUsuario), { codigo: 'DATOS_NO_VALIDOS' });
+        assert.strictEqual((await logica.usuarios.obtener(pelin.idUsuario)).estado, 'activo');
+
+        assert.deepStrictEqual(
+            await logica.usuarios.darDeBajaVarios([pelin.idUsuario, laura.idUsuario], admin.idUsuario), { bajas: 2 });
+        assert.strictEqual((await logica.usuarios.obtener(pelin.idUsuario)).estado, 'inactivo');
+        assert.strictEqual((await logica.usuarios.obtener(laura.idUsuario)).estado, 'inactivo');
+    });
+
+    it('darDeBaja() impide nuevos inicios de sesión e invalida las sesiones existentes', async function () {
+        const sesion = await logica.registrarUsuario('Pelin', 'Kaynak', 'pelin@aeris.es', 'aire2026');
+        await logica.usuarios.darDeBaja(sesion.idUsuario);
+
+        await assert.rejects(
+            logica.iniciarSesion('pelin@aeris.es', 'aire2026'),
+            { codigo: 'CREDENCIALES_INCORRECTAS' });
+        assert.strictEqual(await logica.comprobarSesion(sesion.token), null);
+    });
+
     it('comprobarSesion() devuelve los permisos actuales con el mismo token', async function () {
         const sesion = await logica.registrarUsuario('Ana', 'Admin', 'ana@aeris.es', 'admin2026');
 

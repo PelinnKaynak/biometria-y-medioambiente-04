@@ -4,7 +4,7 @@
 
 ---
 
-## 1. API de usuarios y autenticación (T016 · H001, H002)
+## 1. API de usuarios y autenticación (T016 · H001, H002; T027 · H018)
 
 ```text
 App / Web --HTTP JSON--> ServidorREST (Express) --> ReglasREST --> Logica (logica_design.md)
@@ -60,6 +60,12 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 | `GET /mensajesIncidencia?id=N` 🔒 | — | **200** `[ Mensaje ]` (la conversación, el más antiguo primero; la descripción de la incidencia es el primer mensaje y no se repite) · **401** · **404** no existe, o no es del usuario y este no es técnico ni administrador — Ayuda de la app y panel (T043) |
 | `POST /enviarMensajeIncidencia` 🔒 | `{ idIncidencia, texto, estado? }` | **201** `Mensaje` · **400** `{ error, campos }` (texto vacío o de más de 2000 caracteres, estado no válido) · **401** · **404** — quien envió la incidencia: su mensaje (si estaba «resuelta» vuelve a «abierta»; `estado` se ignora, no manda correo). Técnico o administrador: la respuesta del equipo, igual que `/responderIncidencia` con `respuesta` (un solo correo al usuario). T043 |
 | `GET /api/prevision/ozono?zona=Gandia` | — (pública, sin sesión) | **200** `{ zona, simulados, advertencia, modelo, ultima_observacion_utilizada, predicciones: [{ fecha_hora, ozono_predicho, nivel }] × 48, hora_pico, valor_pico, nivel_pico }` · **400** `{ error, zona_solicitada, zona_disponible }` zona sin modelo · **503** `{ error, motivo }` con `motivo` = `no_disponible` (servicio caído o error interno) o `desactivada` (`PREVISION_ACTIVA=0`); los servidores anteriores a T032 también respondían 503 con «ocupado» · **504** `{ error, motivo: "tiempo_agotado" }` — previsión de 48 h (T031 · T032). El texto de `error` es siempre genérico: nunca lleva trazas ni mensajes internos de Python |
+| `GET /usuarios/conteo` 🔒👑 | — | **200** `{ todos, portadores, premium, administradores, tecnicos }` (números de las pestañas de Usuarios del panel; por los tres campos de roles) · **401** · **403** (T027) |
+| `GET /usuarios?busqueda=&grupo=todos\|portadores\|premium\|administradores\|tecnicos&rol=todos\|administrador\|tecnico\|portador\|ciudadano&estado=todos\|activo\|pendiente\|inactivo&pagina=1&porPagina=20` 🔒👑 | — | **200** `{ usuarios: [ UsuarioAdmin ], total }` (máx. 100 por página) · **400** filtro no válido · **401** · **403** — `grupo` son las pestañas del panel y usa los tres campos de roles (quien es técnico y portador sale en las dos); `rol` filtra por el rol más alto (T027) |
+| `POST /usuarios` 🔒👑 | `{ nombre, apellidos, correo, contrasena?, rol: administrador\|tecnico }` | **201** `UsuarioAdmin` · **400** datos no válidos · **409** correo ya registrado · **401** · **403** — sin `contrasena` (así lo hace el panel) la cuenta queda `pendiente` y se le envía el correo de restablecer contraseña para que elija la suya; al elegirla pasa a `activo` (T027) |
+| `PATCH /usuarios/:idUsuario/rol` 🔒👑 | `{ rol: administrador\|tecnico\|portador\|ciudadano }` | **200** `UsuarioAdmin` · **400** datos no válidos · **403** no puede quitarse el rol de administrador · **404** usuario no existe · **401** (T027) Quien tiene un sensor vinculado sigue siendo portador (`esPortador`) con cualquier rol. |
+| `DELETE /usuarios/:idUsuario` 🔒👑 | — | **204** baja lógica · **400** identificador no válido · **404** usuario no existe · **401** · **403** (T027) |
+| `POST /usuarios/baja` 🔒👑 | `{ ids: [ N ] }` | **200** `{ bajas }` · **400** lista no válida · **403** se incluye a sí mismo · **404** algún usuario no existe · **401** — botón «Dar de baja» del panel; todos o ninguno (T027) |
 
 👷 = solo técnicos y administradores (rol `tecnico` o `administrador`).
 👑 = solo administradores.
@@ -68,6 +74,8 @@ Todas las peticiones y respuestas son JSON (`Content-Type: application/json`). L
 `IncidenciaGestion = Incidencia + usuario: { idUsuario, nombre, apellidos, correo }`, en `responsable` también `idUsuario` y, en `sensor`, también `nombre, estado, bateria, ultimaConexion, necesitaCalibracion`.
 `Aviso = { idAviso, tipo: 'personal' \| 'lugar', contaminante, valor, unidad, zona, latitud, longitud, fechaCreacion }` — `zona`: nombre del lugar («Casa (Gandía)») o, en los personales, las coordenadas en texto; `fechaCreacion` en ISO (UTC). No hay «leído»: la app lo guarda en el teléfono (T008).
 `Mensaje = { idMensaje, idIncidencia, texto, fecha, autor: { idUsuario, nombre, rol } | null, delUsuario }` — `fecha` en ISO (UTC); `delUsuario` es `true` si lo escribió quien envió la incidencia («Tú» en la app) y `false` si lo escribió el equipo; `autor` es `null` si su cuenta se borró.
+Los tests automáticos de las rutas REST están en `src/servidor_rest/test/test_api.js`; usan la base de pruebas `aeris_test` y no envían correos.
+`UsuarioAdmin = { idUsuario, nombre, apellidos, correo, rol, esAdministrador, esTecnico, esPortador, premium, nodo, estado, fechaAlta }` — nunca incluye el hash de contraseña. `rol` es el más alto (administrador, técnico, portador, ciudadano); `premium` es `premiumHasta` en el futuro; `nodo` es el número de serie de su sensor vinculado o `null`; `estado` es `activo`, `pendiente` (creada desde el panel, aún sin contraseña) o `inactivo` (de baja). Una baja anula las sesiones existentes.
 `Medicion = { idMedicion, contaminante, valor, unidad, fecha, latitud, longitud }` — `fecha` en ISO (UTC); nunca dice quién la tomó.
 `Lugar = { id, idLugar, idUsuario, nombre, tipo, direccion, zona, latitud, longitud, avisosActivos, ozonoActual, ozono }`. La exposición usa la interpolación inversa al cuadrado de la distancia de mediciones O3 de las últimas 24 horas; si no hay, devuelve `null`. Todas las operaciones filtran por el usuario de la sesión.
 

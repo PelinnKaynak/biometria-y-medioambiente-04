@@ -7,7 +7,8 @@
 //              T041 (incidencias), T043 (conversación de cada incidencia),
 //              T017 (mediciones), T007 (Mis datos),
 //              T024 (datos de la
-//              página Mi cuenta), T021 (nodos del panel) y T046 (lugares).
+//              página Mi cuenta), T021 (nodos del panel), T027 (usuarios)
+//              y T046 (lugares).
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
 // Copyright:   (c) 2026 Equipo 04 - Proyecto Biometría y Medio Ambiente, EPSG-UPV
@@ -40,7 +41,10 @@ const CODIGOS_HTTP = {
     SIN_SENSOR: 404,
     LIMITE_LUGARES: 409,
     CORREO_YA_REGISTRADO: 409,
-    SENSOR_YA_VINCULADO: 409
+    SENSOR_YA_VINCULADO: 409,
+    USUARIO_NO_EXISTE: 404,
+    NO_PUEDE_QUITAR_ADMIN_PROPIO: 403,
+    NO_PUEDE_DARSE_DE_BAJA: 403
 };
 
 // ---------------------------------------------------------------------------
@@ -199,6 +203,52 @@ function cargarReglasREST(servidor, logica) {
         const { numeroSerie } = await logica.desvincularSensor(peticion.params.numeroSerie);
         respuesta.status(200).json({ numeroSerie });
     }));
+
+    // ---- Gestión de usuarios del panel (T027) ----
+
+    // GET /usuarios/conteo  🔒 solo administrador
+    //   200 { todos, portadores, premium, administradores, tecnicos } (números de las pestañas) · 401 · 403
+    servidor.get('/usuarios/conteo', requiereSesion(logica, ['administrador']), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.usuarios.conteo());
+    }));
+
+    // GET /usuarios?busqueda=&grupo=todos|portadores|premium|administradores|tecnicos
+    //   &rol=todos|administrador|tecnico|portador|ciudadano&estado=todos|activo|pendiente|inactivo
+    //   &pagina=1&porPagina=20  🔒 solo administrador
+    //   200 { usuarios: [ UsuarioAdmin ], total } · 400 filtro no válido · 401 · 403
+    servidor.get('/usuarios', requiereSesion(logica, ['administrador']), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.usuarios.buscar(peticion.query));
+    }));
+
+    // POST /usuarios { nombre, apellidos, correo, contrasena?, rol: administrador|tecnico } 🔒 solo administrador
+    //   201 UsuarioAdmin · 400 datos no válidos · 409 correo ya registrado · 401 · 403
+    //   Sin contrasena la cuenta queda «pendiente» y se le envía el correo para elegirla.
+    servidor.post('/usuarios', requiereSesion(logica, ['administrador']), envolver(async (peticion, respuesta) => {
+        respuesta.status(201).json(await logica.usuarios.crear(peticion.body));
+    }));
+
+    // PATCH /usuarios/:idUsuario/rol { rol } 🔒 solo administrador
+    //   200 UsuarioAdmin · 400 datos no válidos · 403 no puede quitarse el rol de admin · 404 · 401
+    servidor.patch('/usuarios/:idUsuario/rol', requiereSesion(logica, ['administrador']),
+        envolver(async (peticion, respuesta) => {
+            respuesta.status(200).json(await logica.usuarios.cambiarRol(
+                peticion.params.idUsuario, peticion.body && peticion.body.rol, peticion.usuario.idUsuario));
+        }));
+
+    // POST /usuarios/baja { ids: [ N ] } 🔒 solo administrador        (botón «Dar de baja» del panel)
+    //   200 { bajas } · 400 lista no válida · 403 se incluye a sí mismo · 404 algún usuario no existe · 401
+    servidor.post('/usuarios/baja', requiereSesion(logica, ['administrador']), envolver(async (peticion, respuesta) => {
+        respuesta.status(200).json(await logica.usuarios.darDeBajaVarios(
+            peticion.body && peticion.body.ids, peticion.usuario.idUsuario));
+    }));
+
+    // DELETE /usuarios/:idUsuario 🔒 solo administrador
+    //   204 baja lógica · 400 identificador no válido · 404 · 401 · 403
+    servidor.delete('/usuarios/:idUsuario', requiereSesion(logica, ['administrador']),
+        envolver(async (peticion, respuesta) => {
+            await logica.usuarios.darDeBaja(peticion.params.idUsuario);
+            respuesta.status(204).end();
+        }));
 
     // GET /miCuenta  🔒                                                   (T024)
     //   200 Resumen (ver Logica.resumenCuenta) · 404 sin sensor vinculado o sin mediciones · 401

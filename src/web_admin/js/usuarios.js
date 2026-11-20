@@ -105,7 +105,8 @@ function crearFilaUsuario(usuario, id_actual) {
     selector.className = "selector-rol";
     selector.disabled = bloqueado;
     selector.setAttribute("aria-label", "Rol de " + usuario.nombre);
-    for (const rol of ["portador", "tecnico", "administrador"]) {
+    // Ciudadano: cuenta sin sensor ni permisos (se registró y aún no ha vinculado)
+    for (const rol of ["ciudadano", "portador", "tecnico", "administrador"]) {
         const opcion = new Option(TEXTO_ROL[rol], rol, false, usuario.rol === rol);
         selector.add(opcion);
     }

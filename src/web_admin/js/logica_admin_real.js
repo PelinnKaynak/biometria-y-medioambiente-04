@@ -8,6 +8,9 @@
 // ------------------------------------------------------------
 
 const CLAVE_SESION_ADMIN_REAL = "aeris_usuario";
+// Estado de una cuenta dada de baja en la web y en el servidor (T027)
+const ESTADO_BAJA_WEB = "baja";
+const ESTADO_BAJA_SERVIDOR = "inactivo";
 
 class LogicaAdminReal {
 
@@ -155,19 +158,24 @@ class LogicaAdminReal {
     //
     // GET /usuarios?busqueda=&grupo=&estado=&pagina=&porPagina=
     //   200 { usuarios: [ UsuarioAdmin ], total }
+    // El servidor llama «inactivo» a las cuentas dadas de baja y
+    // la web «baja»; aquí se traduce en los dos sentidos.
     // --------------------------------------------------------
     async obtenerUsuarios(filtro) {
+        const estado = filtro.estado || "todos";
         const parametros = new URLSearchParams({
             busqueda: filtro.busqueda || "",
             grupo: filtro.grupo || "todos",
-            estado: filtro.estado || "todos",
+            estado: estado === ESTADO_BAJA_WEB ? ESTADO_BAJA_SERVIDOR : estado,
             pagina: String(filtro.pagina),
             porPagina: String(filtro.porPagina)
         });
         const { respuesta, error } = await this.pedir("/usuarios?" + parametros);
         if (!respuesta) return { correcto: false, usuarios: [], total: 0, error };
         const datos = await respuesta.json();
-        return { correcto: true, usuarios: datos.usuarios, total: datos.total, error: "" };
+        const usuarios = datos.usuarios.map(u =>
+            u.estado === ESTADO_BAJA_SERVIDOR ? { ...u, estado: ESTADO_BAJA_WEB } : u);
+        return { correcto: true, usuarios, total: datos.total, error: "" };
     }
 
     // --------------------------------------------------------
@@ -241,7 +249,9 @@ class LogicaAdminReal {
     //       r: ResultadoCreacion <--
     //
     // POST /usuarios { nombre, apellidos, correo, rol }
-    //   201 { idUsuario } · 400 { error, campos } · 409 { error }
+    //   201 UsuarioAdmin · 400 { error, campos } · 409 { error }
+    // Sin contraseña: la cuenta queda pendiente y el servidor le
+    // envía el correo para que elija la suya.
     // --------------------------------------------------------
     async crearUsuario(datos) {
         const { respuesta, error, cuerpoError } = await this.pedir("/usuarios", "POST", datos);
@@ -256,7 +266,7 @@ class LogicaAdminReal {
     //       r: ResultadoOperacion <--
     //
     // PATCH /usuarios/:idUsuario/rol { rol }
-    //   204 · 400 { error } · 403 (su propio rol)
+    //   200 UsuarioAdmin · 400 { error } · 403 (su propio rol)
     // --------------------------------------------------------
     async cambiarRol(id_usuario, rol) {
         const { respuesta, error, cuerpoError } =
@@ -269,7 +279,7 @@ class LogicaAdminReal {
     // ids: [ N ] --> darDeBaja() --> r: ResultadoOperacion <--
     //
     // POST /usuarios/baja { ids }
-    //   204 · 400 { error }
+    //   200 { bajas } · 400 { error } · 403 (se incluye a sí mismo)
     // --------------------------------------------------------
     async darDeBaja(ids) {
         const { respuesta, error, cuerpoError } = await this.pedir("/usuarios/baja", "POST", { ids });

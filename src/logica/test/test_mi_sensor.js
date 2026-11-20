@@ -71,7 +71,7 @@ describe('Logica (Mi sensor)', function () {
         const [[actualizado]] = await logica.conexion.execute(
             'SELECT esPortador FROM Usuarios WHERE idUsuario = ?', [usuario.idUsuario]);
         assert.strictEqual(Boolean(actualizado.esPortador), false);
-
+        assert.strictEqual((await logica.comprobarSesion(usuario.token)).rol, 'ciudadano');
         await assert.rejects(logica.obtenerMiSensor(usuario.idUsuario), { codigo: 'SIN_SENSOR' });
         await assert.rejects(logica.desvincularMiSensor(usuario.idUsuario), { codigo: 'SIN_SENSOR' });
     });
@@ -87,6 +87,7 @@ describe('Logica (Mi sensor)', function () {
         const [[actualizado]] = await logica.conexion.execute(
             'SELECT esPortador FROM Usuarios WHERE idUsuario = ?', [usuario.idUsuario]);
         assert.strictEqual(Boolean(actualizado.esPortador), true);
+        assert.strictEqual((await logica.comprobarSesion(usuario.token)).rol, 'portador');
     });
 
     // ---- El administrador desvincula un sensor desde el panel de Nodos ----

@@ -57,6 +57,14 @@ describe("usuarios", () => {
         expect(fetch.mock.calls[0][0]).toBe("/usuarios?busqueda=ana&grupo=tecnicos&estado=activo&pagina=1&porPagina=10");
     });
 
+    test("obtenerUsuarios() traduce «baja» (web) e «inactivo» (servidor) en los dos sentidos (T027)", async () => {
+        fetch.mockReturnValue(respuestaFalsa(200, { total: 2, usuarios: [
+            { idUsuario: 1, estado: "inactivo" }, { idUsuario: 2, estado: "pendiente" }] }));
+        const r = await new LogicaAdminReal("").obtenerUsuarios({ busqueda: "", grupo: "todos", estado: "baja", pagina: 1, porPagina: 10 });
+        expect(fetch.mock.calls[0][0]).toBe("/usuarios?busqueda=&grupo=todos&estado=inactivo&pagina=1&porPagina=10");
+        expect(r.usuarios.map(u => u.estado)).toEqual(["baja", "pendiente"]);
+    });
+
     test("crearUsuario() hace POST /usuarios y devuelve los campos erróneos", async () => {
         fetch.mockReturnValue(respuestaFalsa(400, { error: "Datos no válidos", campos: ["nombre"] }));
         const r = await new LogicaAdminReal("").crearUsuario({ nombre: "1", apellidos: "B", correo: "a@b.es", rol: "tecnico" });

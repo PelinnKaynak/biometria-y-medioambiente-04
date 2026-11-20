@@ -29,6 +29,7 @@ const { Incidencias } = require('./Incidencias');
 const { Mediciones } = require('./Mediciones');
 const { Nodos } = require('./Nodos');
 const { Lugares } = require('./Lugares');
+const { Usuarios } = require('./Usuarios');
 const MiCuenta = require('./MiCuenta');
 
 function obtenerRoles(usuario) {
@@ -61,7 +62,8 @@ const ESTADO_RECHAZADA = 'rechazada';
 //   codigo ∈ { DATOS_NO_VALIDOS, CORREO_YA_REGISTRADO, CORREO_NO_REGISTRADO,
 //              CREDENCIALES_INCORRECTAS, TOKEN_NO_VALIDO,
 //              SENSOR_NO_REGISTRADO, SENSOR_YA_VINCULADO, SIN_SOLICITUD,
-//              INCIDENCIA_NO_EXISTE, SENSOR_NO_ES_TUYO, SIN_SENSOR, SIN_MEDICIONES }
+//              INCIDENCIA_NO_EXISTE, SENSOR_NO_ES_TUYO, SIN_SENSOR, SIN_MEDICIONES,
+//              USUARIO_NO_EXISTE, NO_PUEDE_QUITAR_ADMIN_PROPIO, NO_PUEDE_DARSE_DE_BAJA }
 // ---------------------------------------------------------------------------
 class ErrorLogica extends Error {
     constructor(codigo, mensaje, campos = []) {
@@ -124,6 +126,7 @@ class Logica {
         this.mediciones = new Mediciones(this);       // T017: logica.mediciones.guardar(…), …
         this.nodos = new Nodos(this);                 // T021: logica.nodos.buscar(…), …
         this.lugares = new Lugares(this);             // T046: CRUD y exposición interpolada.
+        this.usuarios = new Usuarios(this);           // T027: gestión de cuentas del panel.
     }
 
     // -----------------------------------------------------------------------
@@ -156,7 +159,7 @@ class Logica {
     // nombre: Texto, apellidos: Texto, correo: Texto, contrasena: Texto
     //     --> registrarUsuario() --> SesionIniciada
     // What it does: checks the data, saves the user with the password hash
-    //               (rol portador), opens a session for him and sends him the
+    //               (ciudadano, sin permisos adicionales), opens a session and sends him the
     //               welcome email in the background (if it fails, the sign-up
     //               still works). Throws DATOS_NO_VALIDOS or CORREO_YA_REGISTRADO.
     // -----------------------------------------------------------------------
@@ -210,7 +213,7 @@ class Logica {
             throw new ErrorLogica('CREDENCIALES_INCORRECTAS', 'Correo o contraseña incorrectos');
         }
         const [filas] = await this.conexion.execute(
-            'SELECT idUsuario, passwordHash FROM Usuarios WHERE email = ?',
+            "SELECT idUsuario, passwordHash FROM Usuarios WHERE email = ? AND estado = 'activo'",
             [Validador.normalizarCorreo(correo)]);
 
         const correcta = filas.length === 1
@@ -417,7 +420,11 @@ class Logica {
             throw new ErrorLogica('DATOS_NO_VALIDOS', MENSAJE_CONTRASENA_IGUAL, ['contrasena']);
         }
         const hash = await Seguridad.calcularHash(contrasenaNueva);
-        await this.conexion.execute('UPDATE Usuarios SET passwordHash = ? WHERE idUsuario = ?',
+        // Una cuenta creada desde el panel (pendiente) queda activa al elegir su contraseña
+        await this.conexion.execute(
+            `UPDATE Usuarios SET passwordHash = ?,
+                    estado = CASE WHEN estado = 'pendiente' THEN 'activo' ELSE estado END
+              WHERE idUsuario = ?`,
             [hash, usuario.idUsuario]);
     }
 
@@ -902,9 +909,11 @@ class Logica {
             return null;
         }
         const [filas] = await this.conexion.execute(
-            `SELECT idUsuario, esAdministrador, esTecnico, esPortador, passwordHash
+            `SELECT idUsuario, esAdministrador, esTecnico, esPortador, passwordHash, estado
             FROM Usuarios WHERE idUsuario = ?`, [datos.u]);
-        if (filas.length !== 1 || Seguridad.huellaContrasenya(filas[0].passwordHash) !== datos.h) {
+        if (filas.length !== 1
+            || (tipo === TIPO_SESION && filas[0].estado !== 'activo')
+            || Seguridad.huellaContrasenya(filas[0].passwordHash) !== datos.h) {
             return null;
         }
         return filas[0];
