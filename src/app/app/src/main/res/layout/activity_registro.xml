@@ -136,13 +136,31 @@
             android:layout_marginTop="16dp"
             android:text="@string/registro_contrasena" />
 
-        <EditText
-            android:id="@+id/campoContrasena"
-            style="@style/AERIS.Campo"
+        <!-- Con el ojo para ver lo que se escribe, como en el login -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:autofillHints="newPassword"
-            android:hint="@string/registro_contrasena_pista"
-            android:inputType="textPassword" />
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/campoContrasena"
+                style="@style/AERIS.Campo"
+                android:layout_width="match_parent"
+                android:autofillHints="newPassword"
+                android:hint="@string/registro_contrasena_pista"
+                android:inputType="textPassword"
+                android:paddingEnd="48dp" />
+
+            <ImageView
+                android:id="@+id/botonVerContrasena"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="2dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/login_ver_contrasena"
+                android:padding="10dp"
+                android:src="@drawable/ic_ocultar_contrasena" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/errorContrasena"
@@ -157,13 +175,31 @@
             android:layout_marginTop="16dp"
             android:text="@string/registro_confirmacion" />
 
-        <EditText
-            android:id="@+id/campoConfirmacion"
-            style="@style/AERIS.Campo"
+        <!-- Con el ojo para ver lo que se escribe, como en el login -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:autofillHints="newPassword"
-            android:hint="@string/registro_confirmacion_pista"
-            android:inputType="textPassword" />
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/campoConfirmacion"
+                style="@style/AERIS.Campo"
+                android:layout_width="match_parent"
+                android:autofillHints="newPassword"
+                android:hint="@string/registro_confirmacion_pista"
+                android:inputType="textPassword"
+                android:paddingEnd="48dp" />
+
+            <ImageView
+                android:id="@+id/botonVerConfirmacion"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="2dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/login_ver_contrasena"
+                android:padding="10dp"
+                android:src="@drawable/ic_ocultar_contrasena" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/errorConfirmacion"

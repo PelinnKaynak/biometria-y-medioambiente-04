@@ -3,7 +3,8 @@
 // Descripción: Pantalla de registro (Figma: «registrarte»). Lee el formulario,
 //              lo comprueba con ValidadorRegistro, muestra los errores debajo
 //              de cada campo y pide a LogicaFakeRegistro que cree la cuenta.
-//              Si se crea, guarda la sesión y abre Vincular sensor.
+//              Si se crea, guarda la sesión y abre Vincular sensor. Las dos
+//              contraseñas tienen un ojo para ver lo que se escribe.
 //              Diseño en doc/app_design.md. Tarea T002 · historia H001.
 // Autores:     Equipo 04 – SenseTech
 // Fecha:       03/11/2026
@@ -13,8 +14,11 @@ package com.example.aeris;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.method.HideReturnsTransformationMethod;
+import android.text.method.PasswordTransformationMethod;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -83,6 +87,26 @@ public class RegistroActivity extends AppCompatActivity {
         });
         botonContinuar.setOnClickListener(vista -> pulsarContinuar());
         TeclaEnter.pulsaBoton(campoConfirmacion, botonContinuar);   // Enter en el último campo = «Continuar»
+        prepararOjo(campoContrasena, findViewById(R.id.botonVerContrasena));
+        prepararOjo(campoConfirmacion, findViewById(R.id.botonVerConfirmacion));
+    }
+
+    // -----------------------------------------------------------------------
+    // campo: EditText, ojo: ImageView --> prepararOjo() -->
+    // What it does: each tap on the eye shows or hides that password. The icon
+    //               says how it is now (crossed-out eye = hidden), as in login.
+    // -----------------------------------------------------------------------
+    private void prepararOjo(EditText campo, ImageView ojo) {
+        ojo.setOnClickListener(vista -> {
+            boolean visible = !(campo.getTransformationMethod() instanceof HideReturnsTransformationMethod);
+            campo.setTransformationMethod(visible
+                    ? HideReturnsTransformationMethod.getInstance()
+                    : PasswordTransformationMethod.getInstance());
+            campo.setSelection(campo.getText().length());
+            ojo.setImageResource(visible ? R.drawable.ic_ver_contrasena : R.drawable.ic_ocultar_contrasena);
+            ojo.setContentDescription(getString(visible
+                    ? R.string.login_ocultar_contrasena : R.string.login_ver_contrasena));
+        });
     }
 
     // -----------------------------------------------------------------------
@@ -181,7 +205,7 @@ public class RegistroActivity extends AppCompatActivity {
     // What it does: puts a red border on the field and shows the message under it.
     // -----------------------------------------------------------------------
     private void mostrarError(EditText campo, TextView etiquetaError, String mensaje) {
-        campo.setBackgroundResource(R.drawable.fondo_campo_error);
+        cambiarFondo(campo, R.drawable.fondo_campo_error);
         etiquetaError.setText(mensaje);
         etiquetaError.setVisibility(View.VISIBLE);
     }
@@ -191,8 +215,15 @@ public class RegistroActivity extends AppCompatActivity {
     // What it does: gives the field its normal border and hides the message.
     // -----------------------------------------------------------------------
     private void limpiarError(EditText campo, TextView etiquetaError) {
-        campo.setBackgroundResource(R.drawable.fondo_campo);
+        cambiarFondo(campo, R.drawable.fondo_campo);
         etiquetaError.setVisibility(View.GONE);
+    }
+
+    // campo: EditText, fondo: Z --> cambiarFondo() -->   (sin perder el hueco del ojo)
+    private static void cambiarFondo(EditText campo, int fondo) {
+        int izquierda = campo.getPaddingStart(), derecha = campo.getPaddingEnd();
+        campo.setBackgroundResource(fondo);
+        campo.setPaddingRelative(izquierda, campo.getPaddingTop(), derecha, campo.getPaddingBottom());
     }
 
     // -----------------------------------------------------------------------
