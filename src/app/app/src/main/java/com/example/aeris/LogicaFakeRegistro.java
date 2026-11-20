@@ -21,10 +21,11 @@ import java.util.Locale;
 // anything itself: it sends the new user to the server with POST /registrarUsuario.
 public class LogicaFakeRegistro {
 
-    // Dirección del servidor REST:
+    // Dirección del servidor REST, fijada al compilar (aeris.url en local.properties o -Paeris.url;
+    // ver app/build.gradle). Sin configurar, el servidor de la UPV:
     //   emulador       -> http://10.0.2.2:8080 (el ordenador que ejecuta el emulador)
     //   teléfono real  -> http://<IPv4 del ordenador en la misma Wi-Fi>:8080
-    static final String URL_SERVIDOR = "https://pfermar1.upv.edu.es";
+    static final String URL_SERVIDOR = BuildConfig.URL_SERVIDOR;
 
     static final int CODIGO_CREADO = 201;
     static final int CODIGO_CORREO_YA_REGISTRADO = 409;
