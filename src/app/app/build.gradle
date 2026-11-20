@@ -2,6 +2,19 @@ plugins {
     alias(libs.plugins.android.application)
 }
 
+// Dirección del servidor REST que usa la app (BuildConfig.URL_SERVIDOR). Sin configurar, el
+// servidor compartido de la UPV. Para el emulador: aeris.url=http://10.0.2.2:8080; para un teléfono
+// real: aeris.url=http://<IPv4 del ordenador>:8080. Se pone en local.properties (no se versiona)
+// o con -Paeris.url=... al compilar.
+def propiedadesLocales = new Properties()
+def ficheroLocal = rootProject.file('local.properties')
+if (ficheroLocal.exists()) {
+    ficheroLocal.withInputStream { propiedadesLocales.load(it) }
+}
+def urlServidor = (providers.gradleProperty('aeris.url').orNull
+        ?: propiedadesLocales.getProperty('aeris.url')
+        ?: 'https://pfermar1.upv.edu.es').trim()
+
 android {
     namespace 'com.example.aeris'
     compileSdk {
@@ -14,6 +27,7 @@ android {
         targetSdk 37
         versionCode 1
         versionName "1.0"
+        buildConfigField 'String', 'URL_SERVIDOR', '"' + urlServidor + '"'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -24,6 +38,9 @@ android {
                 enable false
             }
         }
+    }
+    buildFeatures {
+        buildConfig true
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_11

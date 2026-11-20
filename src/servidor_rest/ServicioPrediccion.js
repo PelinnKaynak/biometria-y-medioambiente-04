@@ -17,6 +17,7 @@
 // ---------------------------------------------------------------------------
 'use strict';
 
+const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const { spawn } = require('child_process');
@@ -49,6 +50,14 @@ class ErrorPrevision extends Error {
 function lanzarWorkerPython() {
     const raiz = path.resolve(__dirname, '..', '..');
     const script = path.join(raiz, 'src', 'prevision', 'worker_prediccion.py');
+    // Si el despliegue no incluye estos ficheros, el log lo dice claramente (en vez de un
+    // «no_disponible» sin causa); el cliente sigue recibiendo solo el mensaje genérico.
+    const modelo = path.join(raiz, 'src', 'prevision', 'modelos', 'hist_gradient_boosting_ozono_48h.joblib');
+    for (const requerido of [script, modelo]) {
+        if (!fs.existsSync(requerido)) {
+            throw new Error(`falta ${path.relative(raiz, requerido)}: súbelo con el despliegue`);
+        }
+    }
     return spawn(process.env.PYTHON || 'python', [script], { cwd: raiz, windowsHide: true });
 }
 
