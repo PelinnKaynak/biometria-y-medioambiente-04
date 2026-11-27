@@ -151,7 +151,7 @@ public class VincularSensorTest {
 
     @Test
     public void datosDeEjemplo_pendienteDespuesDePedir() {
-        LogicaFakeVincular logica = new LogicaFakeVincular();
+        LogicaFakeVincular logica = new LogicaFakeVincular(true);   // con datos de ejemplo, sin servidor
         LogicaFakeVincular.olvidarSolicitudDeEjemplo();
         Apuntada antes = new Apuntada();
         logica.consultarEstado("token", antes);

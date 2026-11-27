@@ -40,6 +40,19 @@ public class LogicaFakeVincular {
     // Solicitud de ejemplo de esta sesión de la app (sin servidor)
     private static SolicitudVinculacion solicitudDeEjemplo = null;
 
+    // true: esta instancia usa la solicitud de ejemplo en lugar del servidor
+    private final boolean usarDatosDeEjemplo;
+
+    public LogicaFakeVincular() {
+        this(USAR_DATOS_DE_EJEMPLO);
+    }
+
+    // Los tests usan este constructor para probar los datos de ejemplo
+    // aunque la app use el servidor (igual que LogicaFakeMiSensor)
+    LogicaFakeVincular(boolean usarDatosDeEjemplo) {
+        this.usarDatosDeEjemplo = usarDatosDeEjemplo;
+    }
+
     // -----------------------------------------------------------------------
     // Callbacks (se omiten en la notación)
     // -----------------------------------------------------------------------
@@ -69,7 +82,7 @@ public class LogicaFakeVincular {
     //               once with an example request.
     // -----------------------------------------------------------------------
     public void solicitarVinculacion(String token, CodigoSensor codigo, final RespuestaSolicitud respuesta) {
-        if (USAR_DATOS_DE_EJEMPLO) {
+        if (usarDatosDeEjemplo) {
             solicitudDeEjemplo = new SolicitudVinculacion(codigo.numeroSerie,
                     SolicitudVinculacion.ocultarCorreo(CORREO_COMPRADOR_EJEMPLO),
                     SolicitudVinculacion.Estado.PENDIENTE, System.currentTimeMillis());
@@ -88,7 +101,7 @@ public class LogicaFakeVincular {
     //               ESTADO_DE_EJEMPLO) or sinSolicitud() if there is none.
     // -----------------------------------------------------------------------
     public void consultarEstado(String token, final RespuestaSolicitud respuesta) {
-        if (USAR_DATOS_DE_EJEMPLO) {
+        if (usarDatosDeEjemplo) {
             if (solicitudDeEjemplo == null) {
                 respuesta.sinSolicitud();
             } else {
@@ -107,7 +120,7 @@ public class LogicaFakeVincular {
     // What it does: asks the server to send the confirmation e-mail again.
     // -----------------------------------------------------------------------
     public void reenviarCorreo(String token, final RespuestaReenvio respuesta) {
-        if (USAR_DATOS_DE_EJEMPLO) {
+        if (usarDatosDeEjemplo) {
             respuesta.correoReenviado();
             return;
         }
