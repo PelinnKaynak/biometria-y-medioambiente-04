@@ -32,7 +32,9 @@ describe('arduino: programa del nodo AERIS (C++ con dobles de prueba)', function
     it('compila el código del nodo y pasa todas las comprobaciones', function () {
         if (!hayCompilador()) this.skip();
 
-        const compilacion = spawnSync('g++', ['-std=c++17', '-I', path.join(CARPETA_TEST, 'stubs'),
+        // C++14: así compila también con los g++ antiguos de MinGW en Windows
+        // (por eso los dobles de stubs/ no usan variables inline de C++17)
+        const compilacion = spawnSync('g++', ['-std=c++14', '-I', path.join(CARPETA_TEST, 'stubs'),
             '-o', EJECUTABLE, path.join(CARPETA_TEST, 'pruebasNodoAERIS.cpp')], { encoding: 'utf8' });
         assert.strictEqual(compilacion.status, 0, compilacion.stderr);
 
