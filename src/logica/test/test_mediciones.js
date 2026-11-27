@@ -94,11 +94,14 @@ describe('Logica (mediciones)', function () {
     });
 
     it('guardar() pone el sensor activo con su última conexión (la más reciente)', async function () {
-        await mediciones.guardar(pelin.idUsuario, medicion({ fecha: haceMinutos(1) }));
+        // La fecha se calcula una sola vez: si se volviera a calcular al comprobar,
+        // en un ordenador lento ya habría pasado un segundo y no coincidiría
+        const reciente = haceMinutos(1);
+        await mediciones.guardar(pelin.idUsuario, medicion({ fecha: reciente }));
         await mediciones.guardar(pelin.idUsuario, medicion({ fecha: haceMinutos(30) }));   // llega tarde (sin conexión)
         const [[s]] = await logica.conexion.execute('SELECT estado, ultimaConexion FROM Sensores WHERE idSensor = ?', [idSensorPelin]);
         assert.strictEqual(s.estado, 'activo');
-        assert.strictEqual(s.ultimaConexion.toISOString(), haceMinutos(1));
+        assert.strictEqual(s.ultimaConexion.toISOString(), reciente);
     });
 
     it('guardar() rechaza datos que faltan o fuera de rango, dice qué campos y lo registra', async function () {

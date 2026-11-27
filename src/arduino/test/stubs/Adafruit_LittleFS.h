@@ -23,7 +23,7 @@
 #define FILE_O_WRITE 1
 
 namespace Doble {
-  inline std::map<std::string, std::vector<uint8_t>> ficheros;   // la «flash»
+  std::map<std::string, std::vector<uint8_t>> ficheros;   // la «flash»
 }
 
 namespace Adafruit_LittleFS_Namespace {

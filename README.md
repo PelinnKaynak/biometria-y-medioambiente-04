@@ -46,9 +46,83 @@ Cada función lleva una cabecera con su diseño lógico y cada componente tiene 
 
 ## Forma de trabajar
 
-- `main` solo contiene código que funciona.
-- Cada tarea se hace en su propia rama, con el número de la tarea de Trello en el nombre (por ejemplo, `t013-login-web`).
-- Antes de unir una rama a `main`, otro miembro del equipo revisa la pull request.
+- `main` solo contiene código que funciona y es la versión que se despliega en Plesk.
+- `develop` es donde se junta el trabajo del sprint. Pasa a `main` cuando está estable y probado.
+- Cada tarea se hace en su propia rama, creada desde `develop`, con el número de la tarea de Trello en el nombre (por ejemplo, `t013-login-web`).
+- Antes de unir una rama a `develop`, sus pruebas tienen que pasar y otro miembro del equipo revisa la pull request.
+
+## Pruebas automáticas
+
+Cada parte del proyecto tiene sus pruebas. Todos los comandos se ejecutan desde la raíz del repositorio, salvo que se diga otra cosa.
+
+| Parte | Herramienta | Dónde están | Qué necesita |
+| --- | --- | --- | --- |
+| Web pública y panel | Jest | `src/web_publica/test`, `src/web_admin/test` | Nada más |
+| Lógica de negocio | Mocha | `src/logica/test` | MySQL o MariaDB en marcha |
+| API REST | Mocha | `src/servidor_rest/test` | MySQL o MariaDB en marcha |
+| App Android | JUnit | `src/app/app/src/test` | Android Studio o Gradle |
+| Nodo sensor (Arduino) | Jest + g++ | `src/arduino/test` | Un `g++` reciente |
+| Previsión de ozono | pytest | `src/prevision/test` | Python con `pytest` y `pandas` |
+
+### Web pública y panel
+
+No necesitan ni servidor ni base de datos: usan la lógica fake y un navegador simulado (jsdom).
+
+```
+npx jest --rootDir . src/web_publica src/web_admin
+```
+
+Si se ejecuta `npx jest` sin carpetas, también se lanzan las pruebas del Arduino, que necesitan `g++`.
+
+### Lógica de negocio
+
+Con MySQL en marcha (en local, XAMPP):
+
+```
+cd src/logica
+npx mocha --exit test
+```
+
+Las pruebas no tocan la base de datos `aeris`. Cada vez crean una aparte, `aeris_test`, con el mismo `src/bd/usuarios.sql`, y la vacían entre prueba y prueba, así que siempre empiezan desde el mismo estado y se pueden repetir. Usan el usuario `root` sin contraseña en `127.0.0.1:3306`; si no es así, se cambia con las variables `BD_HOST`, `BD_PUERTO`, `BD_USUARIO` y `BD_CONTRASENYA`.
+
+### API REST
+
+También con MySQL en marcha:
+
+```
+cd src/servidor_rest
+npx mocha --exit test
+```
+
+Cada archivo arranca el servidor en un puerto libre con la base de datos `aeris_test` y le hace peticiones HTTP de verdad, así que no hace falta tener el servidor arrancado. Las pruebas de `test_prevision_api.js` necesitan además el servicio de previsión en marcha (`node mainServidorPrevision.js`, con Python y las librerías del modelo); sin él, fallan. Para lanzar solo una parte:
+
+```
+npx mocha --exit test/test_api.js test/test_api_nodos.js
+```
+
+### App Android
+
+En Android Studio, con `src/app` abierto: clic derecho en `app/src/test/java` y «Run 'Tests in…'». Desde la terminal, dentro de `src/app`:
+
+```
+./gradlew test
+```
+
+En Windows, `.\gradlew test`.
+
+### Nodo sensor (Arduino)
+
+Compilan el código del Arduino en el ordenador con librerías simuladas (`src/arduino/test/stubs`), así que se prueba sin la placa:
+
+```
+npx jest src/arduino
+```
+
+### Previsión de ozono
+
+```
+python -m pytest src/prevision/test
+```
 
 ## Enlaces
 
