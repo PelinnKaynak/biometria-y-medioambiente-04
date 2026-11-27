@@ -36,14 +36,16 @@
 typedef uint32_t err_t;
 enum SecureMode_t { SECMODE_NO_ACCESS = 0, SECMODE_OPEN = 1 };
 
+// Sin «inline» en las variables (es de C++17): las pruebas se compilan en un
+// solo archivo, así que basta con definirlas aquí, y funciona con g++ antiguos.
 namespace Doble {
-  inline long tiempoEsperado = 0;                    // suma de todos los delay()
-  inline std::vector<std::pair<int, int>> escriturasPin; // (pin, valor)
-  inline std::string salidaSerie;                    // lo escrito por Serial
-  inline std::string entradaSerie;                   // lo que «escribe» el usuario
-  inline std::map<int, double> voltiosPin;           // voltios de cada pin analógico
-  inline int bitsADC = 10;
-  inline double vReferenciaADC = 3.0;
+  long tiempoEsperado = 0;                    // suma de todos los delay()
+  std::vector<std::pair<int, int>> escriturasPin; // (pin, valor)
+  std::string salidaSerie;                    // lo escrito por Serial
+  std::string entradaSerie;                   // lo que «escribe» el usuario
+  std::map<int, double> voltiosPin;           // voltios de cada pin analógico
+  int bitsADC = 10;
+  double vReferenciaADC = 3.0;
 }
 
 // ------------------------------------------------------------
@@ -152,7 +154,7 @@ public:
   // ------------------------------------------------------------
   template <typename T> void println(T valor) { print(valor); Doble::salidaSerie += "\n"; }
 };
-inline SerialDoble Serial;
+SerialDoble Serial;
 
 // ------------------------------- Bluefruit --------------------------------
 #define BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE 0x06
@@ -400,6 +402,6 @@ public:
   // ------------------------------------------------------------
   BLEConnection * Connection(uint16_t) { return nullptr; }
 };
-inline BluefruitDoble Bluefruit;
+BluefruitDoble Bluefruit;
 
 #endif
