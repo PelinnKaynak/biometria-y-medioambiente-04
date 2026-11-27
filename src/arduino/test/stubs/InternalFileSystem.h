@@ -12,6 +12,6 @@
 
 #include "Adafruit_LittleFS.h"
 
-inline Adafruit_LittleFS_Namespace::Adafruit_LittleFS InternalFS;
+Adafruit_LittleFS_Namespace::Adafruit_LittleFS InternalFS;
 
 #endif
