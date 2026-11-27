@@ -4,24 +4,28 @@ Motor: **MySQL / MariaDB** (XAMPP en local).
 Base de datos: `aeris` (codificación `utf8mb4`).
 Script: [`src/bd/usuarios.sql`](../src/bd/usuarios.sql)
 
-Sigue el diagrama de la BD en Figma (enlace en el README). Ahora están las tablas `Usuarios`, `Contaminantes`, `Sensores`, `Mediciones` (T015), `Incidencias` (T041), `MensajesIncidencia` (T043) y `Lugares` (T046), más las columnas de la solicitud de vinculación en `Sensores` (T005). Las sesiones y los enlaces de recuperación de contraseña de T016 son tokens firmados por el servidor, así que no necesitan tablas (ver `logica_design.md`). El resto (MovimientosPuntos, Insignias, UsuarioInsignia, Recompensas, Canjes, Campañas, ZonasSensibles) se añadirá en las tareas correspondientes.
+Sigue el diagrama de la BD en Figma (enlace en el README). Ahora hay 10 tablas: `Usuarios`, `Contaminantes`, `Sensores`, `Mediciones` (T015), `Incidencias` (T041), `MensajesIncidencia` (T043), `Lugares` (T046) y las tres de las alertas, `Avisos`, `EstadoAlertaPersonal` y `EstadoAlertaLugar` (T020). La solicitud de vinculación va en columnas de `Sensores` (T005) y los roles, en tres columnas de `Usuarios` (roles múltiples, T036). Las sesiones y los enlaces de recuperación de contraseña de T016 son tokens firmados por el servidor, así que no necesitan tablas (ver `logica_design.md`). El resto (MovimientosPuntos, Insignias, UsuarioInsignia, Recompensas, Canjes, Campañas, ZonasSensibles) se añadirá en las tareas correspondientes.
 
 ## Tabla `Usuarios`
 
 Personas registradas en la plataforma (app y web). Igual que en el diagrama de Figma.
 
+Un usuario puede tener varios roles a la vez (por ejemplo, administrador y portador), así que los roles son tres columnas BOOLEAN en lugar de una columna `role`. Quien se registra empieza con los tres a FALSE (es un ciudadano). `esPortador` pasa a TRUE cuando el comprador confirma la vinculación de su sensor (T037), y `esAdministrador` y `esTecnico` los asigna un administrador desde el panel.
+
 | Columna | Tipo | Restricciones | Descripción |
 |---|---|---|---|
 | `idUsuario` | INT | PK, AUTO_INCREMENT | Identificador del usuario |
-| `role` | VARCHAR(20) | NOT NULL, DEFAULT 'portador', CHECK | 'administrador', 'tecnico', 'portador', 'ciudadano'. Quien se registra desde la app es 'portador' |
+| `esAdministrador` | BOOLEAN | NOT NULL, DEFAULT FALSE | Puede entrar en el panel y gestionar usuarios y nodos |
+| `esTecnico` | BOOLEAN | NOT NULL, DEFAULT FALSE | Puede entrar en el panel y responder incidencias |
+| `esPortador` | BOOLEAN | NOT NULL, DEFAULT FALSE | Tiene un sensor vinculado. Pasa a TRUE al confirmar la vinculación |
 | `nombre` | VARCHAR(50) | NOT NULL | Nombre |
 | `apellidos` | VARCHAR(100) | NOT NULL | Apellidos |
 | `email` | VARCHAR(255) | NOT NULL, UNIQUE | Correo en minúsculas. Se usa para iniciar sesión |
 | `passwordHash` | VARCHAR(255) | NOT NULL | `scrypt$<sal>$<hash>`, nunca la contraseña en claro |
 | `fechaAlta` | DATETIME | NOT NULL, DEFAULT UTC_TIMESTAMP | Fecha de creación de la cuenta (UTC) |
-| `alertas` | BOOLEAN | NOT NULL, DEFAULT TRUE | Si quiere recibir alertas |
-| `estado` | VARCHAR(20) | NOT NULL, DEFAULT 'activo' | Estado de la cuenta |
-| `umbralAlerta` | DOUBLE | NULL | Umbral de alerta elegido (perfil); NULL = el de por defecto |
+| `alertas` | BOOLEAN | NOT NULL, DEFAULT TRUE | Si quiere recibir alertas (lo usa T020) |
+| `estado` | VARCHAR(20) | NOT NULL, DEFAULT 'activo' | `activo`, `pendiente` (cuenta creada desde el panel que todavía no tiene contraseña) o `inactivo` (dada de baja: no puede iniciar sesión) |
+| `umbralAlerta` | DOUBLE | NULL | Umbral de alerta elegido (perfil); NULL = el de por defecto (180 µg/m³) |
 | `premiumHasta` | DATETIME | NULL | Hasta cuándo es premium; NULL = no es premium |
 | `foto` | MEDIUMTEXT | NULL | Foto de perfil: JPEG de 256×256 en base64 (unos 30 KB); NULL = sin foto. Añadida en T010 |
 
@@ -122,21 +126,61 @@ Lugares habituales, privados por usuario. La app envía la dirección y sus coor
 | `ubicacion` | POINT | NOT NULL | Coordenadas validadas; se usa para interpolar el ozono |
 | `avisosActivos` | BOOLEAN | NOT NULL, DEFAULT TRUE | Preferencia de avisos del lugar |
 
+## Tabla `Avisos` (T020 · H015)
+
+Avisos que el servidor crea para cada usuario cuando se supera su umbral (aviso personal) o cuando empeora el aire en uno de sus lugares (aviso de lugar). La app los lee con `GET /avisos` y los muestra en la campana de Inicio.
+
+| Columna | Tipo | Restricciones | Descripción |
+|---|---|---|---|
+| `idAviso` | INT | PK, AUTO_INCREMENT | Identificador |
+| `idUsuario` | INT | FK → Usuarios, NOT NULL, ON DELETE CASCADE | A quién va el aviso |
+| `tipo` | VARCHAR(10) | NOT NULL, CHECK | `personal` o `lugar` |
+| `contaminante` | VARCHAR(50) | NOT NULL | Contaminante (p. ej. O3) |
+| `valor` | DOUBLE | NOT NULL | Valor que ha hecho saltar el aviso |
+| `unidad` | VARCHAR(20) | NOT NULL | Unidad del valor |
+| `zona` | VARCHAR(400) | NOT NULL | Texto de la zona o nombre del lugar |
+| `latitud`, `longitud` | DOUBLE | NOT NULL | Dónde se abre el mapa al pulsar el aviso |
+| `fechaCreacion` | DATETIME(3) | NOT NULL, DEFAULT UTC_TIMESTAMP(3) | Cuándo se creó (UTC) |
+
+El índice `ix_avisos_usuario (idUsuario, idAviso)` sirve para que la app pida solo los avisos nuevos (`desdeId`).
+
+## Tablas `EstadoAlertaPersonal` y `EstadoAlertaLugar` (T020)
+
+Guardan cuándo se envió el último aviso, para no repetirlo: como máximo un aviso personal por hora y un aviso de lugar cada 3 horas.
+
+`EstadoAlertaPersonal`:
+
+| Columna | Tipo | Restricciones | Descripción |
+|---|---|---|---|
+| `idUsuario` | INT | PK, FK → Usuarios, ON DELETE CASCADE | Usuario |
+| `ultimoEnvio` | DATETIME(3) | NULL | Último aviso personal enviado (UTC) |
+
+`EstadoAlertaLugar`:
+
+| Columna | Tipo | Restricciones | Descripción |
+|---|---|---|---|
+| `idLugar` | INT | PK, FK → Lugares, ON DELETE CASCADE | Lugar |
+| `ultimoNivel` | VARCHAR(20) | NULL | Último nivel calculado del lugar (para saber si ha empeorado) |
+| `ultimoEnvio` | DATETIME(3) | NULL | Último aviso de ese lugar (UTC) |
+
+Al borrar un usuario o un lugar se borra también su estado.
+
 ## Aclaraciones
 
 - `email` es UNIQUE: si se intenta registrar un correo que ya existe, la BD lo rechaza y el servidor responde **409** a la app.
 - La app envía el JSON con las claves `nombre`, `apellidos`, `correo` y `contrasena`. La lógica (`logica_design.md`) las guarda en `nombre`, `apellidos`, `email` y calcula `passwordHash`.
 - La foto se guarda en la misma tabla (una columna, no una tabla nueva) para que se vea en cualquier teléfono donde el usuario inicie sesión.
 - Premium no es un rol: un usuario es premium mientras `premiumHasta` sea una fecha futura.
+- «Ciudadano» tampoco es una columna: es un usuario con los tres roles a FALSE.
 
 ## Cómo crear las tablas
 
 1. Abrir XAMPP Control Panel y pulsar **Start** en Apache y MySQL.
 2. Abrir `http://localhost/phpmyadmin`.
 3. Pestaña **Importar** → seleccionar `src/bd/usuarios.sql` → **Importar**.
-4. Debe aparecer la base de datos `aeris` con las tablas `Usuarios`, `Contaminantes`, `Sensores`, `Mediciones`, `Incidencias`, `MensajesIncidencia` y `Lugares`.
+4. Debe aparecer la base de datos `aeris` con las 10 tablas: `Avisos`, `Contaminantes`, `EstadoAlertaLugar`, `EstadoAlertaPersonal`, `Incidencias`, `Lugares`, `Mediciones`, `MensajesIncidencia`, `Sensores` y `Usuarios`.
 
-**Instalación limpia (BD nueva):** basta con `src/bd/usuarios.sql`, que ya incluye `MensajesIncidencia`. No hay que importar ningún `actualizar_*.sql`.
+**Instalación limpia (BD nueva):** basta con `src/bd/usuarios.sql`, que ya incluye todas las tablas y los roles múltiples. No hay que importar ningún `actualizar_*.sql`.
 
 **Si la BD ya estaba creada antes de T010:** importar también `src/bd/actualizar_T010.sql`, que añade la columna `foto` sin borrar los usuarios.
 
@@ -149,6 +193,10 @@ Lugares habituales, privados por usuario. La app envía la dirección y sus coor
 **Si la BD ya estaba creada antes de T043:** importar `src/bd/actualizar_T043.sql`, que crea `MensajesIncidencia` y pasa a ella las respuestas que ya había en `Incidencias.respuesta`, para que salgan en la conversación. **No borra ni cambia nada** (solo crea la tabla y añade filas) y se puede importar más de una vez sin duplicar mensajes. Requiere que exista la tabla `Incidencias` (de T041).
 
 **Si la BD ya estaba creada antes de T046:** importar `src/bd/actualizar_T046.sql`, que crea `Lugares` sin borrar nada. Se puede importar más de una vez.
+
+**Si la BD ya estaba creada antes de T020:** importar `src/bd/actualizar_T020.sql`, que crea `Avisos`, `EstadoAlertaPersonal` y `EstadoAlertaLugar` sin borrar nada. Requiere que exista `Lugares` (T046).
+
+**Si la BD todavía tiene la columna `role`:** importar primero `src/bd/actualizar_roles_multiples.sql`, que añade `esAdministrador`, `esTecnico` y `esPortador` y las rellena según el rol que tenía cada usuario, y después `src/bd/actualizar_T036.sql`, que borra la columna `role`. No se pierde ningún usuario.
 
 ## Prueba del script
 
